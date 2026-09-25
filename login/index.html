@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="bn">
+
 <head>
 
   <meta charset="UTF-8">
@@ -9,7 +10,9 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Login | Masha Studio</title>
+  <title>
+    Sign In | Masha Live
+  </title>
 
 
   <style>
@@ -21,49 +24,107 @@
     }
 
 
+    :root {
+
+      --bg: #050609;
+
+      --panel: #101219;
+
+      --panel-soft: #151821;
+
+      --border: rgba(255,255,255,.09);
+
+      --text: #f5f7fb;
+
+      --muted: #9298a5;
+
+      --accent: #6d5dfc;
+
+      --accent-light: #8b7fff;
+
+      --success: #42d995;
+
+      --danger: #ff667b;
+
+    }
+
+
+    html,
     body {
+
+      width: 100%;
+      min-height: 100%;
+
+    }
+
+
+    body {
+
       min-height: 100vh;
 
       display: flex;
+
       align-items: center;
+
       justify-content: center;
 
       padding: 20px;
 
       font-family:
+        Inter,
         Arial,
         Helvetica,
         sans-serif;
 
-      color: #ffffff;
+      color: var(--text);
 
       background:
+
         radial-gradient(
-          circle at top left,
-          #302080 0%,
-          transparent 35%
+          circle at 10% 10%,
+          rgba(109,93,252,.20),
+          transparent 32%
         ),
+
         radial-gradient(
-          circle at bottom right,
-          #073b55 0%,
-          transparent 35%
+          circle at 90% 90%,
+          rgba(0,180,220,.09),
+          transparent 30%
         ),
-        #050609;
+
+        var(--bg);
+
     }
 
 
-    .login-wrapper {
+    /* =====================================================
+       MAIN
+       ===================================================== */
+
+    .page {
+
       width: 100%;
+
       max-width: 1050px;
 
+    }
+
+
+    .login-card {
+
+      width: 100%;
+
+      min-height: 650px;
+
       display: grid;
+
       grid-template-columns: 1fr 1fr;
 
       overflow: hidden;
 
       border:
         1px solid
-        rgba(255,255,255,.1);
+        var(--border);
 
       border-radius: 28px;
 
@@ -71,34 +132,72 @@
         rgba(12,14,20,.96);
 
       box-shadow:
-        0 30px 100px
+        0 35px 100px
         rgba(0,0,0,.55);
+
     }
 
 
-    /* =========================
+    /* =====================================================
        LEFT
-       ========================= */
+       ===================================================== */
 
     .left {
+
+      position: relative;
+
       padding: 45px;
 
       display: flex;
+
       flex-direction: column;
+
       justify-content: space-between;
 
-      min-height: 650px;
+      overflow: hidden;
 
       background:
         linear-gradient(
           145deg,
-          rgba(109,93,252,.18),
-          rgba(10,10,15,.2)
+          rgba(109,93,252,.17),
+          rgba(10,11,16,.25)
         );
+
+    }
+
+
+    .left::after {
+
+      content: "";
+
+      position: absolute;
+
+      width: 350px;
+
+      height: 350px;
+
+      right: -180px;
+
+      bottom: -180px;
+
+      border-radius: 50%;
+
+      background:
+        rgba(109,93,252,.18);
+
+      filter: blur(80px);
+
+      pointer-events: none;
+
     }
 
 
     .back {
+
+      position: relative;
+
+      z-index: 5;
+
       display: inline-flex;
 
       width: fit-content;
@@ -106,46 +205,61 @@
       padding:
         10px 15px;
 
-      color: #d6d8df;
+      color: #d5d8e0;
 
       text-decoration: none;
 
       border:
         1px solid
-        rgba(255,255,255,.1);
+        rgba(255,255,255,.08);
 
       border-radius: 12px;
 
       background:
-        rgba(255,255,255,.04);
+        rgba(255,255,255,.035);
 
       font-size: 13px;
+
       font-weight: 700;
+
+    }
+
+
+    .brand {
+
+      position: relative;
+
+      z-index: 5;
+
     }
 
 
     .logo {
-      width: 110px;
-      height: 110px;
+
+      width: 115px;
+
+      height: 115px;
 
       object-fit: contain;
 
-      margin-bottom: 25px;
-
       padding: 8px;
+
+      margin-bottom: 26px;
 
       border-radius: 22px;
 
       border:
         1px solid
-        rgba(255,255,255,.1);
+        rgba(255,255,255,.08);
 
       background:
-        rgba(255,255,255,.04);
+        rgba(255,255,255,.035);
+
     }
 
 
     .eyebrow {
+
       margin-bottom: 14px;
 
       color: #9c91ff;
@@ -157,10 +271,12 @@
       letter-spacing: 2px;
 
       text-transform: uppercase;
+
     }
 
 
     .left h1 {
+
       margin-bottom: 20px;
 
       font-size:
@@ -173,62 +289,73 @@
       line-height: .95;
 
       letter-spacing: -3px;
+
     }
 
 
     .left h1 span {
+
       color: #9c91ff;
+
     }
 
 
     .description {
-      max-width: 430px;
 
-      color: #969ba7;
+      max-width: 440px;
+
+      color: var(--muted);
 
       font-size: 15px;
 
       line-height: 1.8;
+
     }
 
 
     .pills {
+
+      position: relative;
+
+      z-index: 5;
+
       display: flex;
 
       flex-wrap: wrap;
 
       gap: 8px;
+
     }
 
 
     .pill {
+
       padding:
         9px 13px;
 
       border:
         1px solid
-        rgba(255,255,255,.08);
+        rgba(255,255,255,.07);
 
       border-radius: 999px;
 
       background:
         rgba(255,255,255,.035);
 
-      color: #a8adb7;
+      color: #a7acb6;
 
       font-size: 11px;
 
       font-weight: 700;
+
     }
 
 
-
-    /* =========================
+    /* =====================================================
        RIGHT
-       ========================= */
+       ===================================================== */
 
     .right {
-      min-height: 650px;
 
       padding: 45px;
 
@@ -237,44 +364,56 @@
       align-items: center;
 
       justify-content: center;
+
     }
 
 
     .form-box {
+
       width: 100%;
+
       max-width: 390px;
+
     }
 
 
     .heading {
+
       margin-bottom: 25px;
+
     }
 
 
     .heading h2 {
+
       margin-bottom: 8px;
 
       font-size: 32px;
 
       letter-spacing: -1px;
+
     }
 
 
     .heading p {
-      color: #959ba6;
+
+      color: var(--muted);
 
       font-size: 13px;
 
       line-height: 1.7;
+
     }
 
 
-
-    /* =========================
-       ROLE BUTTONS
-       ========================= */
+    /* =====================================================
+       ROLE SWITCHER
+       ===================================================== */
 
     .roles {
+
+      width: 100%;
+
       display: grid;
 
       grid-template-columns:
@@ -282,34 +421,38 @@
 
       gap: 8px;
 
-      width: 100%;
+      padding: 5px;
 
-      padding: 6px;
-
-      margin-bottom: 25px;
+      margin-bottom: 24px;
 
       border:
         1px solid
-        rgba(255,255,255,.09);
+        rgba(255,255,255,.08);
 
-      border-radius: 16px;
+      border-radius: 15px;
 
       background: #080a0e;
+
     }
 
 
     .role-btn {
+
       width: 100%;
 
-      min-height: 55px;
+      min-height: 52px;
 
-      border: none;
+      border: 0;
+
+      outline: 0;
 
       border-radius: 11px;
 
       background: transparent;
 
-      color: #777d88;
+      color: #777e89;
+
+      font-family: inherit;
 
       font-size: 14px;
 
@@ -317,68 +460,80 @@
 
       cursor: pointer;
 
+      transition:
+        background .2s ease,
+        color .2s ease,
+        transform .1s ease;
+
       -webkit-tap-highlight-color:
         transparent;
 
       touch-action: manipulation;
 
-      transition:
-        background .2s ease,
-        color .2s ease,
-        transform .15s ease;
     }
 
 
     .role-btn:hover {
+
       color: #ffffff;
+
     }
 
 
     .role-btn:active {
-      transform: scale(.97);
+
+      transform:
+        scale(.97);
+
     }
 
 
     .role-btn.active {
+
       color: #ffffff;
 
       background:
         linear-gradient(
           135deg,
-          #28223f,
-          #1a1d27
+          #27233e,
+          #191c25
         );
 
       box-shadow:
-        0 8px 25px
+        0 6px 20px
         rgba(0,0,0,.25);
+
     }
 
 
-
-    /* =========================
-       FIELDS
-       ========================= */
+    /* =====================================================
+       FIELD
+       ===================================================== */
 
     .field {
+
       margin-bottom: 17px;
+
     }
 
 
     .field label {
+
       display: block;
 
       margin-bottom: 8px;
 
-      color: #c6cad1;
+      color: #c7cbd3;
 
       font-size: 12px;
 
       font-weight: 800;
+
     }
 
 
     .input {
+
       width: 100%;
 
       height: 54px;
@@ -388,7 +543,7 @@
 
       border:
         1px solid
-        rgba(255,255,255,.1);
+        rgba(255,255,255,.09);
 
       border-radius: 14px;
 
@@ -398,35 +553,48 @@
 
       color: #ffffff;
 
+      font-family: inherit;
+
       font-size: 14px;
+
     }
 
 
     .input:focus {
-      border-color: #6d5dfc;
+
+      border-color:
+        rgba(109,93,252,.8);
 
       box-shadow:
         0 0 0 4px
-        rgba(109,93,252,.1);
+        rgba(109,93,252,.08);
+
     }
 
 
-    .email-input {
-      color: #aeb3bd;
+    #email {
+
+      color: #aeb4bf;
+
     }
 
 
-    .password-wrapper {
+    .password-box {
+
       position: relative;
+
     }
 
 
-    .password-wrapper .input {
+    .password-box .input {
+
       padding-right: 55px;
+
     }
 
 
-    .eye-btn {
+    .eye {
+
       position: absolute;
 
       right: 5px;
@@ -437,45 +605,48 @@
         translateY(-50%);
 
       width: 44px;
+
       height: 44px;
 
-      border: none;
+      border: 0;
 
       background: transparent;
 
-      color: #888e99;
+      color: #7f8692;
 
       font-size: 17px;
 
       cursor: pointer;
 
-      z-index: 10;
     }
 
 
-    /* =========================
-       LOGIN BUTTON
-       ========================= */
+    /* =====================================================
+       SUBMIT
+       ===================================================== */
 
-    .login-btn {
+    .submit {
+
       width: 100%;
 
       min-height: 55px;
 
       margin-top: 5px;
 
-      border: none;
+      border: 0;
 
       border-radius: 15px;
 
       background:
         linear-gradient(
           135deg,
-          #6d5dfc,
-          #8b7fff
+          var(--accent),
+          var(--accent-light)
         );
 
       color: #ffffff;
+
+      font-family: inherit;
 
       font-size: 14px;
 
@@ -483,176 +654,257 @@
 
       cursor: pointer;
 
-      touch-action: manipulation;
-
       transition:
         transform .2s ease,
         opacity .2s ease;
+
     }
 
 
-    .login-btn:hover {
+    .submit:hover {
+
       transform:
         translateY(-2px);
+
     }
 
 
-    .login-btn:active {
+    .submit:active {
+
       transform:
-        translateY(0)
-        scale(.99);
+        translateY(0);
+
     }
 
 
-    .login-btn:disabled {
-      opacity: .6;
+    .submit:disabled {
+
+      opacity: .65;
 
       cursor: wait;
 
       transform: none;
+
     }
 
 
-
-    /* =========================
+    /* =====================================================
        MESSAGE
-       ========================= */
+       ===================================================== */
 
     .message {
+
       display: none;
 
       margin-top: 15px;
 
-      padding: 12px 14px;
+      padding:
+        12px 14px;
 
       border-radius: 12px;
 
       font-size: 12px;
 
       line-height: 1.6;
+
     }
 
 
     .message.show {
+
       display: block;
+
     }
 
 
     .message.error {
-      color: #ffb4be;
 
-      background:
-        rgba(255,80,100,.08);
+      color: #ffb3be;
 
       border:
         1px solid
-        rgba(255,80,100,.18);
+        rgba(255,100,120,.18);
+
+      background:
+        rgba(255,100,120,.07);
+
     }
 
 
     .message.success {
-      color: #a7f0c7;
 
-      background:
-        rgba(50,210,130,.08);
+      color: #a4efc4;
 
       border:
         1px solid
-        rgba(50,210,130,.18);
+        rgba(57,217,138,.18);
+
+      background:
+        rgba(57,217,138,.07);
+
     }
 
 
     .security {
+
       margin-top: 22px;
 
-      color: #5e6570;
+      color: #606773;
 
       text-align: center;
 
       font-size: 11px;
 
       line-height: 1.7;
+
     }
 
 
+    /* =====================================================
+       LOADER
+       ===================================================== */
 
-    /* =========================
+    .spinner {
+
+      display: inline-block;
+
+      width: 15px;
+
+      height: 15px;
+
+      margin-right: 7px;
+
+      border:
+        2px solid
+        rgba(255,255,255,.3);
+
+      border-top-color:
+        #ffffff;
+
+      border-radius: 50%;
+
+      vertical-align: -3px;
+
+      animation:
+        spin .7s linear infinite;
+
+    }
+
+
+    @keyframes spin {
+
+      to {
+
+        transform:
+          rotate(360deg);
+
+      }
+
+    }
+
+
+    /* =====================================================
        MOBILE
-       ========================= */
+       ===================================================== */
 
-    @media (max-width: 850px) {
+    @media (
+      max-width: 850px
+    ) {
 
-      .login-wrapper {
+      body {
+
+        padding: 12px;
+
+      }
+
+
+      .login-card {
+
         grid-template-columns: 1fr;
 
         max-width: 520px;
+
+        min-height: auto;
+
+        border-radius: 22px;
+
       }
 
 
       .left {
+
         min-height: 390px;
 
         padding: 28px;
+
       }
 
 
       .right {
-        min-height: auto;
 
-        padding: 32px 24px 38px;
+        padding:
+          32px 24px 38px;
+
       }
 
 
       .pills {
+
         display: none;
+
       }
 
 
       .logo {
+
         width: 90px;
+
         height: 90px;
+
       }
 
 
       .left h1 {
+
         font-size: 43px;
+
       }
 
     }
 
 
-    @media (max-width: 480px) {
-
-      body {
-        padding: 10px;
-      }
-
-
-      .login-wrapper {
-        border-radius: 20px;
-      }
-
+    @media (
+      max-width: 480px
+    ) {
 
       .left {
+
         min-height: 340px;
 
         padding: 22px;
+
       }
 
 
       .right {
+
         padding:
           26px 18px 30px;
+
       }
 
 
       .left h1 {
+
         font-size: 36px;
+
       }
 
 
       .heading h2 {
+
         font-size: 28px;
+
       }
 
     }
@@ -665,215 +917,253 @@
 <body>
 
 
-  <div class="login-wrapper">
+  <div class="page">
 
 
-    <!-- =========================
-         LEFT
-         ========================= -->
-
-    <section class="left">
+    <main class="login-card">
 
 
-      <a
-        href="../"
-        class="back"
-      >
-        ← Back Home
-      </a>
+      <!-- =================================================
+           LEFT
+           ================================================= -->
+
+      <section class="left">
 
 
-      <div>
-
-
-        <img
-          src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true"
-          class="logo"
-          alt="SNK Business"
+        <a
+          href="../"
+          class="back"
         >
+          ← Back Home
+        </a>
 
 
-        <div class="eyebrow">
-          PERSONAL COURSE STUDIO
-        </div>
+        <div class="brand">
 
 
-        <h1>
-          Welcome<br>
-          <span>Back.</span>
-        </h1>
+          <img
+            class="logo"
+            src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true"
+            alt="Masha Live"
+          >
 
 
-        <p class="description">
-          আপনার Mentor Studio অথবা Admin
-          Panel-এ নিরাপদভাবে প্রবেশ করুন।
-        </p>
+          <div class="eyebrow">
+            Personal Course Studio
+          </div>
 
 
-      </div>
+          <h1>
+
+            Welcome<br>
+
+            <span>
+              Back.
+            </span>
+
+          </h1>
 
 
-      <div class="pills">
+          <p class="description">
 
-        <span class="pill">
-          🔐 Secure
-        </span>
+            আপনার Mentor Studio অথবা
+            Admin Panel-এ নিরাপদভাবে
+            প্রবেশ করুন।
 
-        <span class="pill">
-          ☁ Firebase
-        </span>
-
-        <span class="pill">
-          🎬 Studio
-        </span>
-
-      </div>
-
-
-    </section>
-
-
-
-    <!-- =========================
-         RIGHT
-         ========================= -->
-
-    <section class="right">
-
-
-      <div class="form-box">
-
-
-        <div class="heading">
-
-          <h2>
-            Sign in
-          </h2>
-
-          <p>
-            প্রথমে account type নির্বাচন করুন,
-            তারপর password দিন।
           </p>
 
-        </div>
-
-
-
-        <!-- ROLE -->
-
-        <div class="roles">
-
-
-          <button
-            type="button"
-            class="role-btn active"
-            id="mentorBtn"
-          >
-            🎓 Mentor
-          </button>
-
-
-          <button
-            type="button"
-            class="role-btn"
-            id="adminBtn"
-          >
-            👑 Admin
-          </button>
-
 
         </div>
 
 
+        <div class="pills">
 
-        <!-- FORM -->
+          <span class="pill">
+            🔐 Secure Login
+          </span>
 
-        <form
-          id="loginForm"
-        >
+          <span class="pill">
+            ☁ Firebase
+          </span>
+
+          <span class="pill">
+            🎬 Studio
+          </span>
+
+        </div>
 
 
-          <div class="field">
-
-            <label>
-              Account
-            </label>
+      </section>
 
 
-            <input
-              type="text"
-              id="email"
-              class="input email-input"
-              value="mentor@snkitinstitute.com"
-              readonly
-            >
+
+      <!-- =================================================
+           RIGHT
+           ================================================= -->
+
+      <section class="right">
+
+
+        <div class="form-box">
+
+
+          <div class="heading">
+
+            <h2>
+              Sign in
+            </h2>
+
+            <p>
+
+              আপনার account type নির্বাচন
+              করে password দিয়ে login করুন।
+
+            </p>
 
           </div>
 
 
 
-          <div class="field">
+          <!-- =================================================
+               ROLE BUTTONS
+               ================================================= -->
 
-            <label>
-              Firebase Password
-            </label>
+          <div class="roles">
 
 
-            <div class="password-wrapper">
+            <button
+              type="button"
+              id="mentorBtn"
+              class="role-btn active"
+            >
+
+              🎓 Mentor
+
+            </button>
+
+
+            <button
+              type="button"
+              id="adminBtn"
+              class="role-btn"
+            >
+
+              👑 Admin
+
+            </button>
+
+
+          </div>
+
+
+
+          <!-- =================================================
+               LOGIN FORM
+               ================================================= -->
+
+          <form
+            id="loginForm"
+            autocomplete="on"
+          >
+
+
+            <div class="field">
+
+
+              <label
+                for="email"
+              >
+                Account
+              </label>
 
 
               <input
-                type="password"
-                id="password"
+                id="email"
                 class="input"
-                placeholder="Password লিখুন"
-                autocomplete="current-password"
+                type="email"
+                readonly
+                autocomplete="username"
               >
-
-
-              <button
-                type="button"
-                id="eyeBtn"
-                class="eye-btn"
-              >
-                👁
-              </button>
 
 
             </div>
 
+
+
+            <div class="field">
+
+
+              <label
+                for="password"
+              >
+                Firebase Password
+              </label>
+
+
+              <div class="password-box">
+
+
+                <input
+                  id="password"
+                  class="input"
+                  type="password"
+                  placeholder="আপনার password লিখুন"
+                  autocomplete="current-password"
+                  required
+                >
+
+
+                <button
+                  type="button"
+                  id="eyeBtn"
+                  class="eye"
+                  aria-label="Show password"
+                >
+                  👁
+                </button>
+
+
+              </div>
+
+
+            </div>
+
+
+
+            <button
+              type="submit"
+              id="submitBtn"
+              class="submit"
+            >
+              Continue as Mentor
+            </button>
+
+
+            <div
+              id="message"
+              class="message"
+              role="alert"
+            ></div>
+
+
+          </form>
+
+
+          <div class="security">
+
+            Firebase Authentication দ্বারা
+            আপনার login পরিচালনা করা হচ্ছে।
+
           </div>
 
 
-
-          <button
-            type="submit"
-            id="loginBtn"
-            class="login-btn"
-          >
-            Continue as Mentor
-          </button>
-
-
-          <div
-            id="message"
-            class="message"
-          ></div>
-
-
-        </form>
-
-
-        <div class="security">
-          Firebase Authentication ব্যবহার করে
-          আপনার login নিরাপদ রাখা হচ্ছে।
         </div>
 
 
-      </div>
+      </section>
 
 
-    </section>
+    </main>
 
 
   </div>
@@ -881,30 +1171,51 @@
 
 
   <!-- =====================================================
+       LOGIN UI
        IMPORTANT:
-       এই script-এ Firebase নেই।
-       তাই Mentor/Admin button অবশ্যই কাজ করবে।
+       এই অংশ Firebase-এর উপর নির্ভর করে না।
        ===================================================== -->
 
   <script>
 
-
-    /* =========================
-       ACCOUNT DATA
-       ========================= */
-
-    const MENTOR_EMAIL =
-      "mentor@snkitinstitute.com";
+    "use strict";
 
 
-    const ADMIN_EMAIL =
-      "admin@snkitinstitute.com";
+    /* =====================================================
+       ACCOUNTS
+       ===================================================== */
+
+    const ACCOUNTS = {
+
+      mentor: {
+
+        role: "mentor",
+
+        name: "Mentor",
+
+        email:
+          "thesnkgraphic@email.com"
+
+      },
 
 
+      admin: {
 
-    /* =========================
+        role: "admin",
+
+        name: "Admin",
+
+        email:
+          "admin@snkitinstitute.com"
+
+      }
+
+    };
+
+
+    /* =====================================================
        ELEMENTS
-       ========================= */
+       ===================================================== */
 
     const mentorBtn =
       document.getElementById(
@@ -930,9 +1241,9 @@
       );
 
 
-    const loginBtn =
+    const submitBtn =
       document.getElementById(
-        "loginBtn"
+        "submitBtn"
       );
 
 
@@ -954,19 +1265,28 @@
       );
 
 
+    /* =====================================================
+       STATE
+       ===================================================== */
 
-    /* =========================
-       CURRENT ROLE
-       ========================= */
-
-    let currentRole =
+    let selectedRole =
       "mentor";
 
 
-
-    /* =========================
+    /* =====================================================
        MESSAGE
-       ========================= */
+       ===================================================== */
+
+    function clearMessage() {
+
+      message.textContent =
+        "";
+
+      message.className =
+        "message";
+
+    }
+
 
     function showMessage(
       text,
@@ -983,45 +1303,50 @@
     }
 
 
-    function clearMessage() {
+    /* =====================================================
+       UPDATE UI
+       ===================================================== */
 
-      message.textContent =
-        "";
+    function updateRoleUI(
+      role
+    ) {
 
-      message.className =
-        "message";
-
-    }
-
-
-
-    /* =========================
-       SELECT MENTOR
-       ========================= */
-
-    function selectMentor() {
-
-      currentRole =
-        "mentor";
+      const account =
+        ACCOUNTS[role];
 
 
-      mentorBtn.classList.add(
-        "active"
+      selectedRole =
+        role;
+
+
+      /* buttons */
+
+      mentorBtn.classList.toggle(
+        "active",
+        role === "mentor"
       );
 
 
-      adminBtn.classList.remove(
-        "active"
+      adminBtn.classList.toggle(
+        "active",
+        role === "admin"
       );
 
+
+      /* email */
 
       emailInput.value =
-        MENTOR_EMAIL;
+        account.email;
 
 
-      loginBtn.textContent =
-        "Continue as Mentor";
+      /* submit */
 
+      submitBtn.textContent =
+        "Continue as " +
+        account.name;
+
+
+      /* clear old password */
 
       passwordInput.value =
         "";
@@ -1031,84 +1356,54 @@
 
 
       console.log(
-        "Selected role: Mentor"
+        "Selected role:",
+        role
       );
-
-    }
-
-
-
-    /* =========================
-       SELECT ADMIN
-       ========================= */
-
-    function selectAdmin() {
-
-      currentRole =
-        "admin";
-
-
-      adminBtn.classList.add(
-        "active"
-      );
-
-
-      mentorBtn.classList.remove(
-        "active"
-      );
-
-
-      emailInput.value =
-        ADMIN_EMAIL;
-
-
-      loginBtn.textContent =
-        "Continue as Admin";
-
-
-      passwordInput.value =
-        "";
-
-
-      clearMessage();
 
 
       console.log(
-        "Selected role: Admin"
+        "Selected email:",
+        account.email
       );
 
     }
 
 
-
-    /* =========================
-       BUTTON EVENTS
-       ========================= */
+    /* =====================================================
+       MENTOR
+       ===================================================== */
 
     mentorBtn.addEventListener(
       "click",
       function () {
 
-        selectMentor();
+        updateRoleUI(
+          "mentor"
+        );
 
       }
     );
 
+
+    /* =====================================================
+       ADMIN
+       ===================================================== */
 
     adminBtn.addEventListener(
       "click",
       function () {
 
-        selectAdmin();
+        updateRoleUI(
+          "admin"
+        );
 
       }
     );
 
 
-
-    /* =========================
-       PASSWORD EYE
-       ========================= */
+    /* =====================================================
+       PASSWORD VISIBILITY
+       ===================================================== */
 
     eyeBtn.addEventListener(
       "click",
@@ -1139,25 +1434,25 @@
     );
 
 
+    /* =====================================================
+       INITIAL STATE
+       ===================================================== */
 
-    /* =========================
-       INITIAL
-       ========================= */
-
-    selectMentor();
+    updateRoleUI(
+      "mentor"
+    );
 
 
     console.log(
-      "LOGIN UI READY"
+      "Masha Login UI ready."
     );
-
 
   </script>
 
 
 
   <!-- =====================================================
-       FIREBASE AUTH
+       FIREBASE AUTHENTICATION
        ===================================================== -->
 
   <script type="module">
@@ -1172,293 +1467,400 @@
       signInWithEmailAndPassword,
       signOut
     } from
-      "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
-
-
-    loginForm.addEventListener(
-      "submit",
-      async function (event) {
-
-        event.preventDefault();
-
-
-        const password =
-          passwordInput.value.trim();
-
-
-        if (!password) {
-
-          showMessage(
-            "Password লিখুন।",
-            "error"
-          );
-
-          passwordInput.focus();
-
-          return;
-
-        }
-
-
-        loginBtn.disabled =
-          true;
-
-
-        loginBtn.textContent =
-          "Signing in...";
-
-
-        try {
-
-
-          /*
-           * আগের Firebase session থাকলে
-           * প্রথমে logout করি।
-           */
-
-          if (
-            auth.currentUser
-          ) {
-
-            await signOut(
-              auth
-            );
-
-          }
-
-
-          const email =
-            currentRole === "admin"
-              ? ADMIN_EMAIL
-              : MENTOR_EMAIL;
-
-
-          const result =
-            await signInWithEmailAndPassword(
-              auth,
-              email,
-              password
-            );
-
-
-          const user =
-            result.user;
-
-
-          const userEmail =
-            String(
-              user.email || ""
-            )
-              .toLowerCase()
-              .trim();
-
-
-          /*
-           * Security check
-           */
-
-          if (
-            userEmail !==
-            email
-          ) {
-
-            await signOut(
-              auth
-            );
-
-            throw new Error(
-              "Account mismatch"
-            );
-
-          }
-
-
-
-          /* =========================
-             SESSION
-             ========================= */
-
-          sessionStorage.setItem(
-            "personalCourseStudioRole",
-            currentRole
-          );
-
-
-          sessionStorage.setItem(
-            "personalCourseStudioUsername",
-            currentRole
-          );
-
-
-          sessionStorage.setItem(
-            "personalCourseStudioUid",
-            user.uid
-          );
-
-
-          if (
-            currentRole ===
-            "admin"
-          ) {
-
-            sessionStorage.setItem(
-              "personalCourseStudioAdminLoggedIn",
-              "true"
-            );
-
-
-            sessionStorage.removeItem(
-              "personalCourseStudioMentorLoggedIn"
-            );
-
-          }
-
-
-          if (
-            currentRole ===
-            "mentor"
-          ) {
-
-            sessionStorage.setItem(
-              "personalCourseStudioMentorLoggedIn",
-              "true"
-            );
-
-
-            sessionStorage.removeItem(
-              "personalCourseStudioAdminLoggedIn"
-            );
-
-          }
-
-
-
-          showMessage(
-            "Login successful. Opening panel...",
-            "success"
-          );
-
-
-
-          /* =========================
-             REDIRECT
-             ========================= */
-
-          setTimeout(
-            function () {
-
-              if (
-                currentRole ===
-                "admin"
-              ) {
-
-                window.location.href =
-                  "../admin/";
-
-              } else {
-
-                window.location.href =
-                  "../mentor/";
-
-              }
-
-            },
-            700
-          );
-
-
-        } catch (error) {
-
-
-          console.error(
-            "Firebase Login Error:",
-            error
-          );
-
-
-          let errorMessage =
-            "Login করা যায়নি।";
-
-
-          if (
-            error.code ===
-            "auth/invalid-credential"
-          ) {
-
-            errorMessage =
-              "Email অথবা password সঠিক নয়।";
-
-          }
-
-
-          else if (
-            error.code ===
-            "auth/wrong-password"
-          ) {
-
-            errorMessage =
-              "Password সঠিক নয়।";
-
-          }
-
-
-          else if (
-            error.code ===
-            "auth/user-not-found"
-          ) {
-
-            errorMessage =
-              "এই Firebase account পাওয়া যায়নি।";
-
-          }
-
-
-          else if (
-            error.code ===
-            "auth/too-many-requests"
-          ) {
-
-            errorMessage =
-              "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।";
-
-          }
-
-
-          else if (
-            error.code ===
-            "auth/network-request-failed"
-          ) {
-
-            errorMessage =
-              "Internet connection সমস্যা হয়েছে।";
-
-          }
-
-
-          showMessage(
-            errorMessage,
-            "error"
-          );
-
-
-          loginBtn.disabled =
-            false;
-
-
-          loginBtn.textContent =
-            currentRole === "admin"
-              ? "Continue as Admin"
-              : "Continue as Mentor";
-
-        }
-
-      }
-    );
-
-
-  </script>
-
-
-</body>
-</html>
+      "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js"; 
+ 
+ 
+ 
+    /* ===================================================== 
+       SESSION CLEAR 
+       ===================================================== */ 
+ 
+    function clearStudioSession() { 
+ 
+      sessionStorage.removeItem( 
+        "personalCourseStudioRole" 
+      ); 
+ 
+ 
+      sessionStorage.removeItem( 
+        "personalCourseStudioUsername" 
+      ); 
+ 
+ 
+      sessionStorage.removeItem( 
+        "personalCourseStudioUid" 
+      ); 
+ 
+ 
+      sessionStorage.removeItem( 
+        "personalCourseStudioAdminLoggedIn" 
+      ); 
+ 
+ 
+      sessionStorage.removeItem( 
+        "personalCourseStudioMentorLoggedIn" 
+      ); 
+ 
+    } 
+ 
+ 
+ 
+    /* ===================================================== 
+       FIREBASE ERROR 
+       ===================================================== */ 
+ 
+    function getFirebaseError( 
+      error 
+    ) { 
+ 
+      const code = 
+        error?.code || ""; 
+ 
+ 
+      switch ( 
+        code 
+      ) { 
+ 
+        case "auth/invalid-credential": 
+ 
+          return "Email অথবা password সঠিক নয়।"; 
+ 
+ 
+        case "auth/wrong-password": 
+ 
+          return "Password সঠিক নয়।"; 
+ 
+ 
+        case "auth/user-not-found": 
+ 
+          return "এই Firebase account পাওয়া যায়নি।"; 
+ 
+ 
+        case "auth/too-many-requests": 
+ 
+          return "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"; 
+ 
+ 
+        case "auth/network-request-failed": 
+ 
+          return "Internet connection সমস্যা হয়েছে।"; 
+ 
+ 
+        case "auth/user-disabled": 
+ 
+          return "এই account disabled করা আছে।"; 
+ 
+ 
+        case "auth/invalid-email": 
+ 
+          return "Firebase email সঠিক নয়।"; 
+ 
+ 
+        case "auth/operation-not-allowed": 
+ 
+          return "Firebase Email/Password Authentication চালু নেই।"; 
+ 
+ 
+        default: 
+ 
+          console.error( 
+            "Unhandled Firebase error:", 
+            error 
+          ); 
+ 
+          return "Login করা যায়নি। আবার চেষ্টা করুন।"; 
+ 
+      } 
+ 
+    } 
+ 
+ 
+ 
+    /* ===================================================== 
+       LOGIN 
+       ===================================================== */ 
+ 
+    loginForm.addEventListener( 
+      "submit", 
+      async function ( 
+        event 
+      ) { 
+ 
+        event.preventDefault(); 
+ 
+ 
+        const account = 
+          ACCOUNTS[ 
+            selectedRole 
+          ]; 
+ 
+ 
+        const password = 
+          passwordInput.value.trim(); 
+ 
+ 
+        /* ----------------------------------------------- 
+           PASSWORD CHECK 
+           ----------------------------------------------- */ 
+ 
+        if (!password) { 
+ 
+          showMessage( 
+            "Password লিখুন।", 
+            "error" 
+          ); 
+ 
+ 
+          passwordInput.focus(); 
+ 
+ 
+          return; 
+ 
+        } 
+ 
+ 
+        /* ----------------------------------------------- 
+           LOADING 
+           ----------------------------------------------- */ 
+ 
+        submitBtn.disabled = 
+          true; 
+ 
+ 
+        submitBtn.innerHTML = 
+          '<span class="spinner"></span>Signing in...'; 
+ 
+ 
+        clearMessage(); 
+ 
+ 
+        try { 
+ 
+ 
+          /* --------------------------------------------- 
+             CLEAR OLD LOCAL SESSION 
+             --------------------------------------------- */ 
+ 
+          clearStudioSession(); 
+ 
+ 
+          /* --------------------------------------------- 
+             CLEAR OLD FIREBASE USER 
+             --------------------------------------------- */ 
+ 
+          if ( 
+            auth.currentUser 
+          ) { 
+ 
+            await signOut( 
+              auth 
+            ); 
+ 
+          } 
+ 
+ 
+          /* --------------------------------------------- 
+             FIREBASE LOGIN 
+             --------------------------------------------- */ 
+ 
+          const result = 
+            await signInWithEmailAndPassword( 
+              auth, 
+              account.email, 
+              password 
+            ); 
+ 
+ 
+          const user = 
+            result.user; 
+ 
+ 
+          /* --------------------------------------------- 
+             VERIFY EMAIL 
+             --------------------------------------------- */ 
+ 
+          const actualEmail = 
+            String( 
+              user.email || "" 
+            ) 
+              .trim() 
+              .toLowerCase(); 
+ 
+ 
+          const expectedEmail = 
+            account.email 
+              .trim() 
+              .toLowerCase(); 
+ 
+ 
+          if ( 
+            actualEmail !== 
+            expectedEmail 
+          ) { 
+ 
+            await signOut( 
+              auth 
+            ); 
+ 
+ 
+            throw new Error( 
+              "Firebase account mismatch." 
+            ); 
+ 
+          } 
+ 
+ 
+          /* --------------------------------------------- 
+             SAVE SESSION 
+             --------------------------------------------- */ 
+ 
+          sessionStorage.setItem( 
+            "personalCourseStudioRole", 
+            selectedRole 
+          ); 
+ 
+ 
+          sessionStorage.setItem( 
+            "personalCourseStudioUsername", 
+            selectedRole 
+          ); 
+ 
+ 
+          sessionStorage.setItem( 
+            "personalCourseStudioUid", 
+            user.uid 
+          ); 
+ 
+ 
+          if ( 
+            selectedRole === 
+            "mentor" 
+          ) { 
+ 
+            sessionStorage.setItem( 
+              "personalCourseStudioMentorLoggedIn", 
+              "true" 
+            ); 
+ 
+ 
+            sessionStorage.removeItem( 
+              "personalCourseStudioAdminLoggedIn" 
+            ); 
+ 
+          } 
+ 
+ 
+          if ( 
+            selectedRole === 
+            "admin" 
+          ) { 
+ 
+            sessionStorage.setItem( 
+              "personalCourseStudioAdminLoggedIn", 
+              "true" 
+            ); 
+ 
+ 
+            sessionStorage.removeItem( 
+              "personalCourseStudioMentorLoggedIn" 
+            ); 
+ 
+          } 
+ 
+ 
+          /* --------------------------------------------- 
+             SUCCESS 
+             --------------------------------------------- */ 
+ 
+          showMessage( 
+            "Login successful. Opening " + 
+            account.name + 
+            "...", 
+            "success" 
+          ); 
+ 
+ 
+          /* --------------------------------------------- 
+             REDIRECT 
+             --------------------------------------------- */ 
+ 
+          setTimeout( 
+            function () { 
+ 
+ 
+              if ( 
+                selectedRole === 
+                "mentor" 
+              ) { 
+ 
+                window.location.replace( 
+                  "../mentor/" 
+                ); 
+ 
+ 
+                return; 
+ 
+              } 
+ 
+ 
+              if ( 
+                selectedRole === 
+                "admin" 
+              ) { 
+ 
+                window.location.replace( 
+                  "../admin/" 
+                ); 
+ 
+              } 
+ 
+ 
+            }, 
+            700 
+          ); 
+ 
+ 
+        } catch ( 
+          error 
+        ) { 
+ 
+ 
+          console.error( 
+            "Masha Firebase Login Error:", 
+            error 
+          ); 
+ 
+ 
+          showMessage( 
+            getFirebaseError( 
+              error 
+            ), 
+            "error" 
+          ); 
+ 
+ 
+          submitBtn.disabled = 
+            false; 
+ 
+ 
+          submitBtn.textContent = 
+            "Continue as " + 
+            account.name; 
+ 
+        } 
+ 
+      } 
+    ); 
+ 
+ 
+    console.log( 
+      "Masha Firebase Login module ready." 
+    ); 
+ 
+ 
+  </script> 
+ 
+ 
+</body> 
+ 
+</html>aita ki full
