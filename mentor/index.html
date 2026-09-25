@@ -235,6 +235,12 @@
     }
 
 
+    .top-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+
     /* =====================================================
        MAIN
     ===================================================== */
@@ -601,6 +607,8 @@
       cursor: move;
 
       display: none;
+
+      touch-action: none;
     }
 
 
@@ -945,6 +953,13 @@
     }
 
 
+    .setting input:focus,
+    .setting select:focus {
+      border-color:
+        rgba(96,165,250,0.45);
+    }
+
+
     .setting select option {
       background: #111827;
       color: #fff;
@@ -969,6 +984,12 @@
 
       font-size: 11px;
       font-weight: 900;
+    }
+
+
+    .save-settings:hover {
+      background:
+        #1d4ed8;
     }
 
 
@@ -1051,6 +1072,12 @@
         transparent;
 
       color: #fff;
+    }
+
+
+    .small-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
     }
 
 
@@ -1951,9 +1978,9 @@
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-    // =====================================================
-    // CONFIG
-    // =====================================================
+    /* =====================================================
+       CONFIG
+    ===================================================== */
 
     const SETTINGS_KEY =
       "personalCourseStudioSettings";
@@ -1967,9 +1994,9 @@
       "personalCourseStudioVoiceCloneApi";
 
 
-    // =====================================================
-    // ELEMENTS
-    // =====================================================
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
 
     const authLoading =
       document.getElementById("authLoading");
@@ -2037,10 +2064,6 @@
 
     const studentCount =
       document.getElementById("studentCount");
-
-
-    const topLogo =
-      document.getElementById("topLogo");
 
 
     const studioNameTop =
@@ -2151,9 +2174,9 @@
       document.getElementById("toast");
 
 
-    // =====================================================
-    // DEFAULT SETTINGS
-    // =====================================================
+    /* =====================================================
+       DEFAULT SETTINGS
+    ===================================================== */
 
     const defaultSettings = {
 
@@ -2178,9 +2201,9 @@
     };
 
 
-    // =====================================================
-    // LOCAL SETTINGS
-    // =====================================================
+    /* =====================================================
+       LOCAL SETTINGS
+    ===================================================== */
 
     function getSettings() {
 
@@ -2219,9 +2242,9 @@
     }
 
 
-    // =====================================================
-    // APPLY SETTINGS
-    // =====================================================
+    /* =====================================================
+       APPLY SETTINGS
+    ===================================================== */
 
     function applySettings(settings) {
 
@@ -2276,9 +2299,9 @@
     }
 
 
-    // =====================================================
-    // TOAST
-    // =====================================================
+    /* =====================================================
+       TOAST
+    ===================================================== */
 
     let toastTimer = null;
 
@@ -2305,9 +2328,9 @@
     }
 
 
-    // =====================================================
-    // SYNC STATUS
-    // =====================================================
+    /* =====================================================
+       SYNC STATUS
+    ===================================================== */
 
     function setSyncStatus(
       text,
@@ -2323,9 +2346,9 @@
     }
 
 
-    // =====================================================
-    // FIREBASE AUTH GUARD
-    // =====================================================
+    /* =====================================================
+       CENTRAL MENTOR AUTH
+    ===================================================== */
 
     protectMentor()
       .then((user) => {
@@ -2342,11 +2365,14 @@
 
 
         /*
-          auth-guard.js already:
-          - verifies Firebase user
-          - verifies mentor email
-          - saves mentor session
-          - rejects Admin/unknown accounts
+          auth-guard.js handles:
+
+          1. Firebase authentication
+          2. Mentor email verification
+          3. Admin rejection
+          4. Unknown user rejection
+          5. SessionStorage
+          6. Redirect to login
         */
 
 
@@ -2374,9 +2400,9 @@
       });
 
 
-    // =====================================================
-    // LOGOUT
-    // =====================================================
+    /* =====================================================
+       LOGOUT
+    ===================================================== */
 
     logoutBtn.addEventListener(
       "click",
@@ -2394,9 +2420,9 @@
     );
 
 
-    // =====================================================
-    // LOCAL DATA
-    // =====================================================
+    /* =====================================================
+       LOCAL DATA
+    ===================================================== */
 
     function loadLocalData() {
 
@@ -2413,9 +2439,9 @@
     }
 
 
-    // =====================================================
-    // FIRESTORE STUDENTS
-    // =====================================================
+    /* =====================================================
+       FIRESTORE STUDENTS
+    ===================================================== */
 
     function listenToStudents() {
 
@@ -2435,9 +2461,9 @@
 
             const students =
               snapshot.docs.map(
-                doc => ({
-                  id: doc.id,
-                  ...doc.data()
+                studentDoc => ({
+                  id: studentDoc.id,
+                  ...studentDoc.data()
                 })
               );
 
@@ -2489,14 +2515,20 @@
 
         renderLocalStudents();
 
+
+        setSyncStatus(
+          "LOCAL MODE",
+          "local"
+        );
+
       }
 
     }
 
 
-    // =====================================================
-    // LOCAL STUDENTS
-    // =====================================================
+    /* =====================================================
+       LOCAL STUDENTS
+    ===================================================== */
 
     function renderLocalStudents() {
 
@@ -2525,9 +2557,9 @@
     }
 
 
-    // =====================================================
-    // RENDER STUDENTS
-    // =====================================================
+    /* =====================================================
+       RENDER STUDENTS
+    ===================================================== */
 
     function renderStudents(
       students
@@ -2546,6 +2578,7 @@
         `;
 
         return;
+
       }
 
 
@@ -2575,8 +2608,9 @@
 
                 <img
                   class="student-avatar"
-                  src="${avatar}"
+                  src="${escapeHtml(avatar)}"
                   alt=""
+                  loading="lazy"
                 >
 
                 <div class="student-info">
@@ -2603,9 +2637,9 @@
     }
 
 
-    // =====================================================
-    // ESCAPE HTML
-    // =====================================================
+    /* =====================================================
+       ESCAPE HTML
+    ===================================================== */
 
     function escapeHtml(value) {
 
@@ -2619,9 +2653,9 @@
     }
 
 
-    // =====================================================
-    // SETTINGS
-    // =====================================================
+    /* =====================================================
+       SETTINGS
+    ===================================================== */
 
     saveSettings.addEventListener(
       "click",
@@ -2670,9 +2704,9 @@
     );
 
 
-    // =====================================================
-    // SETTINGS BUTTON
-    // =====================================================
+    /* =====================================================
+       SETTINGS BUTTON
+    ===================================================== */
 
     settingsTopBtn.addEventListener(
       "click",
@@ -2687,9 +2721,9 @@
     );
 
 
-    // =====================================================
-    // SLIDE
-    // =====================================================
+    /* =====================================================
+       SLIDE
+    ===================================================== */
 
     slideBtn.addEventListener(
       "click",
@@ -2742,9 +2776,9 @@
     );
 
 
-    // =====================================================
-    // MAIN VIDEO
-    // =====================================================
+    /* =====================================================
+       MAIN VIDEO
+    ===================================================== */
 
     videoBtn.addEventListener(
       "click",
@@ -2797,9 +2831,9 @@
     );
 
 
-    // =====================================================
-    // CLEAR
-    // =====================================================
+    /* =====================================================
+       CLEAR
+    ===================================================== */
 
     clearBtn.addEventListener(
       "click",
@@ -2809,20 +2843,29 @@
           "src"
         );
 
+
         mainVideo.pause();
+
 
         mainVideo.removeAttribute(
           "src"
         );
 
+
+        mainVideo.load();
+
+
         mainImage.style.display =
           "none";
+
 
         mainVideo.style.display =
           "none";
 
+
         stagePlaceholder.style.display =
           "block";
+
 
         stage.classList.add(
           "empty"
@@ -2837,13 +2880,13 @@
     );
 
 
-    // =====================================================
-    // PLAY / PAUSE
-    // =====================================================
+    /* =====================================================
+       PLAY / PAUSE
+    ===================================================== */
 
     playBtn.addEventListener(
       "click",
-      () => {
+      async () => {
 
         if (
           mainVideo.style.display !==
@@ -2851,17 +2894,29 @@
           mainVideo.src
         ) {
 
-          if (mainVideo.paused) {
+          try {
 
-            mainVideo.play();
+            if (mainVideo.paused) {
 
-          } else {
+              await mainVideo.play();
 
-            mainVideo.pause();
+            } else {
+
+              mainVideo.pause();
+
+            }
+
+          } catch (error) {
+
+            console.error(
+              "Video playback:",
+              error
+            );
 
           }
 
           return;
+
         }
 
 
@@ -2901,9 +2956,23 @@
     );
 
 
-    // =====================================================
-    // CAMERA
-    // =====================================================
+    mainVideo.addEventListener(
+      "ended",
+      () => {
+
+        playIcon.textContent =
+          "▶";
+
+        playLabel.textContent =
+          "Play";
+
+      }
+    );
+
+
+    /* =====================================================
+       CAMERA
+    ===================================================== */
 
     let cameraStream = null;
 
@@ -2915,6 +2984,20 @@
         if (cameraStream) {
 
           stopCamera();
+
+          return;
+
+        }
+
+
+        if (
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getUserMedia
+        ) {
+
+          showToast(
+            "এই browser-এ camera support নেই।"
+          );
 
           return;
 
@@ -2996,9 +3079,9 @@
     }
 
 
-    // =====================================================
-    // FULLSCREEN
-    // =====================================================
+    /* =====================================================
+       FULLSCREEN
+    ===================================================== */
 
     fullscreenBtn.addEventListener(
       "click",
@@ -3025,15 +3108,20 @@
             error
           );
 
+
+          showToast(
+            "Fullscreen চালু করা যায়নি।"
+          );
+
         }
 
       }
     );
 
 
-    // =====================================================
-    // SCREEN RECORDING
-    // =====================================================
+    /* =====================================================
+       SCREEN RECORDING
+    ===================================================== */
 
     let recorder = null;
 
@@ -3053,6 +3141,20 @@
         }
 
 
+        if (
+          !navigator.mediaDevices ||
+          !navigator.mediaDevices.getDisplayMedia
+        ) {
+
+          showToast(
+            "এই browser-এ screen recording support নেই।"
+          );
+
+          return;
+
+        }
+
+
         try {
 
           const displayStream =
@@ -3065,14 +3167,32 @@
           recordedChunks = [];
 
 
+          let mimeType =
+            "video/webm";
+
+
+          if (
+            !MediaRecorder.isTypeSupported(
+              "video/webm"
+            )
+          ) {
+
+            mimeType = "";
+
+          }
+
+
           recorder =
-            new MediaRecorder(
-              displayStream,
-              {
-                mimeType:
-                  "video/webm"
-              }
-            );
+            mimeType
+              ? new MediaRecorder(
+                  displayStream,
+                  {
+                    mimeType
+                  }
+                )
+              : new MediaRecorder(
+                  displayStream
+                );
 
 
           recorder.ondataavailable =
@@ -3120,15 +3240,29 @@
               link.href =
                 url;
 
+
               link.download =
                 `mentor-class-${Date.now()}.webm`;
+
+
+              document.body.appendChild(
+                link
+              );
 
 
               link.click();
 
 
-              URL.revokeObjectURL(
-                url
+              link.remove();
+
+
+              setTimeout(
+                () => {
+                  URL.revokeObjectURL(
+                    url
+                  );
+                },
+                1000
               );
 
 
@@ -3141,6 +3275,7 @@
 
               recorder = null;
 
+
               recordBtn.classList.remove(
                 "active"
               );
@@ -3152,6 +3287,21 @@
 
               showToast(
                 "Recording saved."
+              );
+
+            };
+
+
+          recorder.onerror =
+            error => {
+
+              console.error(
+                "MediaRecorder error:",
+                error
+              );
+
+              showToast(
+                "Recording error হয়েছে।"
               );
 
             };
@@ -3174,9 +3324,14 @@
           );
 
 
-          displayStream
-            .getVideoTracks()[0]
-            .addEventListener(
+          const videoTrack =
+            displayStream
+              .getVideoTracks()[0];
+
+
+          if (videoTrack) {
+
+            videoTrack.addEventListener(
               "ended",
               () => {
 
@@ -3193,6 +3348,8 @@
               }
             );
 
+          }
+
         } catch (error) {
 
           console.error(
@@ -3205,6 +3362,7 @@
             "Screen recording শুরু করা যায়নি।"
           );
 
+
           recorder = null;
 
         }
@@ -3213,9 +3371,9 @@
     );
 
 
-    // =====================================================
-    // DRAGGABLE ELEMENTS
-    // =====================================================
+    /* =====================================================
+       DRAGGABLE ELEMENTS
+    ===================================================== */
 
     function makeDraggable(
       element,
@@ -3240,11 +3398,14 @@
               "button, video, input"
             )
           ) {
+
             return;
+
           }
 
 
           dragging = true;
+
 
           element.setPointerCapture(
             event.pointerId
@@ -3279,14 +3440,20 @@
           element.style.left =
             `${startLeft}px`;
 
+
           element.style.top =
             `${startTop}px`;
+
 
           element.style.right =
             "auto";
 
+
           element.style.bottom =
             "auto";
+
+
+          event.preventDefault();
 
         }
       );
@@ -3322,13 +3489,19 @@
 
 
           const maxLeft =
-            containerRect.width -
-            element.offsetWidth;
+            Math.max(
+              0,
+              containerRect.width -
+              element.offsetWidth
+            );
 
 
           const maxTop =
-            containerRect.height -
-            element.offsetHeight;
+            Math.max(
+              0,
+              containerRect.height -
+              element.offsetHeight
+            );
 
 
           left =
@@ -3354,6 +3527,7 @@
           element.style.left =
             `${left}px`;
 
+
           element.style.top =
             `${top}px`;
 
@@ -3367,6 +3541,7 @@
 
           dragging = false;
 
+
           try {
 
             element.releasePointerCapture(
@@ -3374,6 +3549,16 @@
             );
 
           } catch {}
+
+        }
+      );
+
+
+      element.addEventListener(
+        "pointercancel",
+        () => {
+
+          dragging = false;
 
         }
       );
@@ -3393,11 +3578,13 @@
     );
 
 
-    // =====================================================
-    // VOICE SAMPLE PREVIEW
-    // =====================================================
+    /* =====================================================
+       VOICE SAMPLE PREVIEW
+    ===================================================== */
 
     let voiceAudio = null;
+
+    let voiceObjectUrl = null;
 
 
     voicePreviewBtn.addEventListener(
@@ -3426,27 +3613,54 @@
         }
 
 
-        voiceAudio =
-          new Audio(
-            URL.createObjectURL(
-              file
-            )
+        if (voiceObjectUrl) {
+
+          URL.revokeObjectURL(
+            voiceObjectUrl
+          );
+
+        }
+
+
+        voiceObjectUrl =
+          URL.createObjectURL(
+            file
           );
 
 
-        voiceAudio.play();
+        voiceAudio =
+          new Audio(
+            voiceObjectUrl
+          );
 
 
-        voiceStatus.textContent =
-          "Voice sample playing...";
+        voiceAudio.play()
+          .then(() => {
+
+            voiceStatus.textContent =
+              "Voice sample playing...";
+
+          })
+          .catch(error => {
+
+            console.error(
+              "Voice preview:",
+              error
+            );
+
+
+            voiceStatus.textContent =
+              "Voice sample play করা যায়নি.";
+
+          });
 
       }
     );
 
 
-    // =====================================================
-    // VOICE CLONE
-    // =====================================================
+    /* =====================================================
+       VOICE CLONE
+    ===================================================== */
 
     cloneVoiceBtn.addEventListener(
       "click",
@@ -3575,6 +3789,11 @@
               result.audioUrl
             ) {
 
+              if (voiceAudio) {
+                voiceAudio.pause();
+              }
+
+
               voiceAudio =
                 new Audio(
                   result.audioUrl
@@ -3585,7 +3804,15 @@
                 "Cloned voice generated successfully.";
 
 
-              voiceAudio.play();
+              voiceAudio.play()
+                .catch(error => {
+
+                  console.error(
+                    "Cloned audio playback:",
+                    error
+                  );
+
+                });
 
 
             } else if (
@@ -3595,14 +3822,22 @@
               mainVideo.src =
                 result.videoUrl;
 
+
               mainVideo.style.display =
                 "block";
+
 
               mainImage.style.display =
                 "none";
 
+
               stagePlaceholder.style.display =
                 "none";
+
+
+              stage.classList.remove(
+                "empty"
+              );
 
 
               voiceStatus.textContent =
@@ -3627,6 +3862,11 @@
               );
 
 
+            if (voiceAudio) {
+              voiceAudio.pause();
+            }
+
+
             voiceAudio =
               new Audio(url);
 
@@ -3635,7 +3875,15 @@
               "Cloned voice generated successfully.";
 
 
-            voiceAudio.play();
+            voiceAudio.play()
+              .catch(error => {
+
+                console.error(
+                  "Generated audio playback:",
+                  error
+                );
+
+              });
 
           }
 
@@ -3655,6 +3903,7 @@
           cloneVoiceBtn.disabled =
             false;
 
+
           cloneVoiceBtn.textContent =
             "Clone Voice";
 
@@ -3664,9 +3913,9 @@
     );
 
 
-    // =====================================================
-    // INITIALIZE
-    // =====================================================
+    /* =====================================================
+       INITIALIZE
+    ===================================================== */
 
     function initializeStudio() {
 
@@ -3684,9 +3933,9 @@
     }
 
 
-    // =====================================================
-    // SERVICE WORKER
-    // =====================================================
+    /* =====================================================
+       SERVICE WORKER
+    ===================================================== */
 
     function registerServiceWorker() {
 
@@ -3712,9 +3961,9 @@
     }
 
 
-    // =====================================================
-    // CLEANUP
-    // =====================================================
+    /* =====================================================
+       CLEANUP
+    ===================================================== */
 
     window.addEventListener(
       "beforeunload",
@@ -3727,6 +3976,22 @@
             .forEach(
               track => track.stop()
             );
+
+        }
+
+
+        if (voiceAudio) {
+
+          voiceAudio.pause();
+
+        }
+
+
+        if (voiceObjectUrl) {
+
+          URL.revokeObjectURL(
+            voiceObjectUrl
+          );
 
         }
 
