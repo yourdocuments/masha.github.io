@@ -1,24 +1,16 @@
 /* =========================================================
    PERSONAL COURSE STUDIO
-   FIREBASE AUTH GUARD
-   =========================================================
+   FIREBASE AUTH GUARD — FIXED VERSION
 
    Admin:
    admin@snkitinstitute.com
 
    Mentor:
    mentor@snkitinstitute.com
-
-   Protects:
-   /admin/
-   /mentor/
-
-   Firebase Auth + Firestore Role Check
    ========================================================= */
 
 import {
-  auth,
-  db
+  auth
 } from "./firebase.js";
 
 import {
@@ -26,17 +18,10 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
 
 /* =========================================================
-   CONFIG
+   AUTHORIZED ACCOUNTS
    ========================================================= */
-
-const LOGIN_PATH = "../login/";
 
 const ADMIN_EMAIL =
   "admin@snkitinstitute.com";
@@ -46,116 +31,30 @@ const MENTOR_EMAIL =
 
 
 /* =========================================================
-   NORMALIZE EMAIL
+   HELPERS
    ========================================================= */
 
 function normalizeEmail(email) {
-
   return String(email || "")
     .trim()
     .toLowerCase();
-
 }
 
 
-/* =========================================================
-   GET ROLE FROM FIRESTORE
-   ========================================================= */
-
-async function getFirestoreRole(user) {
-
-  if (!user || !user.uid) {
-    return null;
-  }
-
-  try {
-
-    const userRef =
-      doc(
-        db,
-        "users",
-        user.uid
-      );
-
-    const userSnap =
-      await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-
-      console.warn(
-        "No role document found for:",
-        user.uid
-      );
-
-      return null;
-    }
-
-    const data =
-      userSnap.data();
-
-    const role =
-      String(
-        data.role || ""
-      )
-        .trim()
-        .toLowerCase();
-
-    if (
-      role === "admin" ||
-      role === "mentor"
-    ) {
-
-      return role;
-    }
-
-    return null;
-
-  } catch (error) {
-
-    console.error(
-      "Firestore role check failed:",
-      error
-    );
-
-    return null;
-  }
-}
-
-
-/* =========================================================
-   EMAIL FALLBACK
-   =========================================================
-
-   This is only a fallback during migration.
-
-   Main role source:
-   Firestore users/{uid}.role
-   ========================================================= */
-
-function getEmailRole(user) {
+function getRoleFromUser(user) {
 
   if (!user || !user.email) {
     return null;
   }
 
   const email =
-    normalizeEmail(
-      user.email
-    );
+    normalizeEmail(user.email);
 
-  if (
-    email ===
-    ADMIN_EMAIL
-  ) {
-
+  if (email === ADMIN_EMAIL) {
     return "admin";
   }
 
-  if (
-    email ===
-    MENTOR_EMAIL
-  ) {
-
+  if (email === MENTOR_EMAIL) {
     return "mentor";
   }
 
@@ -164,13 +63,10 @@ function getEmailRole(user) {
 
 
 /* =========================================================
-   SAVE SESSION
+   SESSION
    ========================================================= */
 
-function saveSession(
-  role,
-  user
-) {
+function saveSession(role, user) {
 
   sessionStorage.setItem(
     "personalCourseStudioRole",
@@ -188,10 +84,6 @@ function saveSession(
   );
 
 
-  /* -------------------------------------------------------
-     ADMIN
-     ------------------------------------------------------- */
-
   if (role === "admin") {
 
     sessionStorage.setItem(
@@ -202,14 +94,8 @@ function saveSession(
     sessionStorage.removeItem(
       "personalCourseStudioMentorLoggedIn"
     );
-  }
 
-
-  /* -------------------------------------------------------
-     MENTOR
-     ------------------------------------------------------- */
-
-  if (role === "mentor") {
+  } else if (role === "mentor") {
 
     sessionStorage.setItem(
       "personalCourseStudioMentorLoggedIn",
@@ -222,10 +108,6 @@ function saveSession(
   }
 }
 
-
-/* =========================================================
-   CLEAR SESSION
-   ========================================================= */
 
 function clearSession() {
 
@@ -252,7 +134,7 @@ function clearSession() {
 
 
 /* =========================================================
-   REDIRECT TO LOGIN
+   LOGIN REDIRECT
    ========================================================= */
 
 function redirectToLogin() {
@@ -260,256 +142,208 @@ function redirectToLogin() {
   clearSession();
 
   window.location.replace(
-    LOGIN_PATH
+    "../login/"
   );
 }
 
 
 /* =========================================================
-   CHECK USER
+   WAIT FOR FIREBASE AUTH
    ========================================================= */
 
-async function checkUser() {
+function waitForAuth() {
 
   return new Promise((resolve) => {
 
-    onAuthStateChanged(
-      auth,
-      async (user) => {
+    let finished = false;
 
-        /* -------------------------------------------------
-           NOT LOGGED IN
-           ------------------------------------------------- */
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (user) => {
 
-        if (!user) {
-
-          redirectToLogin();
-
-          return;
-        }
-
-
-        console.log(
-          "Firebase user:",
-          user.email
-        );
-
-
-        /* -------------------------------------------------
-           FIRESTORE ROLE
-           ------------------------------------------------- */
-
-        let role =
-          await getFirestoreRole(
-            user
-          );
-
-
-        /* -------------------------------------------------
-           TEMPORARY EMAIL FALLBACK
-           ------------------------------------------------- */
-
-        if (!role) {
-
-          role =
-            getEmailRole(
-              user
-            );
-        }
-
-
-        /* -------------------------------------------------
-           UNKNOWN USER
-           ------------------------------------------------- */
-
-        if (!role) {
-
-          console.warn(
-            "Unauthorized Firebase account:",
-            user.email
-          );
-
-          try {
-
-            await signOut(
-              auth
-            );
-
-          } catch (error) {
-
-            console.error(
-              "Sign out error:",
-              error
-            );
+          if (finished) {
+            return;
           }
 
-          clearSession();
+          finished = true;
 
-          redirectToLogin();
+          unsubscribe();
 
-          return;
+          resolve(user || null);
         }
+      );
 
 
-        /* -------------------------------------------------
-           SAVE VALID SESSION
-           ------------------------------------------------- */
+    /*
+      Safety timeout.
 
-        saveSession(
-          role,
-          user
-        );
+      Firebase normally responds very quickly.
+      If something blocks auth state, we stop
+      the page from remaining stuck forever.
+    */
 
+    setTimeout(() => {
 
-        console.log(
-          "Authenticated role:",
-          role
-        );
-
-
-        resolve({
-          user,
-          role
-        });
-
+      if (finished) {
+        return;
       }
+
+      finished = true;
+
+      unsubscribe();
+
+      resolve(
+        auth.currentUser || null
+      );
+
+    }, 10000);
+
+  });
+}
+
+
+/* =========================================================
+   ADMIN PROTECTION
+   ========================================================= */
+
+export async function protectAdmin() {
+
+  const user =
+    await waitForAuth();
+
+
+  /* No Firebase user */
+
+  if (!user) {
+
+    redirectToLogin();
+
+    throw new Error(
+      "Authentication required."
+    );
+  }
+
+
+  /* Check authorized role */
+
+  const role =
+    getRoleFromUser(user);
+
+
+  if (role !== "admin") {
+
+    console.warn(
+      "Unauthorized Admin access:",
+      user.email
     );
 
-  });
+
+    clearSession();
+
+
+    try {
+
+      await signOut(auth);
+
+    } catch (error) {
+
+      console.error(
+        "Firebase sign out error:",
+        error
+      );
+    }
+
+
+    redirectToLogin();
+
+    throw new Error(
+      "Admin authorization required."
+    );
+  }
+
+
+  /* Save valid session */
+
+  saveSession(
+    "admin",
+    user
+  );
+
+
+  return user;
 }
 
 
 /* =========================================================
-   PROTECT ADMIN
+   MENTOR PROTECTION
    ========================================================= */
 
-export function protectAdmin() {
+export async function protectMentor() {
 
-  return new Promise((resolve) => {
-
-    checkUser()
-      .then(
-        ({
-          user,
-          role
-        }) => {
-
-          if (
-            role !== "admin"
-          ) {
-
-            console.warn(
-              "Admin access denied:",
-              user.email
-            );
-
-            clearSession();
-
-            signOut(
-              auth
-            ).finally(() => {
-
-              redirectToLogin();
-
-            });
-
-            return;
-          }
+  const user =
+    await waitForAuth();
 
 
-          console.log(
-            "Admin access granted:",
-            user.email
-          );
+  /* No Firebase user */
+
+  if (!user) {
+
+    redirectToLogin();
+
+    throw new Error(
+      "Authentication required."
+    );
+  }
 
 
-          resolve(
-            user
-          );
+  /* Check authorized role */
 
-        }
-      )
-      .catch(
-        (error) => {
+  const role =
+    getRoleFromUser(user);
 
-          console.error(
-            "Admin authentication error:",
-            error
-          );
 
-          redirectToLogin();
+  if (role !== "mentor") {
 
-        }
+    console.warn(
+      "Unauthorized Mentor access:",
+      user.email
+    );
+
+
+    clearSession();
+
+
+    try {
+
+      await signOut(auth);
+
+    } catch (error) {
+
+      console.error(
+        "Firebase sign out error:",
+        error
       );
-
-  });
-}
+    }
 
 
-/* =========================================================
-   PROTECT MENTOR
-   ========================================================= */
+    redirectToLogin();
 
-export function protectMentor() {
-
-  return new Promise((resolve) => {
-
-    checkUser()
-      .then(
-        ({
-          user,
-          role
-        }) => {
-
-          if (
-            role !== "mentor"
-          ) {
-
-            console.warn(
-              "Mentor access denied:",
-              user.email
-            );
-
-            clearSession();
-
-            signOut(
-              auth
-            ).finally(() => {
-
-              redirectToLogin();
-
-            });
-
-            return;
-          }
+    throw new Error(
+      "Mentor authorization required."
+    );
+  }
 
 
-          console.log(
-            "Mentor access granted:",
-            user.email
-          );
+  /* Save valid session */
+
+  saveSession(
+    "mentor",
+    user
+  );
 
 
-          resolve(
-            user
-          );
-
-        }
-      )
-      .catch(
-        (error) => {
-
-          console.error(
-            "Mentor authentication error:",
-            error
-          );
-
-          redirectToLogin();
-
-        }
-      );
-
-  });
+  return user;
 }
 
 
@@ -521,9 +355,7 @@ export async function logoutStudio() {
 
   try {
 
-    await signOut(
-      auth
-    );
+    await signOut(auth);
 
   } catch (error) {
 
@@ -531,7 +363,6 @@ export async function logoutStudio() {
       "Firebase logout error:",
       error
     );
-
   }
 
 
@@ -539,58 +370,22 @@ export async function logoutStudio() {
 
 
   window.location.replace(
-    LOGIN_PATH
+    "../login/"
   );
 }
 
 
 /* =========================================================
-   GET CURRENT ROLE
+   PUBLIC HELPERS
    ========================================================= */
 
-export async function getCurrentRole() {
+export function getCurrentRole(user) {
 
-  const user =
-    auth.currentUser;
-
-  if (!user) {
-    return null;
-  }
-
-  let role =
-    await getFirestoreRole(
-      user
-    );
-
-  if (!role) {
-
-    role =
-      getEmailRole(
-        user
-      );
-  }
-
-  return role;
+  return getRoleFromUser(user);
 }
 
-
-/* =========================================================
-   GET CURRENT USER
-   ========================================================= */
 
 export function getCurrentUser() {
 
   return auth.currentUser;
-
 }
-
-
-/* =========================================================
-   EXPORT HELPERS
-   ========================================================= */
-
-export {
-  getFirestoreRole,
-  getEmailRole,
-  clearSession
-};
