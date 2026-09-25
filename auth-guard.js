@@ -1,17 +1,32 @@
 /* =========================================================
    PERSONAL COURSE STUDIO
    FIREBASE AUTH GUARD
+   =========================================================
 
-   Single personal account — used for BOTH
-   Mentor and Admin access.
+   ADMIN
+   sakhijahanusha@gmail.com
 
-   Authorized account:
-   thesnkgraphic@gmail.com
+   MENTOR
+   thesnkgraphic@email.com
+
+   ---------------------------------------------------------
+   IMPORTANT
+   ---------------------------------------------------------
+   Firebase Authentication handles login.
+
+   This file only checks whether the logged-in Firebase
+   account is authorized for the selected area.
+   ========================================================= */
+
+
+/* =========================================================
+   FIREBASE AUTH
    ========================================================= */
 
 import {
   auth
 } from "./firebase.js";
+
 
 import {
   onAuthStateChanged,
@@ -20,11 +35,39 @@ import {
 
 
 /* =========================================================
-   AUTHORIZED ACCOUNT
+   ROLE EMAIL CONFIGURATION
    ========================================================= */
 
-const AUTHORIZED_EMAIL =
-  "thesnkgraphic@gmail.com";
+const ADMIN_EMAIL =
+  "sakhijahanusha@gmail.com";
+
+
+const MENTOR_EMAIL =
+  "thesnkgraphic@email.com";
+
+
+/* =========================================================
+   SESSION KEYS
+   ========================================================= */
+
+const SESSION_KEYS = {
+
+  role:
+    "personalCourseStudioRole",
+
+  username:
+    "personalCourseStudioUsername",
+
+  uid:
+    "personalCourseStudioUid",
+
+  adminLoggedIn:
+    "personalCourseStudioAdminLoggedIn",
+
+  mentorLoggedIn:
+    "personalCourseStudioMentorLoggedIn"
+
+};
 
 
 /* =========================================================
@@ -41,18 +84,89 @@ function normalizeEmail(email) {
 
 
 /* =========================================================
-   IS AUTHORIZED
+   GET ROLE FROM EMAIL
    ========================================================= */
 
-function isAuthorized(user) {
+function getRoleFromEmail(email) {
+
+  const normalizedEmail =
+    normalizeEmail(email);
+
+
+  /* -------------------------------------------------------
+     ADMIN
+     ------------------------------------------------------- */
+
+  if (
+    normalizedEmail ===
+    ADMIN_EMAIL
+  ) {
+
+    return "admin";
+
+  }
+
+
+  /* -------------------------------------------------------
+     MENTOR
+     ------------------------------------------------------- */
+
+  if (
+    normalizedEmail ===
+    MENTOR_EMAIL
+  ) {
+
+    return "mentor";
+
+  }
+
+
+  /* -------------------------------------------------------
+     UNKNOWN
+     ------------------------------------------------------- */
+
+  return null;
+
+}
+
+
+/* =========================================================
+   CHECK ADMIN
+   ========================================================= */
+
+function isAdminUser(user) {
 
   if (!user) {
+
     return false;
+
   }
+
 
   return (
     normalizeEmail(user.email) ===
-    AUTHORIZED_EMAIL
+    ADMIN_EMAIL
+  );
+
+}
+
+
+/* =========================================================
+   CHECK MENTOR
+   ========================================================= */
+
+function isMentorUser(user) {
+
+  if (!user) {
+
+    return false;
+
+  }
+
+
+  return (
+    normalizeEmail(user.email) ===
+    MENTOR_EMAIL
   );
 
 }
@@ -62,58 +176,77 @@ function isAuthorized(user) {
    SAVE SESSION
    ========================================================= */
 
-function saveSession(
+function saveStudioSession(
   role,
   user
 ) {
 
+  if (!user) {
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------------
+     COMMON SESSION
+     ------------------------------------------------------- */
+
   sessionStorage.setItem(
-    "personalCourseStudioRole",
+    SESSION_KEYS.role,
     role
   );
 
 
   sessionStorage.setItem(
-    "personalCourseStudioUsername",
-    role
+    SESSION_KEYS.username,
+    user.email || ""
   );
 
 
   sessionStorage.setItem(
-    "personalCourseStudioUid",
-    user.uid
+    SESSION_KEYS.uid,
+    user.uid || ""
   );
 
+
+  /* -------------------------------------------------------
+     ADMIN SESSION
+     ------------------------------------------------------- */
 
   if (
     role === "admin"
   ) {
 
     sessionStorage.setItem(
-      "personalCourseStudioAdminLoggedIn",
+      SESSION_KEYS.adminLoggedIn,
       "true"
     );
 
 
     sessionStorage.removeItem(
-      "personalCourseStudioMentorLoggedIn"
+      SESSION_KEYS.mentorLoggedIn
     );
 
   }
 
+
+  /* -------------------------------------------------------
+     MENTOR SESSION
+     ------------------------------------------------------- */
 
   if (
     role === "mentor"
   ) {
 
     sessionStorage.setItem(
-      "personalCourseStudioMentorLoggedIn",
+      SESSION_KEYS.mentorLoggedIn,
       "true"
     );
 
 
     sessionStorage.removeItem(
-      "personalCourseStudioAdminLoggedIn"
+      SESSION_KEYS.adminLoggedIn
     );
 
   }
@@ -125,42 +258,42 @@ function saveSession(
    CLEAR SESSION
    ========================================================= */
 
-function clearSession() {
+function clearStudioSession() {
 
   sessionStorage.removeItem(
-    "personalCourseStudioRole"
+    SESSION_KEYS.role
   );
 
 
   sessionStorage.removeItem(
-    "personalCourseStudioUsername"
+    SESSION_KEYS.username
   );
 
 
   sessionStorage.removeItem(
-    "personalCourseStudioUid"
+    SESSION_KEYS.uid
   );
 
 
   sessionStorage.removeItem(
-    "personalCourseStudioAdminLoggedIn"
+    SESSION_KEYS.adminLoggedIn
   );
 
 
   sessionStorage.removeItem(
-    "personalCourseStudioMentorLoggedIn"
+    SESSION_KEYS.mentorLoggedIn
   );
 
 }
 
 
 /* =========================================================
-   REDIRECT LOGIN
+   REDIRECT TO LOGIN
    ========================================================= */
 
 function redirectToLogin() {
 
-  clearSession();
+  clearStudioSession();
 
 
   window.location.replace(
@@ -171,33 +304,28 @@ function redirectToLogin() {
 
 
 /* =========================================================
-   GET CURRENT AUTH USER
+   GET CURRENT FIREBASE USER
    ========================================================= */
 
-function getExistingUser() {
+function getCurrentUser() {
 
   try {
 
-    if (
-      auth &&
-      auth.currentUser
-    ) {
+    return auth.currentUser || null;
 
-      return auth.currentUser;
+  }
 
-    }
-
-  } catch (error) {
+  catch (error) {
 
     console.error(
       "Firebase currentUser error:",
       error
     );
 
+
+    return null;
+
   }
-
-
-  return null;
 
 }
 
@@ -206,17 +334,17 @@ function getExistingUser() {
    WAIT FOR FIREBASE AUTH
    ========================================================= */
 
-function waitForAuth() {
+function waitForFirebaseUser() {
 
   return new Promise(
     (resolve) => {
 
-      /* ---------------------------------------------
+      /* ---------------------------------------------------
          FIRST CHECK
-         --------------------------------------------- */
+         --------------------------------------------------- */
 
       const existingUser =
-        getExistingUser();
+        getCurrentUser();
 
 
       if (existingUser) {
@@ -230,28 +358,38 @@ function waitForAuth() {
       }
 
 
-      /* ---------------------------------------------
+      /* ---------------------------------------------------
          LISTENER
-         --------------------------------------------- */
+         --------------------------------------------------- */
 
-      let finished = false;
-
-      let unsubscribe = null;
-
-      let timeoutId = null;
+      let finished =
+        false;
 
 
-      const finish = (
-        user
-      ) => {
+      let unsubscribe =
+        null;
+
+
+      let timeoutId =
+        null;
+
+
+      function finish(user) {
 
         if (finished) {
+
           return;
+
         }
 
 
-        finished = true;
+        finished =
+          true;
 
+
+        /* -----------------------------------------------
+           CLEAR TIMEOUT
+           ----------------------------------------------- */
 
         if (timeoutId) {
 
@@ -262,6 +400,10 @@ function waitForAuth() {
         }
 
 
+        /* -----------------------------------------------
+           REMOVE LISTENER
+           ----------------------------------------------- */
+
         if (
           typeof unsubscribe ===
           "function"
@@ -271,7 +413,16 @@ function waitForAuth() {
 
             unsubscribe();
 
-          } catch {}
+          }
+
+          catch (error) {
+
+            console.warn(
+              "Firebase unsubscribe error:",
+              error
+            );
+
+          }
 
         }
 
@@ -280,14 +431,19 @@ function waitForAuth() {
           user || null
         );
 
-      };
+      }
 
+
+      /* ---------------------------------------------------
+         AUTH LISTENER
+         --------------------------------------------------- */
 
       try {
 
         unsubscribe =
           onAuthStateChanged(
             auth,
+
             (user) => {
 
               finish(
@@ -295,21 +451,26 @@ function waitForAuth() {
               );
 
             },
+
             (error) => {
 
               console.error(
-                "onAuthStateChanged error:",
+                "Firebase auth state error:",
                 error
               );
 
+
               finish(
-                getExistingUser()
+                getCurrentUser()
               );
 
             }
+
           );
 
-      } catch (error) {
+      }
+
+      catch (error) {
 
         console.error(
           "Firebase auth listener error:",
@@ -318,7 +479,7 @@ function waitForAuth() {
 
 
         finish(
-          getExistingUser()
+          getCurrentUser()
         );
 
 
@@ -327,9 +488,9 @@ function waitForAuth() {
       }
 
 
-      /* ---------------------------------------------
+      /* ---------------------------------------------------
          SAFETY TIMEOUT
-         --------------------------------------------- */
+         --------------------------------------------------- */
 
       timeoutId =
         setTimeout(
@@ -341,11 +502,13 @@ function waitForAuth() {
 
 
             finish(
-              getExistingUser()
+              getCurrentUser()
             );
 
           },
+
           8000
+
         );
 
     }
@@ -360,32 +523,64 @@ function waitForAuth() {
 
 export async function protectAdmin() {
 
-  const user =
-    await waitForAuth();
+  console.log(
+    "Checking Admin authentication..."
+  );
 
+
+  const user =
+    await waitForFirebaseUser();
+
+
+  /* -------------------------------------------------------
+     NO USER
+     ------------------------------------------------------- */
 
   if (!user) {
 
+    console.warn(
+      "No Firebase user found for Admin."
+    );
+
+
     redirectToLogin();
 
+
     throw new Error(
-      "Authentication required."
+      "Admin authentication required."
     );
 
   }
 
 
-  if (
-    !isAuthorized(user)
-  ) {
+  /* -------------------------------------------------------
+     CHECK ADMIN EMAIL
+     ------------------------------------------------------- */
 
-    console.warn(
-      "Unauthorized Admin access:",
+  const email =
+    normalizeEmail(
       user.email
     );
 
 
-    clearSession();
+  console.log(
+    "Admin authentication check:",
+    email
+  );
+
+
+  if (
+    email !==
+    ADMIN_EMAIL
+  ) {
+
+    console.warn(
+      "Unauthorized Admin account:",
+      email
+    );
+
+
+    clearStudioSession();
 
 
     try {
@@ -394,10 +589,12 @@ export async function protectAdmin() {
         auth
       );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
-        "Firebase sign out error:",
+        "Firebase Admin sign-out error:",
         error
       );
 
@@ -408,15 +605,25 @@ export async function protectAdmin() {
 
 
     throw new Error(
-      "Admin authorization required."
+      "Unauthorized Admin account."
     );
 
   }
 
 
-  saveSession(
+  /* -------------------------------------------------------
+     SAVE ADMIN SESSION
+     ------------------------------------------------------- */
+
+  saveStudioSession(
     "admin",
     user
+  );
+
+
+  console.log(
+    "Admin authenticated successfully:",
+    email
   );
 
 
@@ -431,9 +638,18 @@ export async function protectAdmin() {
 
 export async function protectMentor() {
 
-  const user =
-    await waitForAuth();
+  console.log(
+    "Checking Mentor authentication..."
+  );
 
+
+  const user =
+    await waitForFirebaseUser();
+
+
+  /* -------------------------------------------------------
+     NO USER
+     ------------------------------------------------------- */
 
   if (!user) {
 
@@ -452,17 +668,34 @@ export async function protectMentor() {
   }
 
 
-  if (
-    !isAuthorized(user)
-  ) {
+  /* -------------------------------------------------------
+     CHECK MENTOR EMAIL
+     ------------------------------------------------------- */
 
-    console.warn(
-      "Unauthorized Mentor access:",
+  const email =
+    normalizeEmail(
       user.email
     );
 
 
-    clearSession();
+  console.log(
+    "Mentor authentication check:",
+    email
+  );
+
+
+  if (
+    email !==
+    MENTOR_EMAIL
+  ) {
+
+    console.warn(
+      "Unauthorized Mentor account:",
+      email
+    );
+
+
+    clearStudioSession();
 
 
     try {
@@ -471,10 +704,12 @@ export async function protectMentor() {
         auth
       );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
-        "Firebase sign out error:",
+        "Firebase Mentor sign-out error:",
         error
       );
 
@@ -485,15 +720,25 @@ export async function protectMentor() {
 
 
     throw new Error(
-      "Mentor authorization required."
+      "Unauthorized Mentor account."
     );
 
   }
 
 
-  saveSession(
+  /* -------------------------------------------------------
+     SAVE MENTOR SESSION
+     ------------------------------------------------------- */
+
+  saveStudioSession(
     "mentor",
     user
+  );
+
+
+  console.log(
+    "Mentor authenticated successfully:",
+    email
   );
 
 
@@ -508,13 +753,20 @@ export async function protectMentor() {
 
 export async function logoutStudio() {
 
+  console.log(
+    "Logging out from Personal Course Studio..."
+  );
+
+
   try {
 
     await signOut(
       auth
     );
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Firebase logout error:",
@@ -524,8 +776,16 @@ export async function logoutStudio() {
   }
 
 
-  clearSession();
+  /* -------------------------------------------------------
+     CLEAR LOCAL SESSION
+     ------------------------------------------------------- */
 
+  clearStudioSession();
+
+
+  /* -------------------------------------------------------
+     GO TO LOGIN
+     ------------------------------------------------------- */
 
   window.location.replace(
     "../login/"
@@ -535,26 +795,144 @@ export async function logoutStudio() {
 
 
 /* =========================================================
-   PUBLIC HELPERS
+   GET CURRENT ROLE
    ========================================================= */
 
-export function getCurrentRole(
-  user
-) {
+export function getCurrentRole() {
 
-  return isAuthorized(user)
-    ? (
-        sessionStorage.getItem(
-          "personalCourseStudioRole"
-        ) || "mentor"
-      )
-    : null;
+  const user =
+    getCurrentUser();
+
+
+  if (!user) {
+
+    return null;
+
+  }
+
+
+  return getRoleFromEmail(
+    user.email
+  );
+
+}
+
+
+/* =========================================================
+   GET CURRENT USERNAME / EMAIL
+   ========================================================= */
+
+export function getCurrentUsername() {
+
+  const user =
+    getCurrentUser();
+
+
+  if (!user) {
+
+    return "";
+
+  }
+
+
+  return user.email || "";
 
 }
 
 
-export function getCurrentUser() {
+/* =========================================================
+   GET CURRENT UID
+   ========================================================= */
 
-  return getExistingUser();
+export function getCurrentUid() {
+
+  const user =
+    getCurrentUser();
+
+
+  if (!user) {
+
+    return "";
+
+  }
+
+
+  return user.uid || "";
 
 }
+
+
+/* =========================================================
+   IS CURRENT USER ADMIN
+   ========================================================= */
+
+export function isAdmin() {
+
+  const user =
+    getCurrentUser();
+
+
+  return isAdminUser(
+    user
+  );
+
+}
+
+
+/* =========================================================
+   IS CURRENT USER MENTOR
+   ========================================================= */
+
+export function isMentor() {
+
+  const user =
+    getCurrentUser();
+
+
+  return isMentorUser(
+    user
+  );
+
+}
+
+
+/* =========================================================
+   SAVE SESSION — PUBLIC
+   ========================================================= */
+
+export {
+  saveStudioSession
+};
+
+
+/* =========================================================
+   CLEAR SESSION — PUBLIC
+   ========================================================= */
+
+export {
+  clearStudioSession
+};
+
+
+/* =========================================================
+   ROLE HELPERS — PUBLIC
+   ========================================================= */
+
+export {
+  getRoleFromEmail
+};
+
+
+/* =========================================================
+   EMAIL CONSTANTS — PUBLIC
+   ========================================================= */
+
+export {
+  ADMIN_EMAIL,
+  MENTOR_EMAIL
+};
+
+
+/* =========================================================
+   END OF AUTH GUARD
+   ========================================================= */
