@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Sign In | SNK Business</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #050608;
+      --panel: #0d0f14;
+      --panel2: #11141b;
+      --border: rgba(255,255,255,.09);
+      --text: #f5f7fb;
+      --muted: #969daa;
+      --accent: #6d5dfc;
+      --accent2: #8b7fff;
+      --danger: #ff6478;
+      --success: #39d98a;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+
+      background:
+        radial-gradient(
+          circle at 15% 15%,
+          rgba(109,93,252,.18),
+          transparent 32%
+        ),
+        radial-gradient(
+          circle at 85% 85%,
+          rgba(0,188,212,.10),
+          transparent 30%
+        ),
+        #050608;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+    }
+
+
+    /* =====================================================
+       PAGE
+       ===================================================== */
+
+    .page {
+      width: 100%;
+      max-width: 1050px;
+    }
+
+
+    .login-box {
+      width: 100%;
+      min-height: 650px;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+
+      overflow: hidden;
+
+      border:
+        1px solid var(--border);
+
+      border-radius: 28px;
+
+      background:
+        rgba(10,11,15,.94);
+
+      box-shadow:
+        0 35px 100px rgba(0,0,0,.55);
+    }
+
+
+    /* =====================================================
+       LEFT
+       ===================================================== */
+
+    .left {
+      position: relative;
+
+      padding: 42px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      overflow: hidden;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(109,93,252,.16),
+          rgba(10,11,15,.5)
+        );
+    }
+
+
+    .left::before {
+      content: "";
+
+      position: absolute;
+
+      width: 360px;
+      height: 360px;
+
+      right: -150px;
+      bottom: -150px;
+
+      border-radius: 50%;
+
+      background:
+        rgba(109,93,252,.15);
+
+      filter: blur(80px);
+
+      pointer-events: none;
+    }
+
+
+    .home-link {
+      position: relative;
+      z-index: 5;
+
+      width: fit-content;
+
+      padding: 10px 15px;
+
+      color: #d5d8df;
+
+      text-decoration: none;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      border-radius: 12px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      font-size: 13px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition: .2s ease;
+    }
+
+
+    .home-link:hover {
+      color: #fff;
+
+      background:
+        rgba(255,255,255,.08);
+    }
+
+
+    .brand {
+      position: relative;
+      z-index: 5;
+    }
+
+
+    .logo {
+      width: 125px;
+      height: 125px;
+
+      object-fit: contain;
+
+      padding: 8px;
+
+      border-radius: 24px;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      background:
+        rgba(255,255,255,.04);
+
+      margin-bottom: 28px;
+    }
+
+
+    .eyebrow {
+      color: #aaa0ff;
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      letter-spacing: 2px;
+
+      text-transform: uppercase;
+
+      margin-bottom: 14px;
+    }
+
+
+    .left h1 {
+      font-size:
+        clamp(40px, 5vw, 65px);
+
+      line-height: .98;
+
+      letter-spacing: -3px;
+
+      margin-bottom: 22px;
+    }
+
+
+    .left h1 span {
+      color: #9c91ff;
+    }
+
+
+    .description {
+      max-width: 450px;
+
+      color: var(--muted);
+
+      font-size: 15px;
+
+      line-height: 1.8;
+    }
+
+
+    .pills {
+      position: relative;
+      z-index: 5;
+
+      display: flex;
+
+      gap: 9px;
+
+      flex-wrap: wrap;
+    }
+
+
+    .pill {
+      padding: 9px 13px;
+
+      border:
+        1px solid rgba(255,255,255,.07);
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      color: #aab0ba;
+
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+
+    /* =====================================================
+       RIGHT
+       ===================================================== */
+
+    .right {
+      padding: 45px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+    }
+
+
+    .form {
+      width: 100%;
+      max-width: 390px;
+    }
+
+
+    .title {
+      margin-bottom: 26px;
+    }
+
+
+    .title h2 {
+      font-size: 31px;
+
+      letter-spacing: -1px;
+
+      margin-bottom: 8px;
+    }
+
+
+    .title p {
+      color: var(--muted);
+
+      font-size: 13px;
+
+      line-height: 1.7;
+    }
+
+
+    /* =====================================================
+       ROLE BUTTONS
+       ===================================================== */
+
+    .roles {
+      width: 100%;
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 8px;
+
+      padding: 5px;
+
+      background:
+        #090b0f;
+
+      border:
+        1px solid rgba(255,255,255,.08);
+
+      border-radius: 15px;
+
+      margin-bottom: 24px;
+    }
+
+
+    .role {
+      appearance: none;
+      -webkit-appearance: none;
+
+      display: block;
+
+      width: 100%;
+      min-height: 50px;
+
+      border: 0;
+
+      outline: none;
+
+      border-radius: 11px;
+
+      background:
+        transparent;
+
+      color: #777e89;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      font-weight: 800;
+
+      cursor: pointer;
+
+      user-select: none;
+
+      pointer-events: auto;
+
+      position: relative;
+
+      z-index: 20;
+
+      transition:
+        background .2s ease,
+        color .2s ease;
+    }
+
+
+    .role:hover {
+      color: #fff;
+    }
+
+
+    .role.active {
+      color: #fff;
+
+      background:
+        #1a1d26;
+
+      box-shadow:
+        0 5px 20px rgba(0,0,0,.28);
+    }
+
+
+    .role:focus-visible {
+      box-shadow:
+        0 0 0 3px
+        rgba(109,93,252,.4);
+    }
+
+
+    /* =====================================================
+       FORM
+       ===================================================== */
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+
+    .field label {
+      display: block;
+
+      color: #c5cad2;
+
+      font-size: 12px;
+
+      font-weight: 800;
+
+      margin-bottom: 8px;
+    }
+
+
+    .input {
+      width: 100%;
+
+      height: 53px;
+
+      padding: 0 15px;
+
+      border:
+        1px solid rgba(255,255,255,.09);
+
+      border-radius: 14px;
+
+      outline: none;
+
+      background:
+        #090b0f;
+
+      color: #fff;
+
+      font-family: inherit;
+
+      font-size: 14px;
+    }
+
+
+    .input:focus {
+      border-color:
+        rgba(109,93,252,.75);
+
+      box-shadow:
+        0 0 0 4px
+        rgba(109,93,252,.09);
+    }
+
+
+    .input[readonly] {
+      color: #aeb4be;
+
+      cursor: default;
+    }
+
+
+    .password-box {
+      position: relative;
+
+      width: 100%;
+    }
+
+
+    .password-box .input {
+      padding-right: 55px;
+    }
+
+
+    .eye {
+      position: absolute;
+
+      right: 7px;
+      top: 50%;
+
+      transform:
+        translateY(-50%);
+
+      width: 42px;
+      height: 42px;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      background:
+        transparent;
+
+      color: #777e89;
+
+      cursor: pointer;
+
+      z-index: 20;
+
+      font-size: 16px;
+    }
+
+
+    .eye:hover {
+      color: #fff;
+    }
+
+
+    /* =====================================================
+       SUBMIT
+       ===================================================== */
+
+    .submit {
+      width: 100%;
+
+      min-height: 54px;
+
+      margin-top: 5px;
+
+      border: 0;
+
+      outline: none;
+
+      border-radius: 15px;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2)
+        );
+
+      color: #fff;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+
+      position: relative;
+
+      z-index: 20;
+
+      transition: .2s ease;
+    }
+
+
+    .submit:hover {
+      transform:
+        translateY(-2px);
+    }
+
+
+    .submit:disabled {
+      opacity: .65;
+
+      cursor: wait;
+
+      transform: none;
+    }
+
+
+    /* =====================================================
+       MESSAGE
+       ===================================================== */
+
+    .message {
+      display: none;
+
+      margin-top: 15px;
+
+      padding: 12px 14px;
+
+      border-radius: 12px;
+
+      font-size: 12px;
+
+      line-height: 1.6;
+    }
+
+
+    .message.show {
+      display: block;
+    }
+
+
+    .message.error {
+      color: #ffb1bc;
+
+      border:
+        1px solid rgba(255,100,120,.18);
+
+      background:
+        rgba(255,100,120,.07);
+    }
+
+
+    .message.success {
+      color: #a0efc2;
+
+      border:
+        1px solid rgba(57,217,138,.18);
+
+      background:
+        rgba(57,217,138,.07);
+    }
+
+
+    .security {
+      margin-top: 22px;
+
+      color: #606772;
+
+      font-size: 11px;
+
+      text-align: center;
+
+      line-height: 1.7;
+    }
+
+
+    .loading {
+      display: inline-block;
+
+      width: 15px;
+      height: 15px;
+
+      margin-right: 7px;
+
+      border:
+        2px solid rgba(255,255,255,.35);
+
+      border-top-color: #fff;
+
+      border-radius: 50%;
+
+      animation:
+        spin .7s linear infinite;
+
+      vertical-align: -3px;
+    }
+
+
+    @keyframes spin {
+
+      to {
+        transform: rotate(360deg);
+      }
+
+    }
+
+
+    /* =====================================================
+       MOBILE
+       ===================================================== */
+
+    @media (max-width: 850px) {
+
+      body {
+        padding: 12px;
+      }
+
+
+      .login-box {
+        grid-template-columns: 1fr;
+
+        min-height: auto;
+
+        max-width: 520px;
+
+        border-radius: 22px;
+      }
+
+
+      .left {
+        min-height: 390px;
+
+        padding: 27px;
+      }
+
+
+      .logo {
+        width: 90px;
+        height: 90px;
+
+        border-radius: 18px;
+
+        margin-bottom: 20px;
+      }
+
+
+      .left h1 {
+        font-size: 42px;
+
+        letter-spacing: -2px;
+      }
+
+
+      .right {
+        padding: 30px 24px 35px;
+      }
+
+
+      .pills {
+        display: none;
+      }
+
+    }
+
+
+    @media (max-width: 480px) {
+
+      .left {
+        min-height: 350px;
+
+        padding: 22px;
+      }
+
+
+      .left h1 {
+        font-size: 36px;
+      }
+
+
+      .right {
+        padding: 25px 18px 30px;
+      }
+
+
+      .title h2 {
+        font-size: 27px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <div class="page">
+
+
+    <main class="login-box">
+
+
+      <!-- =================================================
+           LEFT SIDE
+           ================================================= -->
+
+      <section class="left">
+
+
+        <a
+          class="home-link"
+          href="../"
+        >
+          ← Back Home
+        </a>
+
+
+        <div class="brand">
+
+
+          <img
+            class="logo"
+            src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true"
+            alt="SNK Business"
+          >
+
+
+          <div class="eyebrow">
+            Personal Learning & Recording Studio
+          </div>
+
+
+          <h1>
+            Welcome<br>
+            <span>Back.</span>
+          </h1>
+
+
+          <p class="description">
+            আপনার Mentor Studio অথবা Admin Panel-এ
+            নিরাপদভাবে প্রবেশ করুন।
+          </p>
+
+
+        </div>
+
+
+        <div class="pills">
+
+          <span class="pill">
+            🔐 Secure Login
+          </span>
+
+          <span class="pill">
+            ☁ Firebase
+          </span>
+
+          <span class="pill">
+            🎬 Studio
+          </span>
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- =================================================
+           RIGHT SIDE
+           ================================================= -->
+
+      <section class="right">
+
+
+        <div class="form">
+
+
+          <div class="title">
+
+            <h2>
+              Sign in
+            </h2>
+
+            <p>
+              আপনার account type নির্বাচন করে
+              Firebase password দিয়ে login করুন।
+            </p>
+
+          </div>
+
+
+
+          <!-- =================================================
+               ROLE SWITCH
+               ================================================= -->
+
+          <div
+            class="roles"
+            id="roleSwitcher"
+          >
+
+
+            <button
+              type="button"
+              id="mentorButton"
+              class="role active"
+            >
+              🎓 Mentor
+            </button>
+
+
+            <button
+              type="button"
+              id="adminButton"
+              class="role"
+            >
+              👑 Admin
+            </button>
+
+
+          </div>
+
+
+
+          <!-- =================================================
+               LOGIN FORM
+               ================================================= -->
+
+          <form
+            id="loginForm"
+            novalidate
+          >
+
+
+            <div class="field">
+
+              <label for="email">
+                Account
+              </label>
+
+
+              <input
+                id="email"
+                class="input"
+                type="email"
+                readonly
+                autocomplete="username"
+              >
+
+            </div>
+
+
+
+            <div class="field">
+
+              <label for="password">
+                Firebase Password
+              </label>
+
+
+              <div class="password-box">
+
+
+                <input
+                  id="password"
+                  class="input"
+                  type="password"
+                  placeholder="আপনার password লিখুন"
+                  autocomplete="current-password"
+                  required
+                >
+
+
+                <button
+                  type="button"
+                  id="eyeButton"
+                  class="eye"
+                  aria-label="Show password"
+                >
+                  👁
+                </button>
+
+
+              </div>
+
+            </div>
+
+
+
+            <button
+              type="submit"
+              id="submitButton"
+              class="submit"
+            >
+              Continue as Mentor
+            </button>
+
+
+            <div
+              id="message"
+              class="message"
+              role="alert"
+            ></div>
+
+
+          </form>
+
+
+          <div class="security">
+
+            Password এই website-এর code-এ রাখা নেই।
+            Firebase Authentication এটি নিরাপদভাবে পরিচালনা করে।
+
+          </div>
+
+
+        </div>
+
+
+      </section>
+
+
+    </main>
+
+
+  </div>
+
+
+
+  <!-- =====================================================
+       UI SCRIPT
+
+       এই অংশ Firebase-এর ওপর নির্ভর করে না।
+       তাই Firebase error হলেও Mentor/Admin button
+       অবশ্যই click করবে।
+       ===================================================== -->
+
+  <script>
+
+    (function () {
+
+      "use strict";
+
+
+      const accounts = {
+
+        mentor: {
+          email: "mentor@snkitinstitute.com",
+          name: "Mentor"
+        },
+
+        admin: {
+          email: "admin@snkitinstitute.com",
+          name: "Admin"
+        }
+
+      };
+
+
+      let selectedRole = "mentor";
+
+
+      const mentorButton =
+        document.getElementById(
+          "mentorButton"
+        );
+
+
+      const adminButton =
+        document.getElementById(
+          "adminButton"
+        );
+
+
+      const emailInput =
+        document.getElementById(
+          "email"
+        );
+
+
+      const passwordInput =
+        document.getElementById(
+          "password"
+        );
+
+
+      const eyeButton =
+        document.getElementById(
+          "eyeButton"
+        );
+
+
+      const submitButton =
+        document.getElementById(
+          "submitButton"
+        );
+
+
+      const message =
+        document.getElementById(
+          "message"
+        );
+
+
+
+      function clearMessage() {
+
+        message.textContent = "";
+
+        message.className =
+          "message";
+
+      }
+
+
+
+      function selectRole(role) {
+
+        selectedRole =
+          role;
+
+
+        const account =
+          accounts[role];
+
+
+        emailInput.value =
+          account.email;
+
+
+        mentorButton.classList.remove(
+          "active"
+        );
+
+
+        adminButton.classList.remove(
+          "active"
+        );
+
+
+        if (
+          role === "mentor"
+        ) {
+
+          mentorButton.classList.add(
+            "active"
+          );
+
+        }
+
+
+        if (
+          role === "admin"
+        ) {
+
+          adminButton.classList.add(
+            "active"
+          );
+
+        }
+
+
+        submitButton.textContent =
+          "Continue as " +
+          account.name;
+
+
+        clearMessage();
+
+
+        passwordInput.value =
+          "";
+
+
+        passwordInput.focus();
+
+      }
+
+
+
+      /*
+       * Mentor
+       */
+
+      mentorButton.onclick =
+        function (event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          selectRole("mentor");
+
+        };
+
+
+
+      /*
+       * Admin
+       */
+
+      adminButton.onclick =
+        function (event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          selectRole("admin");
+
+        };
+
+
+
+      /*
+       * Password eye
+       */
+
+      eyeButton.onclick =
+        function (event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          if (
+            passwordInput.type ===
+            "password"
+          ) {
+
+            passwordInput.type =
+              "text";
+
+            eyeButton.textContent =
+              "🙈";
+
+          } else {
+
+            passwordInput.type =
+              "password";
+
+            eyeButton.textContent =
+              "👁";
+
+          }
+
+        };
+
+
+
+      /*
+       * Store selected role globally.
+       * Firebase module নিচের script থেকে এটি ব্যবহার করবে।
+       */
+
+      window.getSelectedStudioRole =
+        function () {
+
+          return selectedRole;
+
+        };
+
+
+
+      window.getStudioAccount =
+        function () {
+
+          return accounts[
+            selectedRole
+          ];
+
+        };
+
+
+
+      /*
+       * Loading state
+       */
+
+      window.setLoginLoading =
+        function (loading) {
+
+          if (loading) {
+
+            submitButton.disabled =
+              true;
+
+            submitButton.innerHTML =
+              '<span class="loading"></span>Signing in...';
+
+          } else {
+
+            submitButton.disabled =
+              false;
+
+            submitButton.textContent =
+              "Continue as " +
+              accounts[
+                selectedRole
+              ].name;
+
+          }
+
+        };
+
+
+
+      /*
+       * Message helper
+       */
+
+      window.showLoginMessage =
+        function (
+          text,
+          type
+        ) {
+
+          message.textContent =
+            text;
+
+          message.className =
+            "message show " +
+            type;
+
+        };
+
+
+
+      /*
+       * Initial
+       */
+
+      selectRole(
+        "mentor"
+      );
+
+
+      console.log(
+        "Login UI loaded."
+      );
+
+
+    })();
+
+  </script>
+
+
+
+  <!-- =====================================================
+       FIREBASE SCRIPT
+
+       আলাদা module হওয়ায় UI button Firebase import-এর
+       ওপর নির্ভরশীল নয়।
+       ===================================================== -->
+
+  <script type="module">
+
+    import {
+      auth
+    } from "../firebase.js";
+
+
+    import {
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+
+
+    /* =====================================================
+       SESSION CLEAN
+       ===================================================== */
+
+    function clearStudioSession() {
+
+      sessionStorage.removeItem(
+        "personalCourseStudioRole"
+      );
+
+      sessionStorage.removeItem(
+        "personalCourseStudioUsername"
+      );
+
+      sessionStorage.removeItem(
+        "personalCourseStudioUid"
+      );
+
+      sessionStorage.removeItem(
+        "personalCourseStudioMentorLoggedIn"
+      );
+
+      sessionStorage.removeItem(
+        "personalCourseStudioAdminLoggedIn"
+      );
+
+    }
+
+
+
+    /* =====================================================
+       ERROR
+       ===================================================== */
+
+    function firebaseError(
+      error
+    ) {
+
+      const code =
+        error?.code || "";
+
+
+      switch (code) {
+
+        case "auth/invalid-credential":
+
+          return "Password সঠিক নয়।";
+
+
+        case "auth/wrong-password":
+
+          return "Password সঠিক নয়।";
+
+
+        case "auth/user-not-found":
+
+          return "Firebase account পাওয়া যায়নি।";
+
+
+        case "auth/too-many-requests":
+
+          return "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।";
+
+
+        case "auth/network-request-failed":
+
+          return "Internet connection সমস্যা হয়েছে।";
+
+
+        case "auth/user-disabled":
+
+          return "এই account disabled করা আছে।";
+
+
+        case "auth/operation-not-allowed":
+
+          return "Firebase Email/Password Authentication চালু নেই।";
+
+
+        case "auth/invalid-email":
+
+          return "Firebase email configuration ভুল।";
+
+
+        default:
+
+          return "Login করা যায়নি। আবার চেষ্টা করুন।";
+
+      }
+
+    }
+
+
+
+    /* =====================================================
+       FORM
+       ===================================================== */
+
+    const loginForm =
+      document.getElementById(
+        "loginForm"
+      );
+
+
+    loginForm.addEventListener(
+      "submit",
+      async function (event) {
+
+        event.preventDefault();
+
+
+        const role =
+          window.getSelectedStudioRole();
+
+
+        const account =
+          window.getStudioAccount();
+
+
+        const password =
+          document
+            .getElementById("password")
+            .value
+            .trim();
+
+
+        if (!password) {
+
+          window.showLoginMessage(
+            "Password লিখুন।",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        window.setLoginLoading(
+          true
+        );
+
+
+        try {
+
+
+          /*
+           * Old local session
+           */
+
+          clearStudioSession();
+
+
+          /*
+           * Old Firebase user থাকলে sign out
+           */
+
+          if (
+            auth.currentUser
+          ) {
+
+            await signOut(
+              auth
+            );
+
+          }
+
+
+          /*
+           * Firebase login
+           */
+
+          const result =
+            await signInWithEmailAndPassword(
+              auth,
+              account.email,
+              password
+            );
+
+
+          const user =
+            result.user;
+
+
+          const actualEmail =
+            String(
+              user.email || ""
+            )
+              .trim()
+              .toLowerCase();
+
+
+          const expectedEmail =
+            account.email
+              .trim()
+              .toLowerCase();
+
+
+          /*
+           * Verify account
+           */
+
+          if (
+            actualEmail !==
+            expectedEmail
+          ) {
+
+            await signOut(
+              auth
+            );
+
+            throw new Error(
+              "Account mismatch."
+            );
+
+          }
+
+
+          /*
+           * Save session
+           */
+
+          sessionStorage.setItem(
+            "personalCourseStudioRole",
+            role
+          );
+
+
+          sessionStorage.setItem(
+            "personalCourseStudioUsername",
+            role
+          );
+
+
+          sessionStorage.setItem(
+            "personalCourseStudioUid",
+            user.uid
+          );
+
+
+          if (
+            role === "admin"
+          ) {
+
+            sessionStorage.setItem(
+              "personalCourseStudioAdminLoggedIn",
+              "true"
+            );
+
+          }
+
+
+          if (
+            role === "mentor"
+          ) {
+
+            sessionStorage.setItem(
+              "personalCourseStudioMentorLoggedIn",
+              "true"
+            );
+
+          }
+
+
+          window.showLoginMessage(
+            "Login successful. Opening " +
+            account.name +
+            "...",
+            "success"
+          );
+
+
+          /*
+           * IMPORTANT:
+           * Relative path works for your
+           * current /masha.github.io/ structure.
+           */
+
+          const target =
+            role === "admin"
+              ? "../admin/"
+              : "../mentor/";
+
+
+          setTimeout(
+            function () {
+
+              window.location.href =
+                target;
+
+            },
+            700
+          );
+
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            "Firebase Login Error:",
+            error
+          );
+
+
+          window.showLoginMessage(
+            firebaseError(error),
+            "error"
+          );
+
+
+          window.setLoginLoading(
+            false
+          );
+
+        }
+
+      }
+    );
+
+
+    console.log(
+      "Firebase login module loaded."
+    );
+
+
+  </script>
+
+
+</body>
+</html>
