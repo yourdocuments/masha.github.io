@@ -1,32 +1,17 @@
 /* =========================================================
    PERSONAL COURSE STUDIO
    FIREBASE AUTH GUARD
-   =========================================================
 
-   ADMIN
+   Single personal account — used for BOTH
+   Mentor and Admin access.
+
+   Authorized account:
    sakhijahanusha@gmail.com
-
-   MENTOR
-   thesnkgraphic@email.com
-
-   ---------------------------------------------------------
-   IMPORTANT
-   ---------------------------------------------------------
-   Firebase Authentication handles login.
-
-   This file only checks whether the logged-in Firebase
-   account is authorized for the selected area.
-   ========================================================= */
-
-
-/* =========================================================
-   FIREBASE AUTH
    ========================================================= */
 
 import {
   auth
 } from "./firebase.js";
-
 
 import {
   onAuthStateChanged,
@@ -35,39 +20,11 @@ import {
 
 
 /* =========================================================
-   ROLE EMAIL CONFIGURATION
+   AUTHORIZED ACCOUNT
    ========================================================= */
 
-const ADMIN_EMAIL =
+const AUTHORIZED_EMAIL =
   "sakhijahanusha@gmail.com";
-
-
-const MENTOR_EMAIL =
-  "thesnkgraphic@email.com";
-
-
-/* =========================================================
-   SESSION KEYS
-   ========================================================= */
-
-const SESSION_KEYS = {
-
-  role:
-    "personalCourseStudioRole",
-
-  username:
-    "personalCourseStudioUsername",
-
-  uid:
-    "personalCourseStudioUid",
-
-  adminLoggedIn:
-    "personalCourseStudioAdminLoggedIn",
-
-  mentorLoggedIn:
-    "personalCourseStudioMentorLoggedIn"
-
-};
 
 
 /* =========================================================
@@ -84,89 +41,18 @@ function normalizeEmail(email) {
 
 
 /* =========================================================
-   GET ROLE FROM EMAIL
+   IS AUTHORIZED
    ========================================================= */
 
-function getRoleFromEmail(email) {
-
-  const normalizedEmail =
-    normalizeEmail(email);
-
-
-  /* -------------------------------------------------------
-     ADMIN
-     ------------------------------------------------------- */
-
-  if (
-    normalizedEmail ===
-    ADMIN_EMAIL
-  ) {
-
-    return "admin";
-
-  }
-
-
-  /* -------------------------------------------------------
-     MENTOR
-     ------------------------------------------------------- */
-
-  if (
-    normalizedEmail ===
-    MENTOR_EMAIL
-  ) {
-
-    return "mentor";
-
-  }
-
-
-  /* -------------------------------------------------------
-     UNKNOWN
-     ------------------------------------------------------- */
-
-  return null;
-
-}
-
-
-/* =========================================================
-   CHECK ADMIN
-   ========================================================= */
-
-function isAdminUser(user) {
+function isAuthorized(user) {
 
   if (!user) {
-
     return false;
-
   }
-
 
   return (
     normalizeEmail(user.email) ===
-    ADMIN_EMAIL
-  );
-
-}
-
-
-/* =========================================================
-   CHECK MENTOR
-   ========================================================= */
-
-function isMentorUser(user) {
-
-  if (!user) {
-
-    return false;
-
-  }
-
-
-  return (
-    normalizeEmail(user.email) ===
-    MENTOR_EMAIL
+    AUTHORIZED_EMAIL
   );
 
 }
@@ -176,77 +62,58 @@ function isMentorUser(user) {
    SAVE SESSION
    ========================================================= */
 
-function saveStudioSession(
+function saveSession(
   role,
   user
 ) {
 
-  if (!user) {
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------------
-     COMMON SESSION
-     ------------------------------------------------------- */
-
   sessionStorage.setItem(
-    SESSION_KEYS.role,
+    "personalCourseStudioRole",
     role
   );
 
 
   sessionStorage.setItem(
-    SESSION_KEYS.username,
-    user.email || ""
+    "personalCourseStudioUsername",
+    role
   );
 
 
   sessionStorage.setItem(
-    SESSION_KEYS.uid,
-    user.uid || ""
+    "personalCourseStudioUid",
+    user.uid
   );
 
-
-  /* -------------------------------------------------------
-     ADMIN SESSION
-     ------------------------------------------------------- */
 
   if (
     role === "admin"
   ) {
 
     sessionStorage.setItem(
-      SESSION_KEYS.adminLoggedIn,
+      "personalCourseStudioAdminLoggedIn",
       "true"
     );
 
 
     sessionStorage.removeItem(
-      SESSION_KEYS.mentorLoggedIn
+      "personalCourseStudioMentorLoggedIn"
     );
 
   }
 
-
-  /* -------------------------------------------------------
-     MENTOR SESSION
-     ------------------------------------------------------- */
 
   if (
     role === "mentor"
   ) {
 
     sessionStorage.setItem(
-      SESSION_KEYS.mentorLoggedIn,
+      "personalCourseStudioMentorLoggedIn",
       "true"
     );
 
 
     sessionStorage.removeItem(
-      SESSION_KEYS.adminLoggedIn
+      "personalCourseStudioAdminLoggedIn"
     );
 
   }
@@ -258,42 +125,42 @@ function saveStudioSession(
    CLEAR SESSION
    ========================================================= */
 
-function clearStudioSession() {
+function clearSession() {
 
   sessionStorage.removeItem(
-    SESSION_KEYS.role
+    "personalCourseStudioRole"
   );
 
 
   sessionStorage.removeItem(
-    SESSION_KEYS.username
+    "personalCourseStudioUsername"
   );
 
 
   sessionStorage.removeItem(
-    SESSION_KEYS.uid
+    "personalCourseStudioUid"
   );
 
 
   sessionStorage.removeItem(
-    SESSION_KEYS.adminLoggedIn
+    "personalCourseStudioAdminLoggedIn"
   );
 
 
   sessionStorage.removeItem(
-    SESSION_KEYS.mentorLoggedIn
+    "personalCourseStudioMentorLoggedIn"
   );
 
 }
 
 
 /* =========================================================
-   REDIRECT TO LOGIN
+   REDIRECT LOGIN
    ========================================================= */
 
 function redirectToLogin() {
 
-  clearStudioSession();
+  clearSession();
 
 
   window.location.replace(
@@ -304,28 +171,33 @@ function redirectToLogin() {
 
 
 /* =========================================================
-   GET CURRENT FIREBASE USER
+   GET CURRENT AUTH USER
    ========================================================= */
 
-function getCurrentUser() {
+function getExistingUser() {
 
   try {
 
-    return auth.currentUser || null;
+    if (
+      auth &&
+      auth.currentUser
+    ) {
 
-  }
+      return auth.currentUser;
 
-  catch (error) {
+    }
+
+  } catch (error) {
 
     console.error(
       "Firebase currentUser error:",
       error
     );
 
-
-    return null;
-
   }
+
+
+  return null;
 
 }
 
@@ -334,17 +206,17 @@ function getCurrentUser() {
    WAIT FOR FIREBASE AUTH
    ========================================================= */
 
-function waitForFirebaseUser() {
+function waitForAuth() {
 
   return new Promise(
     (resolve) => {
 
-      /* ---------------------------------------------------
+      /* ---------------------------------------------
          FIRST CHECK
-         --------------------------------------------------- */
+         --------------------------------------------- */
 
       const existingUser =
-        getCurrentUser();
+        getExistingUser();
 
 
       if (existingUser) {
@@ -358,38 +230,28 @@ function waitForFirebaseUser() {
       }
 
 
-      /* ---------------------------------------------------
+      /* ---------------------------------------------
          LISTENER
-         --------------------------------------------------- */
+         --------------------------------------------- */
 
-      let finished =
-        false;
+      let finished = false;
 
+      let unsubscribe = null;
 
-      let unsubscribe =
-        null;
-
-
-      let timeoutId =
-        null;
+      let timeoutId = null;
 
 
-      function finish(user) {
+      const finish = (
+        user
+      ) => {
 
         if (finished) {
-
           return;
-
         }
 
 
-        finished =
-          true;
+        finished = true;
 
-
-        /* -----------------------------------------------
-           CLEAR TIMEOUT
-           ----------------------------------------------- */
 
         if (timeoutId) {
 
@@ -400,10 +262,6 @@ function waitForFirebaseUser() {
         }
 
 
-        /* -----------------------------------------------
-           REMOVE LISTENER
-           ----------------------------------------------- */
-
         if (
           typeof unsubscribe ===
           "function"
@@ -413,16 +271,7 @@ function waitForFirebaseUser() {
 
             unsubscribe();
 
-          }
-
-          catch (error) {
-
-            console.warn(
-              "Firebase unsubscribe error:",
-              error
-            );
-
-          }
+          } catch {}
 
         }
 
@@ -431,19 +280,14 @@ function waitForFirebaseUser() {
           user || null
         );
 
-      }
+      };
 
-
-      /* ---------------------------------------------------
-         AUTH LISTENER
-         --------------------------------------------------- */
 
       try {
 
         unsubscribe =
           onAuthStateChanged(
             auth,
-
             (user) => {
 
               finish(
@@ -451,26 +295,21 @@ function waitForFirebaseUser() {
               );
 
             },
-
             (error) => {
 
               console.error(
-                "Firebase auth state error:",
+                "onAuthStateChanged error:",
                 error
               );
 
-
               finish(
-                getCurrentUser()
+                getExistingUser()
               );
 
             }
-
           );
 
-      }
-
-      catch (error) {
+      } catch (error) {
 
         console.error(
           "Firebase auth listener error:",
@@ -479,7 +318,7 @@ function waitForFirebaseUser() {
 
 
         finish(
-          getCurrentUser()
+          getExistingUser()
         );
 
 
@@ -488,9 +327,9 @@ function waitForFirebaseUser() {
       }
 
 
-      /* ---------------------------------------------------
+      /* ---------------------------------------------
          SAFETY TIMEOUT
-         --------------------------------------------------- */
+         --------------------------------------------- */
 
       timeoutId =
         setTimeout(
@@ -502,13 +341,11 @@ function waitForFirebaseUser() {
 
 
             finish(
-              getCurrentUser()
+              getExistingUser()
             );
 
           },
-
           8000
-
         );
 
     }
@@ -523,64 +360,32 @@ function waitForFirebaseUser() {
 
 export async function protectAdmin() {
 
-  console.log(
-    "Checking Admin authentication..."
-  );
-
-
   const user =
-    await waitForFirebaseUser();
+    await waitForAuth();
 
-
-  /* -------------------------------------------------------
-     NO USER
-     ------------------------------------------------------- */
 
   if (!user) {
 
-    console.warn(
-      "No Firebase user found for Admin."
-    );
-
-
     redirectToLogin();
 
-
     throw new Error(
-      "Admin authentication required."
+      "Authentication required."
     );
 
   }
 
 
-  /* -------------------------------------------------------
-     CHECK ADMIN EMAIL
-     ------------------------------------------------------- */
+  if (
+    !isAuthorized(user)
+  ) {
 
-  const email =
-    normalizeEmail(
+    console.warn(
+      "Unauthorized Admin access:",
       user.email
     );
 
 
-  console.log(
-    "Admin authentication check:",
-    email
-  );
-
-
-  if (
-    email !==
-    ADMIN_EMAIL
-  ) {
-
-    console.warn(
-      "Unauthorized Admin account:",
-      email
-    );
-
-
-    clearStudioSession();
+    clearSession();
 
 
     try {
@@ -589,12 +394,10 @@ export async function protectAdmin() {
         auth
       );
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
       console.error(
-        "Firebase Admin sign-out error:",
+        "Firebase sign out error:",
         error
       );
 
@@ -605,25 +408,15 @@ export async function protectAdmin() {
 
 
     throw new Error(
-      "Unauthorized Admin account."
+      "Admin authorization required."
     );
 
   }
 
 
-  /* -------------------------------------------------------
-     SAVE ADMIN SESSION
-     ------------------------------------------------------- */
-
-  saveStudioSession(
+  saveSession(
     "admin",
     user
-  );
-
-
-  console.log(
-    "Admin authenticated successfully:",
-    email
   );
 
 
@@ -638,18 +431,9 @@ export async function protectAdmin() {
 
 export async function protectMentor() {
 
-  console.log(
-    "Checking Mentor authentication..."
-  );
-
-
   const user =
-    await waitForFirebaseUser();
+    await waitForAuth();
 
-
-  /* -------------------------------------------------------
-     NO USER
-     ------------------------------------------------------- */
 
   if (!user) {
 
@@ -668,34 +452,17 @@ export async function protectMentor() {
   }
 
 
-  /* -------------------------------------------------------
-     CHECK MENTOR EMAIL
-     ------------------------------------------------------- */
+  if (
+    !isAuthorized(user)
+  ) {
 
-  const email =
-    normalizeEmail(
+    console.warn(
+      "Unauthorized Mentor access:",
       user.email
     );
 
 
-  console.log(
-    "Mentor authentication check:",
-    email
-  );
-
-
-  if (
-    email !==
-    MENTOR_EMAIL
-  ) {
-
-    console.warn(
-      "Unauthorized Mentor account:",
-      email
-    );
-
-
-    clearStudioSession();
+    clearSession();
 
 
     try {
@@ -704,12 +471,10 @@ export async function protectMentor() {
         auth
       );
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
       console.error(
-        "Firebase Mentor sign-out error:",
+        "Firebase sign out error:",
         error
       );
 
@@ -720,25 +485,15 @@ export async function protectMentor() {
 
 
     throw new Error(
-      "Unauthorized Mentor account."
+      "Mentor authorization required."
     );
 
   }
 
 
-  /* -------------------------------------------------------
-     SAVE MENTOR SESSION
-     ------------------------------------------------------- */
-
-  saveStudioSession(
+  saveSession(
     "mentor",
     user
-  );
-
-
-  console.log(
-    "Mentor authenticated successfully:",
-    email
   );
 
 
@@ -753,20 +508,13 @@ export async function protectMentor() {
 
 export async function logoutStudio() {
 
-  console.log(
-    "Logging out from Personal Course Studio..."
-  );
-
-
   try {
 
     await signOut(
       auth
     );
 
-  }
-
-  catch (error) {
+  } catch (error) {
 
     console.error(
       "Firebase logout error:",
@@ -776,16 +524,8 @@ export async function logoutStudio() {
   }
 
 
-  /* -------------------------------------------------------
-     CLEAR LOCAL SESSION
-     ------------------------------------------------------- */
+  clearSession();
 
-  clearStudioSession();
-
-
-  /* -------------------------------------------------------
-     GO TO LOGIN
-     ------------------------------------------------------- */
 
   window.location.replace(
     "../login/"
@@ -795,144 +535,26 @@ export async function logoutStudio() {
 
 
 /* =========================================================
-   GET CURRENT ROLE
+   PUBLIC HELPERS
    ========================================================= */
 
-export function getCurrentRole() {
+export function getCurrentRole(
+  user
+) {
 
-  const user =
-    getCurrentUser();
-
-
-  if (!user) {
-
-    return null;
-
-  }
-
-
-  return getRoleFromEmail(
-    user.email
-  );
+  return isAuthorized(user)
+    ? (
+        sessionStorage.getItem(
+          "personalCourseStudioRole"
+        ) || "mentor"
+      )
+    : null;
 
 }
 
 
-/* =========================================================
-   GET CURRENT USERNAME / EMAIL
-   ========================================================= */
+export function getCurrentUser() {
 
-export function getCurrentUsername() {
-
-  const user =
-    getCurrentUser();
-
-
-  if (!user) {
-
-    return "";
-
-  }
-
-
-  return user.email || "";
+  return getExistingUser();
 
 }
-
-
-/* =========================================================
-   GET CURRENT UID
-   ========================================================= */
-
-export function getCurrentUid() {
-
-  const user =
-    getCurrentUser();
-
-
-  if (!user) {
-
-    return "";
-
-  }
-
-
-  return user.uid || "";
-
-}
-
-
-/* =========================================================
-   IS CURRENT USER ADMIN
-   ========================================================= */
-
-export function isAdmin() {
-
-  const user =
-    getCurrentUser();
-
-
-  return isAdminUser(
-    user
-  );
-
-}
-
-
-/* =========================================================
-   IS CURRENT USER MENTOR
-   ========================================================= */
-
-export function isMentor() {
-
-  const user =
-    getCurrentUser();
-
-
-  return isMentorUser(
-    user
-  );
-
-}
-
-
-/* =========================================================
-   SAVE SESSION — PUBLIC
-   ========================================================= */
-
-export {
-  saveStudioSession
-};
-
-
-/* =========================================================
-   CLEAR SESSION — PUBLIC
-   ========================================================= */
-
-export {
-  clearStudioSession
-};
-
-
-/* =========================================================
-   ROLE HELPERS — PUBLIC
-   ========================================================= */
-
-export {
-  getRoleFromEmail
-};
-
-
-/* =========================================================
-   EMAIL CONSTANTS — PUBLIC
-   ========================================================= */
-
-export {
-  ADMIN_EMAIL,
-  MENTOR_EMAIL
-};
-
-
-/* =========================================================
-   END OF AUTH GUARD
-   ========================================================= */
