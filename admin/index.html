@@ -26,10 +26,6 @@
   >
 
   <style>
-    /* =====================================================
-       RESET
-    ===================================================== */
-
     * {
       margin: 0;
       padding: 0;
@@ -44,7 +40,6 @@
 
     body {
       min-height: 100vh;
-
       font-family:
         Inter,
         system-ui,
@@ -52,11 +47,8 @@
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
-
       color: #f5f7fa;
-
       background: #08090d;
-
       overflow-x: hidden;
     }
 
@@ -69,23 +61,13 @@
       cursor: pointer;
     }
 
-
-    /* =====================================================
-       AUTH LOADING
-    ===================================================== */
-
     .auth-loading {
       position: fixed;
-
       inset: 0;
-
       z-index: 99999;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       background: #08090d;
     }
 
@@ -95,25 +77,17 @@
 
     .loader-card {
       text-align: center;
-
       padding: 30px;
     }
 
     .loader {
       width: 42px;
       height: 42px;
-
       margin: 0 auto 16px;
-
       border-radius: 50%;
-
-      border:
-        3px solid rgba(255,255,255,0.08);
-
+      border: 3px solid rgba(255,255,255,0.08);
       border-top-color: #60a5fa;
-
-      animation:
-        spin 0.8s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
 
     @keyframes spin {
@@ -123,22 +97,13 @@
     }
 
     .loader-card p {
-      color:
-        rgba(255,255,255,0.42);
-
+      color: rgba(255,255,255,0.42);
       font-size: 12px;
     }
 
-
-    /* =====================================================
-       LAYOUT
-    ===================================================== */
-
     .app {
       min-height: 100vh;
-
       display: flex;
-
       background:
         radial-gradient(
           circle at 80% 10%,
@@ -148,1224 +113,707 @@
         #08090d;
     }
 
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
-
     .sidebar {
       width: 260px;
-
       flex: 0 0 260px;
-
       min-height: 100vh;
-
       position: fixed;
-
       left: 0;
       top: 0;
       bottom: 0;
-
       z-index: 100;
-
       display: flex;
-
       flex-direction: column;
-
       padding: 20px;
-
-      background:
-        rgba(11,13,19,0.97);
-
-      border-right:
-        1px solid rgba(255,255,255,0.07);
+      background: rgba(11,13,19,0.97);
+      border-right: 1px solid rgba(255,255,255,0.07);
     }
-
 
     .sidebar-brand {
       display: flex;
-
       align-items: center;
-
       gap: 11px;
-
       padding: 6px 5px 22px;
-
-      border-bottom:
-        1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
-
 
     .sidebar-logo {
       width: 44px;
       height: 44px;
-
       border-radius: 12px;
-
       object-fit: contain;
-
       padding: 4px;
-
       background: #fff;
     }
-
 
     .sidebar-brand-text {
       min-width: 0;
     }
 
-
     .sidebar-brand-text strong {
       display: block;
-
       font-size: 13px;
-
       white-space: nowrap;
-
       overflow: hidden;
-
       text-overflow: ellipsis;
     }
 
-
     .sidebar-brand-text span {
       display: block;
-
       margin-top: 3px;
-
       font-size: 10px;
-
-      color:
-        rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.38);
     }
-
 
     .nav {
       display: flex;
-
       flex-direction: column;
-
       gap: 5px;
-
       margin-top: 22px;
     }
 
-
     .nav-item {
       width: 100%;
-
       min-height: 44px;
-
       display: flex;
-
       align-items: center;
-
       gap: 11px;
-
       padding: 0 12px;
-
       border-radius: 11px;
-
-      border:
-        1px solid transparent;
-
+      border: 1px solid transparent;
       background: transparent;
-
-      color:
-        rgba(255,255,255,0.50);
-
+      color: rgba(255,255,255,0.50);
       text-align: left;
-
       font-size: 12px;
-
       font-weight: 800;
-
       transition: 0.2s ease;
     }
-
 
     .nav-item:hover,
     .nav-item.active {
       color: #fff;
-
-      background:
-        rgba(255,255,255,0.055);
-
-      border-color:
-        rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(255,255,255,0.06);
     }
-
 
     .nav-icon {
       width: 24px;
-
       text-align: center;
-
       font-size: 15px;
     }
 
-
     .sidebar-bottom {
       margin-top: auto;
-
       padding-top: 18px;
-
-      border-top:
-        1px solid rgba(255,255,255,0.07);
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
-
 
     .admin-account {
       display: flex;
-
       align-items: center;
-
       gap: 10px;
-
       padding: 10px;
-
       border-radius: 12px;
-
-      background:
-        rgba(255,255,255,0.035);
+      background: rgba(255,255,255,0.035);
     }
-
 
     .admin-avatar {
       width: 36px;
       height: 36px;
-
       flex: 0 0 36px;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       border-radius: 10px;
-
       background:
         linear-gradient(
           135deg,
           #2563eb,
           #4f46e5
         );
-
       font-size: 13px;
-
       font-weight: 900;
     }
-
 
     .admin-account-info {
       min-width: 0;
     }
 
-
     .admin-account-info strong {
       display: block;
-
       font-size: 11px;
     }
-
 
     .admin-account-info span {
       display: block;
-
       margin-top: 3px;
-
       font-size: 9px;
-
-      color:
-        rgba(255,255,255,0.38);
-
+      color: rgba(255,255,255,0.38);
       overflow: hidden;
-
       text-overflow: ellipsis;
-
       white-space: nowrap;
     }
 
-
     .logout-btn {
       width: 100%;
-
       height: 42px;
-
       margin-top: 9px;
-
       border-radius: 10px;
-
-      border:
-        1px solid rgba(248,113,113,0.13);
-
-      background:
-        rgba(127,29,29,0.10);
-
+      border: 1px solid rgba(248,113,113,0.13);
+      background: rgba(127,29,29,0.10);
       color: #fca5a5;
-
       font-size: 11px;
-
       font-weight: 800;
     }
 
-
-    /* =====================================================
-       MOBILE HEADER
-    ===================================================== */
-
     .mobile-header {
       display: none;
-
       height: 62px;
-
       position: fixed;
-
       top: 0;
       left: 0;
       right: 0;
-
       z-index: 200;
-
       align-items: center;
-
       justify-content: space-between;
-
       padding: 0 14px;
-
-      background:
-        rgba(8,9,13,0.96);
-
-      border-bottom:
-        1px solid rgba(255,255,255,0.07);
+      background: rgba(8,9,13,0.96);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
-
 
     .mobile-menu-btn {
       width: 40px;
       height: 40px;
-
       border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.04);
-
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
       color: #fff;
-
       font-size: 18px;
     }
 
-
-    /* =====================================================
-       CONTENT
-    ===================================================== */
-
     .content {
       width: calc(100% - 260px);
-
       margin-left: 260px;
-
       min-height: 100vh;
-
       padding: 25px;
     }
 
-
     .content-inner {
       width: min(1250px, 100%);
-
       margin: 0 auto;
     }
 
-
-    /* =====================================================
-       PAGE HEADER
-    ===================================================== */
-
     .page-header {
       display: flex;
-
       align-items: center;
       justify-content: space-between;
-
       gap: 15px;
-
       margin-bottom: 22px;
     }
 
-
     .page-header h1 {
       font-size: 25px;
-
       letter-spacing: -0.035em;
     }
 
-
     .page-header p {
       margin-top: 6px;
-
       font-size: 12px;
-
-      color:
-        rgba(255,255,255,0.40);
+      color: rgba(255,255,255,0.40);
     }
-
 
     .sync-badge {
       display: inline-flex;
-
       align-items: center;
-
       gap: 7px;
-
       padding: 9px 12px;
-
       border-radius: 999px;
-
       font-size: 10px;
-
       font-weight: 900;
-
       white-space: nowrap;
     }
 
-
     .sync-badge::before {
       content: "";
-
       width: 7px;
       height: 7px;
-
       border-radius: 50%;
-
       background: currentColor;
     }
 
-
     .sync-badge.live {
       color: #86efac;
-
-      background:
-        rgba(34,197,94,0.08);
+      background: rgba(34,197,94,0.08);
     }
-
 
     .sync-badge.local {
       color: #fcd34d;
-
-      background:
-        rgba(245,158,11,0.08);
+      background: rgba(245,158,11,0.08);
     }
-
 
     .sync-badge.error {
       color: #fca5a5;
-
-      background:
-        rgba(239,68,68,0.08);
+      background: rgba(239,68,68,0.08);
     }
-
-
-    /* =====================================================
-       DASHBOARD GRID
-    ===================================================== */
 
     .dashboard-grid {
       display: grid;
-
       grid-template-columns:
         minmax(0, 1.45fr)
         minmax(300px, 0.75fr);
-
       gap: 18px;
     }
 
-
     .card {
       padding: 20px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 18px;
-
-      background:
-        rgba(255,255,255,0.035);
+      background: rgba(255,255,255,0.035);
     }
-
 
     .card-header {
       display: flex;
-
       align-items: center;
       justify-content: space-between;
-
       gap: 12px;
-
       margin-bottom: 18px;
     }
-
 
     .card-header h2 {
       font-size: 14px;
     }
 
-
     .card-header span {
       font-size: 10px;
-
-      color:
-        rgba(255,255,255,0.34);
+      color: rgba(255,255,255,0.34);
     }
-
-
-    /* =====================================================
-       STUDENTS
-    ===================================================== */
 
     .student-toolbar {
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
-
       gap: 10px;
-
       margin-bottom: 14px;
     }
 
-
     .search-box {
       flex: 1;
-
       height: 42px;
-
       padding: 0 12px;
-
       border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
+      border: 1px solid rgba(255,255,255,0.08);
       outline: none;
-
-      background:
-        rgba(255,255,255,0.04);
-
+      background: rgba(255,255,255,0.04);
       color: #fff;
-
       font-size: 11px;
     }
 
-
     .search-box::placeholder {
-      color:
-        rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.25);
     }
-
 
     .add-student-btn {
       height: 42px;
-
       padding: 0 15px;
-
       border: 0;
-
       border-radius: 10px;
-
-      background:
-        #2563eb;
-
+      background: #2563eb;
       color: #fff;
-
       font-size: 11px;
-
       font-weight: 900;
-
       white-space: nowrap;
     }
 
-
     .student-table {
       width: 100%;
-
       overflow-x: auto;
     }
 
-
     table {
       width: 100%;
-
       border-collapse: collapse;
-
       min-width: 520px;
     }
 
-
     th {
-      padding:
-        10px 9px;
-
+      padding: 10px 9px;
       text-align: left;
-
       font-size: 9px;
-
       font-weight: 900;
-
-      color:
-        rgba(255,255,255,0.34);
-
-      border-bottom:
-        1px solid rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.34);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
 
-
     td {
-      padding:
-        11px 9px;
-
+      padding: 11px 9px;
       font-size: 11px;
-
-      border-bottom:
-        1px solid rgba(255,255,255,0.045);
-
+      border-bottom: 1px solid rgba(255,255,255,0.045);
       vertical-align: middle;
     }
 
-
     .student-cell {
       display: flex;
-
       align-items: center;
-
       gap: 10px;
     }
-
 
     .student-image {
       width: 38px;
       height: 38px;
-
       object-fit: cover;
-
       border-radius: 10px;
-
-      background:
-        rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.08);
     }
-
 
     .student-name {
       font-weight: 800;
     }
 
-
     .student-id {
       margin-top: 3px;
-
       font-size: 9px;
-
-      color:
-        rgba(255,255,255,0.32);
+      color: rgba(255,255,255,0.32);
     }
-
 
     .action-group {
       display: flex;
-
       gap: 5px;
     }
 
-
     .action-btn {
       height: 31px;
-
       padding: 0 9px;
-
       border-radius: 8px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
-      background:
-        rgba(255,255,255,0.04);
-
-      color:
-        rgba(255,255,255,0.65);
-
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.65);
       font-size: 9px;
-
       font-weight: 800;
     }
 
-
     .action-btn.delete {
       color: #fca5a5;
-
-      border-color:
-        rgba(248,113,113,0.10);
+      border-color: rgba(248,113,113,0.10);
     }
-
 
     .empty-table {
       padding: 40px 20px;
-
       text-align: center;
-
-      color:
-        rgba(255,255,255,0.30);
-
+      color: rgba(255,255,255,0.30);
       font-size: 11px;
     }
 
-
-    /* =====================================================
-       LOGO CARD
-    ===================================================== */
-
     .logo-preview {
       width: 100%;
-
       min-height: 190px;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       border-radius: 15px;
-
-      border:
-        1px dashed rgba(255,255,255,0.12);
-
-      background:
-        rgba(255,255,255,0.025);
-
+      border: 1px dashed rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.025);
       overflow: hidden;
     }
-
 
     .logo-preview img {
       max-width: 180px;
       max-height: 130px;
-
       object-fit: contain;
-
       border-radius: 14px;
     }
 
-
     .logo-empty {
       text-align: center;
-
-      color:
-        rgba(255,255,255,0.30);
-
+      color: rgba(255,255,255,0.30);
       font-size: 11px;
     }
 
-
     .logo-actions {
       display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
-
       margin-top: 12px;
     }
-
 
     .upload-logo-btn,
     .remove-logo-btn {
       height: 42px;
-
       border-radius: 10px;
-
       font-size: 10px;
-
       font-weight: 900;
     }
-
 
     .upload-logo-btn {
       border: 0;
-
-      background:
-        #2563eb;
-
+      background: #2563eb;
       color: #fff;
     }
 
-
     .remove-logo-btn {
-      border:
-        1px solid rgba(248,113,113,0.12);
-
-      background:
-        rgba(127,29,29,0.10);
-
+      border: 1px solid rgba(248,113,113,0.12);
+      background: rgba(127,29,29,0.10);
       color: #fca5a5;
     }
 
-
     .logo-note {
       margin-top: 11px;
-
       font-size: 9px;
-
       line-height: 1.6;
-
-      color:
-        rgba(255,255,255,0.30);
+      color: rgba(255,255,255,0.30);
     }
-
-
-    /* =====================================================
-       INFO CARDS
-    ===================================================== */
 
     .info-grid {
       display: grid;
-
-      grid-template-columns:
-        repeat(3, 1fr);
-
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-
       margin-top: 18px;
     }
 
-
     .info-card {
       padding: 15px;
-
       border-radius: 14px;
-
-      background:
-        rgba(255,255,255,0.03);
-
-      border:
-        1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
     }
-
 
     .info-card .number {
       font-size: 25px;
-
       font-weight: 900;
-
       letter-spacing: -0.04em;
     }
 
-
     .info-card p {
       margin-top: 4px;
-
       font-size: 9px;
-
-      color:
-        rgba(255,255,255,0.34);
+      color: rgba(255,255,255,0.34);
     }
-
-
-    /* =====================================================
-       MODAL
-    ===================================================== */
 
     .modal {
       position: fixed;
-
       inset: 0;
-
       z-index: 1000;
-
       display: none;
-
       align-items: center;
       justify-content: center;
-
       padding: 20px;
-
-      background:
-        rgba(0,0,0,0.72);
-
+      background: rgba(0,0,0,0.72);
       backdrop-filter: blur(8px);
     }
-
 
     .modal.show {
       display: flex;
     }
 
-
     .modal-card {
       width: min(470px, 100%);
-
-      max-height:
-        calc(100vh - 40px);
-
+      max-height: calc(100vh - 40px);
       overflow-y: auto;
-
       padding: 22px;
-
       border-radius: 20px;
-
-      border:
-        1px solid rgba(255,255,255,0.09);
-
-      background:
-        #10131b;
-
-      box-shadow:
-        0 30px 90px rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.09);
+      background: #10131b;
+      box-shadow: 0 30px 90px rgba(0,0,0,0.55);
     }
-
 
     .modal-header {
       display: flex;
-
       align-items: center;
       justify-content: space-between;
-
       margin-bottom: 20px;
     }
-
 
     .modal-header h3 {
       font-size: 16px;
     }
 
-
     .close-modal {
       width: 34px;
       height: 34px;
-
       border-radius: 9px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.04);
-
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
       color: #fff;
-
       font-size: 16px;
     }
-
 
     .form-group {
       margin-bottom: 14px;
     }
 
-
     .form-group label {
       display: block;
-
       margin-bottom: 7px;
-
       font-size: 10px;
-
       font-weight: 900;
-
-      color:
-        rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.55);
     }
-
 
     .form-input {
       width: 100%;
-
       height: 44px;
-
       padding: 0 12px;
-
       border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
+      border: 1px solid rgba(255,255,255,0.08);
       outline: none;
-
-      background:
-        rgba(255,255,255,0.04);
-
+      background: rgba(255,255,255,0.04);
       color: #fff;
-
       font-size: 11px;
     }
 
-
     .form-input:focus {
-      border-color:
-        rgba(96,165,250,0.55);
-
+      border-color: rgba(96,165,250,0.55);
       box-shadow:
         0 0 0 3px
         rgba(37,99,235,0.10);
     }
 
-
     .image-drop {
       min-height: 130px;
-
       display: flex;
-
       align-items: center;
       justify-content: center;
-
       text-align: center;
-
       padding: 18px;
-
       border-radius: 12px;
-
-      border:
-        1px dashed rgba(255,255,255,0.12);
-
-      background:
-        rgba(255,255,255,0.025);
-
+      border: 1px dashed rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.025);
       cursor: pointer;
-
       overflow: hidden;
     }
-
 
     .image-drop img {
       max-width: 100%;
       max-height: 180px;
-
       object-fit: contain;
-
       border-radius: 10px;
     }
 
-
     .image-drop-text {
-      color:
-        rgba(255,255,255,0.32);
-
+      color: rgba(255,255,255,0.32);
       font-size: 10px;
-
       line-height: 1.6;
     }
 
-
     .modal-actions {
       display: flex;
-
       justify-content: flex-end;
-
       gap: 8px;
-
       margin-top: 18px;
     }
 
-
     .modal-btn {
       height: 40px;
-
       padding: 0 14px;
-
       border-radius: 9px;
-
       font-size: 10px;
-
       font-weight: 900;
     }
 
-
     .modal-btn.cancel {
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.04);
-
-      color:
-        rgba(255,255,255,0.65);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.65);
     }
-
 
     .modal-btn.save {
       border: 0;
-
-      background:
-        #2563eb;
-
+      background: #2563eb;
       color: #fff;
     }
-
-
-    /* =====================================================
-       TOAST
-    ===================================================== */
 
     .toast {
       position: fixed;
-
       left: 50%;
       bottom: 24px;
-
       z-index: 5000;
-
-      max-width:
-        calc(100% - 30px);
-
+      max-width: calc(100% - 30px);
       padding: 12px 16px;
-
       border-radius: 11px;
-
-      background:
-        rgba(15,23,42,0.96);
-
-      border:
-        1px solid rgba(255,255,255,0.09);
-
-      box-shadow:
-        0 18px 50px rgba(0,0,0,0.35);
-
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(255,255,255,0.09);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
       color: #fff;
-
       font-size: 11px;
-
-      transform:
-        translate(-50%, 20px);
-
+      transform: translate(-50%, 20px);
       opacity: 0;
-
       pointer-events: none;
-
       transition: 0.25s ease;
     }
 
-
     .toast.show {
-      transform:
-        translate(-50%, 0);
-
+      transform: translate(-50%, 0);
       opacity: 1;
     }
 
-
-    /* =====================================================
-       MOBILE
-    ===================================================== */
-
     @media (max-width: 1000px) {
-
       .dashboard-grid {
         grid-template-columns: 1fr;
       }
-
     }
 
-
     @media (max-width: 760px) {
-
       .sidebar {
-        transform:
-          translateX(-100%);
-
+        transform: translateX(-100%);
         transition: 0.25s ease;
-
-        box-shadow:
-          20px 0 60px rgba(0,0,0,0.35);
+        box-shadow: 20px 0 60px rgba(0,0,0,0.35);
       }
-
 
       .sidebar.open {
-        transform:
-          translateX(0);
+        transform: translateX(0);
       }
-
 
       .mobile-header {
         display: flex;
       }
 
-
       .content {
         width: 100%;
-
         margin-left: 0;
-
-        padding:
-          82px 14px 20px;
+        padding: 82px 14px 20px;
       }
-
 
       .page-header {
         align-items: flex-start;
-
         flex-direction: column;
       }
-
 
       .info-grid {
-        grid-template-columns:
-          1fr;
+        grid-template-columns: 1fr;
       }
-
     }
 
-
     @media (max-width: 500px) {
-
       .student-toolbar {
         align-items: stretch;
-
         flex-direction: column;
       }
-
 
       .add-student-btn {
         width: 100%;
       }
 
-
       .logo-actions {
         grid-template-columns: 1fr;
       }
-
     }
   </style>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       AUTH LOADING
-  ====================================================== -->
-
   <div
     class="auth-loading"
     id="authLoading"
   >
-
     <div class="loader-card">
-
       <div class="loader"></div>
 
       <p>
         Checking Admin authentication...
       </p>
-
     </div>
-
   </div>
 
-
-  <!-- =====================================================
-       MOBILE HEADER
-  ====================================================== -->
 
   <header class="mobile-header">
 
@@ -1378,27 +826,16 @@
       ☰
     </button>
 
-
     <strong>
       Admin Panel
     </strong>
-
 
     <div style="width:40px;"></div>
 
   </header>
 
 
-  <!-- =====================================================
-       APP
-  ====================================================== -->
-
   <div class="app">
-
-
-    <!-- ===================================================
-         SIDEBAR
-    ==================================================== -->
 
     <aside
       class="sidebar"
@@ -1498,18 +935,9 @@
     </aside>
 
 
-    <!-- ===================================================
-         CONTENT
-    ==================================================== -->
-
     <main class="content">
 
       <div class="content-inner">
-
-
-        <!-- ===============================================
-             PAGE HEADER
-        ============================================= -->
 
         <div class="page-header">
 
@@ -1536,16 +964,7 @@
         </div>
 
 
-        <!-- ===============================================
-             DASHBOARD
-        ============================================= -->
-
         <div class="dashboard-grid">
-
-
-          <!-- ============================================
-               STUDENT MANAGER
-          ============================================= -->
 
           <section class="card">
 
@@ -1630,10 +1049,6 @@
           </section>
 
 
-          <!-- ============================================
-               LOGO
-          ============================================= -->
-
           <section
             class="card"
             id="logoCard"
@@ -1713,10 +1128,6 @@
         </div>
 
 
-        <!-- ===============================================
-             INFO
-        ============================================= -->
-
         <div class="info-grid">
 
           <div class="info-card">
@@ -1774,10 +1185,6 @@
 
   </div>
 
-
-  <!-- =====================================================
-       STUDENT MODAL
-  ====================================================== -->
 
   <div
     class="modal"
@@ -1884,37 +1291,23 @@
   </div>
 
 
-  <!-- =====================================================
-       TOAST
-  ====================================================== -->
-
   <div
     class="toast"
     id="toast"
   ></div>
 
 
-  <!-- =====================================================
-       FIREBASE + ADMIN
-  ====================================================== -->
-
   <script type="module">
 
-    // =====================================================
-    // FIREBASE
-    // =====================================================
+    /* =====================================================
+       FIREBASE
+    ===================================================== */
 
     import {
       auth,
       db,
       storage
     } from "../firebase.js";
-
-
-    import {
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 
     import {
@@ -1930,34 +1323,37 @@
     import {
       ref,
       uploadBytes,
-      getDownloadURL,
-      deleteObject
+      getDownloadURL
     } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
 
-    // =====================================================
-    // CONFIG
-    // =====================================================
+    /* =====================================================
+       AUTH GUARD
+    ===================================================== */
 
-    const ADMIN_EMAIL =
-      "admin@snkitinstitute.com";
+    import {
+      protectAdmin,
+      logoutStudio
+    } from "../auth-guard.js";
 
+
+    /* =====================================================
+       CONFIG
+    ===================================================== */
 
     const STUDENTS_KEY =
       "personalCourseStudioStudents";
 
-
     const PROFILE_KEY =
       "personalCourseStudioProfile";
-
 
     const SETTINGS_KEY =
       "personalCourseStudioSettings";
 
 
-    // =====================================================
-    // ELEMENTS
-    // =====================================================
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
 
     const authLoading =
       document.getElementById(
@@ -2110,9 +1506,9 @@
       );
 
 
-    // =====================================================
-    // STATE
-    // =====================================================
+    /* =====================================================
+       STATE
+    ===================================================== */
 
     let students = [];
 
@@ -2122,17 +1518,14 @@
 
     let currentLogoUrl = "";
 
-
-    // =====================================================
-    // TOAST
-    // =====================================================
-
     let toastTimer = null;
 
 
-    function showToast(
-      message
-    ) {
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    function showToast(message) {
 
       toast.textContent =
         message;
@@ -2141,11 +1534,9 @@
         "show"
       );
 
-
       clearTimeout(
         toastTimer
       );
-
 
       toastTimer =
         setTimeout(
@@ -2158,13 +1549,12 @@
           },
           2600
         );
-
     }
 
 
-    // =====================================================
-    // SYNC STATUS
-    // =====================================================
+    /* =====================================================
+       SYNC STATUS
+    ===================================================== */
 
     function setSyncStatus(
       text,
@@ -2176,97 +1566,97 @@
 
       syncBadge.className =
         "sync-badge " + type;
+    }
+
+
+    /* =====================================================
+       START ADMIN APP
+    ===================================================== */
+
+    async function startAdminApp(
+      user
+    ) {
+
+      console.log(
+        "Admin authenticated:",
+        user.email
+      );
+
+
+      authLoading.classList.add(
+        "hidden"
+      );
+
+
+      adminEmail.textContent =
+        user.email;
+
+
+      sessionStorage.setItem(
+        "personalCourseStudioRole",
+        "admin"
+      );
+
+      sessionStorage.setItem(
+        "personalCourseStudioUsername",
+        "admin"
+      );
+
+      sessionStorage.setItem(
+        "personalCourseStudioUid",
+        user.uid
+      );
+
+      sessionStorage.setItem(
+        "personalCourseStudioAdminLoggedIn",
+        "true"
+      );
+
+
+      loadLocalData();
+
+      listenToStudents();
+
+      listenToLogo();
+
+      registerServiceWorker();
 
     }
 
 
-    // =====================================================
-    // FIREBASE AUTH
-    // =====================================================
+    /* =====================================================
+       START AUTH GUARD
+    ===================================================== */
 
-    onAuthStateChanged(
-      auth,
-      user => {
+    protectAdmin()
+      .then(
+        user => {
 
-        if (!user) {
+          startAdminApp(
+            user
+          );
+
+        }
+      )
+      .catch(
+        error => {
+
+          console.error(
+            "Admin guard error:",
+            error
+          );
 
           window.location.replace(
             "../login/"
           );
 
-          return;
-
         }
+      );
 
 
-        const email =
-          (user.email || "")
-            .toLowerCase();
-
-
-        if (
-          email !==
-          ADMIN_EMAIL.toLowerCase()
-        ) {
-
-          signOut(auth)
-            .finally(
-              () => {
-
-                sessionStorage.clear();
-
-                window.location.replace(
-                  "../login/"
-                );
-
-              }
-            );
-
-          return;
-
-        }
-
-
-        // =================================================
-        // AUTH SUCCESS
-        // =================================================
-
-        authLoading.classList.add(
-          "hidden"
-        );
-
-
-        adminEmail.textContent =
-          user.email;
-
-
-        sessionStorage.setItem(
-          "personalCourseStudioRole",
-          "admin"
-        );
-
-
-        sessionStorage.setItem(
-          "personalCourseStudioAdminLoggedIn",
-          "true"
-        );
-
-
-        loadLocalData();
-
-        listenToStudents();
-
-        listenToLogo();
-
-        registerServiceWorker();
-
-      }
-    );
-
-
-    // =====================================================
-    // LOGOUT
-    // =====================================================
+    /* =====================================================
+       LOGOUT
+    ===================================================== */
 
     logoutBtn.addEventListener(
       "click",
@@ -2275,39 +1665,18 @@
         logoutBtn.disabled =
           true;
 
+        logoutBtn.textContent =
+          "Logging out...";
 
-        try {
-
-          await signOut(
-            auth
-          );
-
-        } catch (
-          error
-        ) {
-
-          console.error(
-            "Firebase logout:",
-            error
-          );
-
-        }
-
-
-        sessionStorage.clear();
-
-
-        window.location.replace(
-          "../login/"
-        );
+        await logoutStudio();
 
       }
     );
 
 
-    // =====================================================
-    // LOCAL DATA
-    // =====================================================
+    /* =====================================================
+       LOCAL DATA
+    ===================================================== */
 
     function loadLocalData() {
 
@@ -2320,14 +1689,12 @@
             ) || "[]"
           );
 
-
         students =
           Array.isArray(
             savedStudents
           )
             ? savedStudents
             : [];
-
 
         renderStudents();
 
@@ -2349,7 +1716,6 @@
             ) || "null"
           );
 
-
         if (
           profile &&
           profile.logo
@@ -2366,9 +1732,9 @@
     }
 
 
-    // =====================================================
-    // FIRESTORE STUDENTS
-    // =====================================================
+    /* =====================================================
+       FIRESTORE STUDENTS
+    ===================================================== */
 
     function listenToStudents() {
 
@@ -2379,7 +1745,6 @@
             db,
             "students"
           );
-
 
         onSnapshot(
           studentsRef,
@@ -2394,7 +1759,6 @@
                 })
               );
 
-
             localStorage.setItem(
               STUDENTS_KEY,
               JSON.stringify(
@@ -2402,9 +1766,7 @@
               )
             );
 
-
             renderStudents();
-
 
             setSyncStatus(
               "LIVE SYNC",
@@ -2420,9 +1782,7 @@
               error
             );
 
-
             loadLocalStudents();
-
 
             setSyncStatus(
               "LOCAL MODE",
@@ -2441,7 +1801,6 @@
           error
         );
 
-
         loadLocalStudents();
 
       }
@@ -2449,9 +1808,9 @@
     }
 
 
-    // =====================================================
-    // LOCAL STUDENTS
-    // =====================================================
+    /* =====================================================
+       LOCAL STUDENTS
+    ===================================================== */
 
     function loadLocalStudents() {
 
@@ -2464,12 +1823,10 @@
             ) || "[]"
           );
 
-
         students =
           Array.isArray(saved)
             ? saved
             : [];
-
 
       } catch {
 
@@ -2477,15 +1834,14 @@
 
       }
 
-
       renderStudents();
 
     }
 
 
-    // =====================================================
-    // RENDER STUDENTS
-    // =====================================================
+    /* =====================================================
+       RENDER STUDENTS
+    ===================================================== */
 
     function renderStudents() {
 
@@ -2507,7 +1863,11 @@
 
 
       studentTotal.textContent =
-        `${students.length} student${students.length === 1 ? "" : "s"}`;
+        `${students.length} student${
+          students.length === 1
+            ? ""
+            : "s"
+        }`;
 
 
       infoStudents.textContent =
@@ -2692,9 +2052,9 @@
     }
 
 
-    // =====================================================
-    // SEARCH
-    // =====================================================
+    /* =====================================================
+       SEARCH
+    ===================================================== */
 
     studentSearch.addEventListener(
       "input",
@@ -2702,17 +2062,13 @@
     );
 
 
-    // =====================================================
-    // ADD STUDENT
-    // =====================================================
+    /* =====================================================
+       ADD STUDENT
+    ===================================================== */
 
     addStudentBtn.addEventListener(
       "click",
-      () => {
-
-        openAddStudent();
-
-      }
+      openAddStudent
     );
 
 
@@ -2724,34 +2080,26 @@
       selectedStudentImageFile =
         null;
 
-
       modalTitle.textContent =
         "Add Student";
-
 
       studentName.value =
         "";
 
-
       studentImageInput.value =
         "";
-
 
       studentImagePreview.style.display =
         "none";
 
-
       studentImagePreview.src =
         "";
-
 
       imageDropText.style.display =
         "block";
 
-
       saveStudentBtn.textContent =
         "Save Student";
-
 
       studentModal.classList.add(
         "show"
@@ -2760,9 +2108,9 @@
     }
 
 
-    // =====================================================
-    // EDIT STUDENT
-    // =====================================================
+    /* =====================================================
+       EDIT STUDENT
+    ===================================================== */
 
     function openEditStudent(
       id
@@ -2840,16 +2188,15 @@
     }
 
 
-    // =====================================================
-    // CLOSE MODAL
-    // =====================================================
+    /* =====================================================
+       CLOSE MODAL
+    ===================================================== */
 
     function closeStudentModal() {
 
       studentModal.classList.remove(
         "show"
       );
-
 
       editingStudentId =
         null;
@@ -2889,9 +2236,9 @@
     );
 
 
-    // =====================================================
-    // STUDENT IMAGE
-    // =====================================================
+    /* =====================================================
+       STUDENT IMAGE
+    ===================================================== */
 
     studentImageInput.addEventListener(
       "change",
@@ -2937,9 +2284,9 @@
     );
 
 
-    // =====================================================
-    // SAVE STUDENT
-    // =====================================================
+    /* =====================================================
+       SAVE STUDENT
+    ===================================================== */
 
     saveStudentBtn.addEventListener(
       "click",
@@ -2969,14 +2316,19 @@
       saveStudentBtn.disabled =
         true;
 
-
       saveStudentBtn.textContent =
         "Saving...";
 
 
+      const wasEditing =
+        Boolean(
+          editingStudentId
+        );
+
+
       try {
 
-        let id =
+        const id =
           editingStudentId ||
           `student_${Date.now()}`;
 
@@ -2996,10 +2348,6 @@
           existing?.imageUrl ||
           "";
 
-
-        // ===============================================
-        // IMAGE UPLOAD
-        // ===============================================
 
         if (
           selectedStudentImageFile
@@ -3027,10 +2375,6 @@
         }
 
 
-        // ===============================================
-        // FIRESTORE
-        // ===============================================
-
         await setDoc(
           doc(
             db,
@@ -3050,7 +2394,7 @@
             updatedAt:
               serverTimestamp(),
 
-            ...(editingStudentId
+            ...(wasEditing
               ? {}
               : {
                   createdAt:
@@ -3065,7 +2409,7 @@
 
 
         showToast(
-          editingStudentId
+          wasEditing
             ? "Student updated."
             : "Student added."
         );
@@ -3083,10 +2427,6 @@
           error
         );
 
-
-        // ===============================================
-        // LOCAL FALLBACK
-        // ===============================================
 
         saveStudentLocal(
           name
@@ -3112,7 +2452,7 @@
           false;
 
         saveStudentBtn.textContent =
-          editingStudentId
+          wasEditing
             ? "Update Student"
             : "Save Student";
 
@@ -3121,9 +2461,9 @@
     }
 
 
-    // =====================================================
-    // LOCAL STUDENT FALLBACK
-    // =====================================================
+    /* =====================================================
+       LOCAL STUDENT FALLBACK
+    ===================================================== */
 
     function saveStudentLocal(
       name
@@ -3137,9 +2477,19 @@
         );
 
 
-      const image =
-        studentImagePreview.src ||
-        "";
+      let image = "";
+
+
+      if (
+        studentImagePreview.src &&
+        studentImagePreview.src !==
+          window.location.href
+      ) {
+
+        image =
+          studentImagePreview.src;
+
+      }
 
 
       const record = {
@@ -3160,11 +2510,10 @@
 
       if (index >= 0) {
 
-        students[index] =
-          {
-            ...students[index],
-            ...record
-          };
+        students[index] = {
+          ...students[index],
+          ...record
+        };
 
       } else {
 
@@ -3188,9 +2537,9 @@
     }
 
 
-    // =====================================================
-    // DELETE STUDENT
-    // =====================================================
+    /* =====================================================
+       DELETE STUDENT
+    ===================================================== */
 
     async function deleteStudent(
       id
@@ -3210,7 +2559,10 @@
 
       const confirmed =
         confirm(
-          `Delete "${student.name || "this student"}"?`
+          `Delete "${
+            student.name ||
+            "this student"
+          }"?`
         );
 
 
@@ -3278,9 +2630,9 @@
     }
 
 
-    // =====================================================
-    // LOGO LISTENER
-    // =====================================================
+    /* =====================================================
+       LOGO LISTENER
+    ===================================================== */
 
     function listenToLogo() {
 
@@ -3329,6 +2681,7 @@
                 logoUrl
               );
 
+
               localStorage.setItem(
                 SETTINGS_KEY,
                 JSON.stringify({
@@ -3340,7 +2693,9 @@
 
             } else {
 
-              applyLogo("");
+              applyLogo(
+                ""
+              );
 
             }
 
@@ -3382,9 +2737,9 @@
     }
 
 
-    // =====================================================
-    // LOCAL LOGO
-    // =====================================================
+    /* =====================================================
+       LOCAL LOGO
+    ===================================================== */
 
     function loadLocalLogo() {
 
@@ -3432,9 +2787,9 @@
     }
 
 
-    // =====================================================
-    // APPLY LOGO
-    // =====================================================
+    /* =====================================================
+       APPLY LOGO
+    ===================================================== */
 
     function applyLogo(
       url
@@ -3511,9 +2866,9 @@
     }
 
 
-    // =====================================================
-    // LOGO UPLOAD
-    // =====================================================
+    /* =====================================================
+       LOGO UPLOAD
+    ===================================================== */
 
     uploadLogoBtn.addEventListener(
       "click",
@@ -3540,7 +2895,6 @@
 
         uploadLogoBtn.disabled =
           true;
-
 
         uploadLogoBtn.textContent =
           "Uploading...";
@@ -3589,8 +2943,6 @@
           );
 
 
-          // Update local settings too
-
           const settings =
             getLocalSettings();
 
@@ -3622,6 +2974,7 @@
             "live"
           );
 
+
         } catch (
           error
         ) {
@@ -3642,6 +2995,7 @@
             "error"
           );
 
+
         } finally {
 
           uploadLogoBtn.disabled =
@@ -3659,9 +3013,9 @@
     );
 
 
-    // =====================================================
-    // REMOVE LOGO
-    // =====================================================
+    /* =====================================================
+       REMOVE LOGO
+    ===================================================== */
 
     removeLogoBtn.addEventListener(
       "click",
@@ -3716,7 +3070,9 @@
           );
 
 
-          applyLogo("");
+          applyLogo(
+            ""
+          );
 
 
           const settings =
@@ -3739,6 +3095,7 @@
             "Logo removed."
           );
 
+
         } catch (
           error
         ) {
@@ -3753,6 +3110,7 @@
             "Logo remove করা যায়নি।"
           );
 
+
         } finally {
 
           removeLogoBtn.disabled =
@@ -3764,9 +3122,9 @@
     );
 
 
-    // =====================================================
-    // LOGO NAV
-    // =====================================================
+    /* =====================================================
+       LOGO NAV
+    ===================================================== */
 
     logoNavBtn.addEventListener(
       "click",
@@ -3784,9 +3142,9 @@
     );
 
 
-    // =====================================================
-    // MOBILE MENU
-    // =====================================================
+    /* =====================================================
+       MOBILE MENU
+    ===================================================== */
 
     mobileMenuBtn.addEventListener(
       "click",
@@ -3809,9 +3167,9 @@
     }
 
 
-    // =====================================================
-    // ESCAPE HTML
-    // =====================================================
+    /* =====================================================
+       ESCAPE HTML
+    ===================================================== */
 
     function escapeHtml(
       value
@@ -3844,9 +3202,9 @@
     }
 
 
-    // =====================================================
-    // SERVICE WORKER
-    // =====================================================
+    /* =====================================================
+       SERVICE WORKER
+    ===================================================== */
 
     function registerServiceWorker() {
 
@@ -3855,7 +3213,9 @@
       ) {
 
         navigator.serviceWorker
-          .register("../sw.js")
+          .register(
+            "../sw.js"
+          )
           .catch(
             error => {
 
