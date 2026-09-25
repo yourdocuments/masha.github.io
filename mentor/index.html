@@ -1922,17 +1922,28 @@
 
   <script type="module">
 
+    /* =====================================================
+       FIREBASE
+    ===================================================== */
+
     import {
-      auth,
       db
     } from "../firebase.js";
 
 
-    import {
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    /* =====================================================
+       CENTRAL AUTH GUARD
+    ===================================================== */
 
+    import {
+      protectMentor,
+      logoutStudio
+    } from "../auth-guard.js";
+
+
+    /* =====================================================
+       FIRESTORE
+    ===================================================== */
 
     import {
       collection,
@@ -1943,10 +1954,6 @@
     // =====================================================
     // CONFIG
     // =====================================================
-
-    const MENTOR_EMAIL =
-      "mentor@snkitinstitute.com";
-
 
     const SETTINGS_KEY =
       "personalCourseStudioSettings";
@@ -1967,134 +1974,178 @@
     const authLoading =
       document.getElementById("authLoading");
 
+
     const syncStatus =
       document.getElementById("syncStatus");
+
 
     const logoutBtn =
       document.getElementById("logoutBtn");
 
+
     const stage =
       document.getElementById("stage");
+
 
     const stagePlaceholder =
       document.getElementById("stagePlaceholder");
 
+
     const mainImage =
       document.getElementById("mainImage");
+
 
     const mainVideo =
       document.getElementById("mainVideo");
 
+
     const stageLabel =
       document.getElementById("stageLabel");
+
 
     const stageTitle =
       document.getElementById("stageTitle");
 
+
     const stageSubtitle =
       document.getElementById("stageSubtitle");
+
 
     const brandBadge =
       document.getElementById("brandBadge");
 
+
     const mentorCameraBox =
       document.getElementById("mentorCameraBox");
+
 
     const mentorCamera =
       document.getElementById("mentorCamera");
 
+
     const slideInput =
       document.getElementById("slideInput");
+
 
     const videoInput =
       document.getElementById("videoInput");
 
+
     const studentList =
       document.getElementById("studentList");
+
 
     const studentCount =
       document.getElementById("studentCount");
 
+
     const topLogo =
       document.getElementById("topLogo");
+
 
     const studioNameTop =
       document.getElementById("studioNameTop");
 
+
     const studioSubtitleTop =
       document.getElementById("studioSubtitleTop");
+
 
     const welcomeTitle =
       document.getElementById("welcomeTitle");
 
+
     const welcomeText =
       document.getElementById("welcomeText");
+
 
     const studioName =
       document.getElementById("studioName");
 
+
     const studioSubtitle =
       document.getElementById("studioSubtitle");
+
 
     const selectedBrand =
       document.getElementById("selectedBrand");
 
+
     const zoomTitle =
       document.getElementById("zoomTitle");
+
 
     const welcomeSetting =
       document.getElementById("welcomeSetting");
 
+
     const saveSettings =
       document.getElementById("saveSettings");
+
 
     const settingsTopBtn =
       document.getElementById("settingsTopBtn");
 
+
     const settingsPanel =
       document.getElementById("settingsPanel");
+
 
     const slideBtn =
       document.getElementById("slideBtn");
 
+
     const videoBtn =
       document.getElementById("videoBtn");
+
 
     const cameraBtn =
       document.getElementById("cameraBtn");
 
+
     const clearBtn =
       document.getElementById("clearBtn");
+
 
     const playBtn =
       document.getElementById("playBtn");
 
+
     const playIcon =
       document.getElementById("playIcon");
+
 
     const playLabel =
       document.getElementById("playLabel");
 
+
     const fullscreenBtn =
       document.getElementById("fullscreenBtn");
+
 
     const recordBtn =
       document.getElementById("recordBtn");
 
+
     const recordLabel =
       document.getElementById("recordLabel");
+
 
     const voiceSample =
       document.getElementById("voiceSample");
 
+
     const voicePreviewBtn =
       document.getElementById("voicePreviewBtn");
+
 
     const cloneVoiceBtn =
       document.getElementById("cloneVoiceBtn");
 
+
     const voiceStatus =
       document.getElementById("voiceStatus");
+
 
     const toast =
       document.getElementById("toast");
@@ -2220,7 +2271,7 @@
 
 
       welcomeText.textContent =
-        "Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন।";
+        "Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন.";
 
     }
 
@@ -2273,64 +2324,30 @@
 
 
     // =====================================================
-    // FIREBASE AUTH
+    // FIREBASE AUTH GUARD
     // =====================================================
 
-    onAuthStateChanged(
-      auth,
-      user => {
+    protectMentor()
+      .then((user) => {
 
-        if (!user) {
+        console.log(
+          "Mentor authenticated:",
+          user.email
+        );
 
-          window.location.replace(
-            "../login/"
-          );
-
-          return;
-        }
-
-
-        const email =
-          (user.email || "").toLowerCase();
-
-
-        if (
-          email !==
-          MENTOR_EMAIL.toLowerCase()
-        ) {
-
-          signOut(auth)
-            .finally(() => {
-
-              sessionStorage.clear();
-
-              window.location.replace(
-                "../login/"
-              );
-
-            });
-
-          return;
-        }
-
-
-        // Authenticated Mentor
 
         authLoading.classList.add(
           "hidden"
         );
 
 
-        sessionStorage.setItem(
-          "personalCourseStudioRole",
-          "mentor"
-        );
-
-
-        sessionStorage.setItem(
-          "personalCourseStudioMentorLoggedIn",
-          "true"
-        );
+        /*
+          auth-guard.js already:
+          - verifies Firebase user
+          - verifies mentor email
+          - saves mentor session
+          - rejects Admin/unknown accounts
+        */
 
 
         loadLocalData();
@@ -2341,8 +2358,20 @@
 
         registerServiceWorker();
 
-      }
-    );
+      })
+      .catch((error) => {
+
+        console.error(
+          "Mentor auth guard:",
+          error
+        );
+
+
+        window.location.replace(
+          "../login/"
+        );
+
+      });
 
 
     // =====================================================
@@ -2355,24 +2384,11 @@
 
         logoutBtn.disabled = true;
 
-        try {
+        logoutBtn.textContent =
+          "Logging out...";
 
-          await signOut(auth);
 
-        } catch (error) {
-
-          console.error(
-            "Firebase logout:",
-            error
-          );
-
-        }
-
-        sessionStorage.clear();
-
-        window.location.replace(
-          "../login/"
-        );
+        await logoutStudio();
 
       }
     );
