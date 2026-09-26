@@ -27,7 +27,7 @@ import {
 const firebaseConfig = {
 
   apiKey:
-    "AIzaSyBUNXeCxRB6k0_llJliCozY4h9birfEfk",
+    "AIzaSyBUNXeCxRBk6b0_llJliCozY4h9birfEfk",
 
   authDomain:
     "mashalive-bd2ea.firebaseapp.com",
