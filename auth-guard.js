@@ -2,11 +2,13 @@
    PERSONAL COURSE STUDIO
    FIREBASE AUTH GUARD
 
-   Single personal account — used for BOTH
-   Mentor and Admin access.
+   Separate accounts:
 
-   Authorized account:
+   Admin:
    sakhijahanusha@gmail.com
+
+   Mentor:
+   thesnkgraphic@email.com
    ========================================================= */
 
 import {
@@ -20,11 +22,14 @@ import {
 
 
 /* =========================================================
-   AUTHORIZED ACCOUNT
+   AUTHORIZED ACCOUNTS
    ========================================================= */
 
-const AUTHORIZED_EMAIL =
+const ADMIN_EMAIL =
   "sakhijahanusha@gmail.com";
+
+const MENTOR_EMAIL =
+  "thesnkgraphic@email.com";
 
 
 /* =========================================================
@@ -41,19 +46,38 @@ function normalizeEmail(email) {
 
 
 /* =========================================================
-   IS AUTHORIZED
+   GET ROLE FROM USER
    ========================================================= */
 
-function isAuthorized(user) {
+function getRoleFromUser(user) {
 
   if (!user) {
-    return false;
+    return null;
   }
 
-  return (
-    normalizeEmail(user.email) ===
-    AUTHORIZED_EMAIL
-  );
+  const email =
+    normalizeEmail(user.email);
+
+
+  if (
+    email === ADMIN_EMAIL
+  ) {
+
+    return "admin";
+
+  }
+
+
+  if (
+    email === MENTOR_EMAIL
+  ) {
+
+    return "mentor";
+
+  }
+
+
+  return null;
 
 }
 
@@ -375,8 +399,14 @@ export async function protectAdmin() {
   }
 
 
+  const role =
+    getRoleFromUser(
+      user
+    );
+
+
   if (
-    !isAuthorized(user)
+    role !== "admin"
   ) {
 
     console.warn(
@@ -452,8 +482,14 @@ export async function protectMentor() {
   }
 
 
+  const role =
+    getRoleFromUser(
+      user
+    );
+
+
   if (
-    !isAuthorized(user)
+    role !== "mentor"
   ) {
 
     console.warn(
@@ -542,13 +578,9 @@ export function getCurrentRole(
   user
 ) {
 
-  return isAuthorized(user)
-    ? (
-        sessionStorage.getItem(
-          "personalCourseStudioRole"
-        ) || "mentor"
-      )
-    : null;
+  return getRoleFromUser(
+    user
+  );
 
 }
 
