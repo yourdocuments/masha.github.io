@@ -572,6 +572,10 @@
       font-weight: 800;
 
       backdrop-filter: blur(12px);
+
+      cursor: move;
+
+      user-select: none;
     }
 
 
@@ -609,6 +613,8 @@
       display: none;
 
       touch-action: none;
+
+      transition: background .25s ease;
     }
 
 
@@ -619,6 +625,8 @@
       object-fit: cover;
 
       transform: scaleX(-1);
+
+      background: transparent;
     }
 
 
@@ -649,7 +657,7 @@
       display: grid;
 
       grid-template-columns:
-        repeat(7, minmax(0, 1fr));
+        repeat(8, minmax(0, 1fr));
 
       gap: 8px;
 
@@ -723,6 +731,17 @@
 
       border-color:
         rgba(248,113,113,0.28);
+    }
+
+
+    .tool-btn.teleprompter.active {
+      color: #fff;
+
+      background:
+        rgba(124,58,237,0.22);
+
+      border-color:
+        rgba(167,139,250,0.30);
     }
 
 
@@ -962,6 +981,52 @@
 
     .setting select option {
       background: #111827;
+      color: #fff;
+    }
+
+
+    .setting input[type="color"] {
+      padding: 4px;
+      cursor: pointer;
+    }
+
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+
+    .color-row input[type="color"] {
+      width: 54px;
+      flex-shrink: 0;
+    }
+
+
+    .color-row-reset {
+      height: 42px;
+      padding: 0 10px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid rgba(255,255,255,0.08);
+
+      background:
+        rgba(255,255,255,0.045);
+
+      color: rgba(255,255,255,0.75);
+
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+
+    .color-row-reset:hover {
+      background:
+        rgba(255,255,255,0.09);
+
       color: #fff;
     }
 
@@ -1629,6 +1694,16 @@
 
 
           <button
+            class="tool-btn teleprompter"
+            id="teleprompterBtn"
+            type="button"
+          >
+            <span class="icon">📜</span>
+            <span class="label">Teleprompter</span>
+          </button>
+
+
+          <button
             class="tool-btn record"
             id="recordBtn"
             type="button"
@@ -1814,6 +1889,33 @@
 
           <div class="setting">
 
+            <label for="cameraBgInput">
+              Mentor Camera Background
+            </label>
+
+            <div class="color-row">
+
+              <input
+                id="cameraBgInput"
+                type="color"
+                value="#020617"
+              >
+
+              <button
+                type="button"
+                class="color-row-reset"
+                id="cameraBgReset"
+              >
+                Reset
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="setting">
+
             <label for="zoomTitle">
               Stage Title
             </label>
@@ -1879,7 +1981,7 @@
             </strong>
 
             <p>
-              আপনার mentor voice sample দিয়ে
+              আপনার mentor voice sample দিয়ে
               original class narration-এর জন্য
               voice clone backend ব্যবহার করা যাবে।
             </p>
@@ -1994,6 +2096,22 @@
       "personalCourseStudioVoiceCloneApi";
 
 
+    const TELEPROMPTER_TEXT_KEY =
+      "personalCourseStudioTeleprompterText";
+
+
+    const TELEPROMPTER_SPEED_KEY =
+      "personalCourseStudioTeleprompterSpeed";
+
+
+    const TELEPROMPTER_SIZE_KEY =
+      "personalCourseStudioTeleprompterSize";
+
+
+    const DEFAULT_CAMERA_BG =
+      "#020617";
+
+
     /* =====================================================
        ELEMENTS
     ===================================================== */
@@ -2094,6 +2212,14 @@
       document.getElementById("selectedBrand");
 
 
+    const cameraBgInput =
+      document.getElementById("cameraBgInput");
+
+
+    const cameraBgReset =
+      document.getElementById("cameraBgReset");
+
+
     const zoomTitle =
       document.getElementById("zoomTitle");
 
@@ -2146,6 +2272,10 @@
       document.getElementById("fullscreenBtn");
 
 
+    const teleprompterBtn =
+      document.getElementById("teleprompterBtn");
+
+
     const recordBtn =
       document.getElementById("recordBtn");
 
@@ -2196,7 +2326,10 @@
         "Zoom Demo",
 
       welcomeText:
-        "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?"
+        "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
+
+      cameraBg:
+        DEFAULT_CAMERA_BG
 
     };
 
@@ -2295,6 +2428,21 @@
 
       welcomeText.textContent =
         "Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন.";
+
+
+      const cameraBg =
+        settings.cameraBg ||
+        DEFAULT_CAMERA_BG;
+
+      mentorCameraBox.style.background =
+        cameraBg;
+
+      if (cameraBgInput) {
+
+        cameraBgInput.value =
+          cameraBg;
+
+      }
 
     }
 
@@ -2681,7 +2829,11 @@
 
           welcomeText:
             welcomeSetting.value.trim() ||
-            "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?"
+            "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
+
+          cameraBg:
+            cameraBgInput.value ||
+            DEFAULT_CAMERA_BG
 
         };
 
@@ -2699,6 +2851,35 @@
         showToast(
           "Studio settings saved."
         );
+
+      }
+    );
+
+
+    /* =====================================================
+       CAMERA BACKGROUND — LIVE PREVIEW + RESET
+    ===================================================== */
+
+    cameraBgInput.addEventListener(
+      "input",
+      () => {
+
+        mentorCameraBox.style.background =
+          cameraBgInput.value;
+
+      }
+    );
+
+
+    cameraBgReset.addEventListener(
+      "click",
+      () => {
+
+        cameraBgInput.value =
+          DEFAULT_CAMERA_BG;
+
+        mentorCameraBox.style.background =
+          DEFAULT_CAMERA_BG;
 
       }
     );
@@ -3040,7 +3221,7 @@
 
 
           showToast(
-            "Camera permission পাওয়া যায়নি।"
+            "Camera permission পাওয়া যায়নি।"
           );
 
         }
@@ -3110,7 +3291,7 @@
 
 
           showToast(
-            "Fullscreen চালু করা যায়নি।"
+            "Fullscreen চালু করা যায়নি।"
           );
 
         }
@@ -3120,12 +3301,301 @@
 
 
     /* =====================================================
+       TELEPROMPTER
+       Opens in a SEPARATE browser window so it never
+       appears inside a screen/tab recording. When
+       recording, choose "This Tab" (not entire screen)
+       and this popup will stay invisible to viewers.
+    ===================================================== */
+
+    let teleprompterWindow = null;
+
+
+    function getTeleprompterHTML() {
+
+      const savedText =
+        localStorage.getItem(
+          TELEPROMPTER_TEXT_KEY
+        ) ||
+        "আপনার script এখানে লিখুন...";
+
+
+      const savedSpeed =
+        localStorage.getItem(
+          TELEPROMPTER_SPEED_KEY
+        ) || "40";
+
+
+      const savedSize =
+        localStorage.getItem(
+          TELEPROMPTER_SIZE_KEY
+        ) || "32";
+
+
+      return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Teleprompter</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: Inter, system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .bar {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    background: #111;
+    border-bottom: 1px solid #222;
+  }
+  .bar button {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #333;
+    background: #1c1c1c;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .bar button:hover { background: #262626; }
+  .bar input[type="range"] { width: 90px; }
+  .bar label { font-size: 10px; color: #999; margin-right: 4px; }
+  #viewport {
+    height: calc(100% - 52px);
+    overflow: hidden;
+    position: relative;
+  }
+  #scrollArea {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 40px 8vw 80vh;
+  }
+  #scriptText {
+    width: 100%;
+    min-height: 200px;
+    background: transparent;
+    color: #fff;
+    border: none;
+    outline: none;
+    resize: none;
+    text-align: center;
+    line-height: 1.5;
+    font-family: inherit;
+  }
+  .center-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 2px solid rgba(96,165,250,0.5);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div class="bar">
+    <button id="playPauseBtn">▶ Start</button>
+    <button id="editBtn">✎ Edit</button>
+    <button id="resetBtn">⤒ Top</button>
+    <label>Speed</label>
+    <input id="speedRange" type="range" min="10" max="150" value="${savedSpeed}">
+    <label>Size</label>
+    <input id="sizeRange" type="range" min="16" max="72" value="${savedSize}">
+  </div>
+
+  <div id="viewport">
+    <div id="scrollArea">
+      <textarea id="scriptText" readonly>${savedText}</textarea>
+    </div>
+    <div class="center-line"></div>
+  </div>
+
+  <script>
+    const scriptText = document.getElementById('scriptText');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const editBtn = document.getElementById('editBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const speedRange = document.getElementById('speedRange');
+    const sizeRange = document.getElementById('sizeRange');
+    const scrollArea = document.getElementById('scrollArea');
+    const viewport = document.getElementById('viewport');
+
+    let playing = false;
+    let pos = 0;
+    let rafId = null;
+    let editing = false;
+
+    function applySize() {
+      scriptText.style.fontSize = sizeRange.value + 'px';
+      localStorage.setItem('${TELEPROMPTER_SIZE_KEY}', sizeRange.value);
+    }
+
+    function autoHeight() {
+      scriptText.style.height = 'auto';
+      scriptText.style.height = scriptText.scrollHeight + 'px';
+    }
+
+    function tick() {
+      if (!playing) return;
+      pos += (speedRange.value / 100) * 1.2;
+      scrollArea.style.transform = 'translateY(-' + pos + 'px)';
+      rafId = requestAnimationFrame(tick);
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      if (editing) return;
+      playing = !playing;
+      playPauseBtn.textContent = playing ? '⏸ Pause' : '▶ Start';
+      if (playing) {
+        tick();
+      } else if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      pos = 0;
+      scrollArea.style.transform = 'translateY(0px)';
+    });
+
+    editBtn.addEventListener('click', () => {
+      editing = !editing;
+      scriptText.readOnly = !editing;
+      editBtn.textContent = editing ? '✓ Done' : '✎ Edit';
+      if (editing) {
+        playing = false;
+        playPauseBtn.textContent = '▶ Start';
+        if (rafId) cancelAnimationFrame(rafId);
+        scriptText.focus();
+      } else {
+        localStorage.setItem('${TELEPROMPTER_TEXT_KEY}', scriptText.value);
+      }
+      autoHeight();
+    });
+
+    speedRange.addEventListener('input', () => {
+      localStorage.setItem('${TELEPROMPTER_SPEED_KEY}', speedRange.value);
+    });
+
+    sizeRange.addEventListener('input', applySize);
+
+    window.addEventListener('resize', autoHeight);
+
+    applySize();
+    setTimeout(autoHeight, 50);
+  </script>
+
+</body>
+</html>
+      `;
+
+    }
+
+
+    function openTeleprompter() {
+
+      if (
+        teleprompterWindow &&
+        !teleprompterWindow.closed
+      ) {
+
+        teleprompterWindow.focus();
+
+        return;
+
+      }
+
+
+      teleprompterWindow =
+        window.open(
+          "",
+          "mentorTeleprompter",
+          "width=480,height=640,resizable=yes"
+        );
+
+
+      if (!teleprompterWindow) {
+
+        showToast(
+          "Popup blocked — browser-এ popup allow করুন।"
+        );
+
+        return;
+
+      }
+
+
+      teleprompterWindow.document.open();
+
+      teleprompterWindow.document.write(
+        getTeleprompterHTML()
+      );
+
+      teleprompterWindow.document.close();
+
+
+      teleprompterBtn.classList.add(
+        "active"
+      );
+
+    }
+
+
+    teleprompterBtn.addEventListener(
+      "click",
+      () => {
+
+        openTeleprompter();
+
+      }
+    );
+
+
+    window.addEventListener(
+      "beforeunload",
+      () => {
+
+        if (
+          teleprompterWindow &&
+          !teleprompterWindow.closed
+        ) {
+
+          teleprompterWindow.close();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
        SCREEN RECORDING
+       Video  -> screen/tab share (getDisplayMedia)
+       Audio  -> mentor's microphone ONLY
+                 (main video / tab audio is never recorded)
     ===================================================== */
 
     let recorder = null;
 
     let recordedChunks = [];
+
+    let recordingDisplayStream = null;
+
+    let recordingMicStream = null;
 
 
     recordBtn.addEventListener(
@@ -3157,11 +3627,46 @@
 
         try {
 
-          const displayStream =
+          recordingDisplayStream =
             await navigator.mediaDevices.getDisplayMedia({
-              video: true,
-              audio: true
+              video: { frameRate: 30 },
+              audio: false
             });
+
+
+          try {
+
+            recordingMicStream =
+              await navigator.mediaDevices.getUserMedia({
+                audio: true
+              });
+
+          } catch (micError) {
+
+            console.error(
+              "Microphone error:",
+              micError
+            );
+
+
+            showToast(
+              "Microphone permission পাওয়া যায়নি — audio ছাড়া recording হবে।"
+            );
+
+            recordingMicStream = null;
+
+          }
+
+
+          const combinedStream =
+            new MediaStream([
+              ...recordingDisplayStream.getVideoTracks(),
+              ...(
+                recordingMicStream
+                  ? recordingMicStream.getAudioTracks()
+                  : []
+              )
+            ]);
 
 
           recordedChunks = [];
@@ -3185,13 +3690,13 @@
           recorder =
             mimeType
               ? new MediaRecorder(
-                  displayStream,
+                  combinedStream,
                   {
                     mimeType
                   }
                 )
               : new MediaRecorder(
-                  displayStream
+                  combinedStream
                 );
 
 
@@ -3266,11 +3771,30 @@
               );
 
 
-              displayStream
-                .getTracks()
-                .forEach(
-                  track => track.stop()
-                );
+              if (recordingDisplayStream) {
+
+                recordingDisplayStream
+                  .getTracks()
+                  .forEach(
+                    track => track.stop()
+                  );
+
+                recordingDisplayStream = null;
+
+              }
+
+
+              if (recordingMicStream) {
+
+                recordingMicStream
+                  .getTracks()
+                  .forEach(
+                    track => track.stop()
+                  );
+
+                recordingMicStream = null;
+
+              }
 
 
               recorder = null;
@@ -3301,7 +3825,7 @@
               );
 
               showToast(
-                "Recording error হয়েছে।"
+                "Recording error হয়েছে।"
               );
 
             };
@@ -3320,12 +3844,12 @@
 
 
           showToast(
-            "Recording started."
+            "Recording started (mic audio only)."
           );
 
 
           const videoTrack =
-            displayStream
+            recordingDisplayStream
               .getVideoTracks()[0];
 
 
@@ -3359,8 +3883,34 @@
 
 
           showToast(
-            "Screen recording শুরু করা যায়নি।"
+            "Screen recording শুরু করা যায়নি।"
           );
+
+
+          if (recordingDisplayStream) {
+
+            recordingDisplayStream
+              .getTracks()
+              .forEach(
+                track => track.stop()
+              );
+
+            recordingDisplayStream = null;
+
+          }
+
+
+          if (recordingMicStream) {
+
+            recordingMicStream
+              .getTracks()
+              .forEach(
+                track => track.stop()
+              );
+
+            recordingMicStream = null;
+
+          }
 
 
           recorder = null;
@@ -3578,6 +4128,12 @@
     );
 
 
+    makeDraggable(
+      brandBadge,
+      stage
+    );
+
+
     /* =====================================================
        VOICE SAMPLE PREVIEW
     ===================================================== */
@@ -3650,7 +4206,7 @@
 
 
             voiceStatus.textContent =
-              "Voice sample play করা যায়নি.";
+              "Voice sample play করা যায়নি.";
 
           });
 
@@ -3846,7 +4402,7 @@
             } else {
 
               voiceStatus.textContent =
-                "API response পাওয়া গেছে, কিন্তু audio/video URL পাওয়া যায়নি.";
+                "API response পাওয়া গেছে, কিন্তু audio/video URL পাওয়া যায়নি.";
 
             }
 
