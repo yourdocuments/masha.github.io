@@ -627,6 +627,8 @@
       transform: scaleX(-1);
 
       background: transparent;
+
+      pointer-events: none;
     }
 
 
@@ -3302,233 +3304,92 @@
 
     /* =====================================================
        TELEPROMPTER
-       Opens in a SEPARATE browser window so it never
-       appears inside a screen/tab recording. When
-       recording, choose "This Tab" (not entire screen)
-       and this popup will stay invisible to viewers.
+       Floating window (Picture-in-Picture when the browser
+       supports it, otherwise a popup). It is a SEPARATE
+       window, so it is not part of a "This Tab" recording.
+       The script scrolls up together with the mentor's
+       voice (microphone level).
     ===================================================== */
 
-    let teleprompterWindow = null;
+    const TELEPROMPTER_MODE_KEY =
+      "personalCourseStudioTeleprompterMode";
+
+    const TELEPROMPTER_SENS_KEY =
+      "personalCourseStudioTeleprompterSens";
 
 
-    function getTeleprompterHTML() {
-
-      const savedText =
-        localStorage.getItem(
-          TELEPROMPTER_TEXT_KEY
-        ) ||
-        "আপনার script এখানে লিখুন...";
+    let tpWindow = null;
 
 
-      const savedSpeed =
-        localStorage.getItem(
-          TELEPROMPTER_SPEED_KEY
-        ) || "40";
-
-
-      const savedSize =
-        localStorage.getItem(
-          TELEPROMPTER_SIZE_KEY
-        ) || "32";
-
-
-      return `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Teleprompter</title>
-<style>
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    height: 100%;
-    background: #000;
-    color: #fff;
-    font-family: Inter, system-ui, sans-serif;
-    overflow: hidden;
-  }
-  .bar {
-    height: 52px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 10px;
-    background: #111;
-    border-bottom: 1px solid #222;
-  }
-  .bar button {
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid #333;
-    background: #1c1c1c;
-    color: #fff;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .bar button:hover { background: #262626; }
-  .bar input[type="range"] { width: 90px; }
-  .bar label { font-size: 10px; color: #999; margin-right: 4px; }
-  #viewport {
-    height: calc(100% - 52px);
-    overflow: hidden;
-    position: relative;
-  }
-  #scrollArea {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    padding: 40px 8vw 80vh;
-  }
-  #scriptText {
-    width: 100%;
-    min-height: 200px;
-    background: transparent;
-    color: #fff;
-    border: none;
-    outline: none;
-    resize: none;
-    text-align: center;
-    line-height: 1.5;
-    font-family: inherit;
-  }
-  .center-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    border-top: 2px solid rgba(96,165,250,0.5);
-    pointer-events: none;
-  }
-</style>
-</head>
-<body>
-
-  <div class="bar">
-    <button id="playPauseBtn">▶ Start</button>
-    <button id="editBtn">✎ Edit</button>
-    <button id="resetBtn">⤒ Top</button>
-    <label>Speed</label>
-    <input id="speedRange" type="range" min="10" max="150" value="${savedSpeed}">
-    <label>Size</label>
-    <input id="sizeRange" type="range" min="16" max="72" value="${savedSize}">
-  </div>
-
-  <div id="viewport">
-    <div id="scrollArea">
-      <textarea id="scriptText" readonly>${savedText}</textarea>
-    </div>
-    <div class="center-line"></div>
-  </div>
-
-  <script>
-    const scriptText = document.getElementById('scriptText');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const editBtn = document.getElementById('editBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const speedRange = document.getElementById('speedRange');
-    const sizeRange = document.getElementById('sizeRange');
-    const scrollArea = document.getElementById('scrollArea');
-    const viewport = document.getElementById('viewport');
-
-    let playing = false;
-    let pos = 0;
-    let rafId = null;
-    let editing = false;
-
-    function applySize() {
-      scriptText.style.fontSize = sizeRange.value + 'px';
-      localStorage.setItem('${TELEPROMPTER_SIZE_KEY}', sizeRange.value);
-    }
-
-    function autoHeight() {
-      scriptText.style.height = 'auto';
-      scriptText.style.height = scriptText.scrollHeight + 'px';
-    }
-
-    function tick() {
-      if (!playing) return;
-      pos += (speedRange.value / 100) * 1.2;
-      scrollArea.style.transform = 'translateY(-' + pos + 'px)';
-      rafId = requestAnimationFrame(tick);
-    }
-
-    playPauseBtn.addEventListener('click', () => {
-      if (editing) return;
-      playing = !playing;
-      playPauseBtn.textContent = playing ? '⏸ Pause' : '▶ Start';
-      if (playing) {
-        tick();
-      } else if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-    });
-
-    resetBtn.addEventListener('click', () => {
-      pos = 0;
-      scrollArea.style.transform = 'translateY(0px)';
-    });
-
-    editBtn.addEventListener('click', () => {
-      editing = !editing;
-      scriptText.readOnly = !editing;
-      editBtn.textContent = editing ? '✓ Done' : '✎ Edit';
-      if (editing) {
-        playing = false;
-        playPauseBtn.textContent = '▶ Start';
-        if (rafId) cancelAnimationFrame(rafId);
-        scriptText.focus();
-      } else {
-        localStorage.setItem('${TELEPROMPTER_TEXT_KEY}', scriptText.value);
-      }
-      autoHeight();
-    });
-
-    speedRange.addEventListener('input', () => {
-      localStorage.setItem('${TELEPROMPTER_SPEED_KEY}', speedRange.value);
-    });
-
-    sizeRange.addEventListener('input', applySize);
-
-    window.addEventListener('resize', autoHeight);
-
-    applySize();
-    setTimeout(autoHeight, 50);
-  <\/script>
-
-</body>
-</html>
-      `;
-
-    }
-
-
-    function openTeleprompter() {
+    async function openTeleprompter() {
 
       if (
-        teleprompterWindow &&
-        !teleprompterWindow.closed
+        tpWindow &&
+        !tpWindow.closed
       ) {
 
-        teleprompterWindow.focus();
+        tpWindow.focus();
 
         return;
 
       }
 
 
-      teleprompterWindow =
-        window.open(
-          "",
-          "mentorTeleprompter",
-          "width=480,height=640,resizable=yes"
+      const width =
+        Math.min(
+          Math.round(screen.availWidth * 0.7),
+          1000
         );
 
+      const height = 320;
 
-      if (!teleprompterWindow) {
+      let win = null;
+
+
+      if ("documentPictureInPicture" in window) {
+
+        try {
+
+          win =
+            await window.documentPictureInPicture
+              .requestWindow({ width, height });
+
+        } catch (error) {
+
+          console.error(
+            "Document PiP:",
+            error
+          );
+
+          win = null;
+
+        }
+
+      }
+
+
+      if (!win) {
+
+        const left =
+          Math.round(
+            (screen.availLeft || 0) +
+            (screen.availWidth - width) / 2
+          );
+
+        win =
+          window.open(
+            "",
+            "mentorTeleprompter",
+            "width=" + width +
+            ",height=" + height +
+            ",left=" + left +
+            ",top=0,resizable=yes"
+          );
+
+      }
+
+
+      if (!win) {
 
         showToast(
           "Popup blocked — browser-এ popup allow করুন।"
@@ -3539,14 +3400,9 @@
       }
 
 
-      teleprompterWindow.document.open();
+      tpWindow = win;
 
-      teleprompterWindow.document.write(
-        getTeleprompterHTML()
-      );
-
-      teleprompterWindow.document.close();
-
+      buildTeleprompter(win);
 
       teleprompterBtn.classList.add(
         "active"
@@ -3555,9 +3411,604 @@
     }
 
 
+    function buildTeleprompter(win) {
+
+      const doc = win.document;
+
+      doc.title = "Teleprompter";
+
+      doc.head.innerHTML = "";
+
+      doc.body.innerHTML = "";
+
+
+      const style =
+        doc.createElement("style");
+
+      style.textContent = `
+        * { box-sizing: border-box; }
+        html, body {
+          margin: 0;
+          height: 100%;
+          background: #000;
+          color: #fff;
+          font-family: Inter, system-ui, sans-serif;
+          overflow: hidden;
+        }
+        body {
+          display: flex;
+          flex-direction: column;
+        }
+        .bar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          background: #111;
+          border-bottom: 1px solid #222;
+        }
+        .bar button, .bar select {
+          height: 32px;
+          padding: 0 10px;
+          border: 1px solid #333;
+          background: #1c1c1c;
+          color: #fff;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .bar button:hover { background: #2a2a2a; }
+        .bar label { font-size: 10px; color: #9ca3af; }
+        .bar input[type=range] { width: 80px; }
+        .meter {
+          width: 60px;
+          height: 8px;
+          border-radius: 99px;
+          background: #222;
+          overflow: hidden;
+        }
+        .meter i {
+          display: block;
+          height: 100%;
+          width: 0;
+          background: #22c55e;
+        }
+        #viewport {
+          position: relative;
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
+        #scroller {
+          padding: 0 6vw;
+          will-change: transform;
+        }
+        #tpText {
+          white-space: pre-wrap;
+          word-break: break-word;
+          text-align: center;
+          line-height: 1.5;
+        }
+        .line {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 45%;
+          border-top: 2px solid rgba(96,165,250,0.55);
+          pointer-events: none;
+        }
+        #tpEditor {
+          display: none;
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          padding: 16px;
+          background: #0a0a0a;
+          color: #fff;
+          border: 0;
+          outline: none;
+          resize: none;
+          font-size: 18px;
+          font-family: inherit;
+        }
+      `;
+
+      doc.head.appendChild(style);
+
+
+      doc.body.innerHTML = `
+        <div class="bar">
+          <button id="tpPlay">▶ Start</button>
+          <button id="tpEdit">✎ Edit</button>
+          <button id="tpTop">⤒ Top</button>
+          <select id="tpMode">
+            <option value="voice">🎙 Voice</option>
+            <option value="auto">⏱ Auto</option>
+          </select>
+          <label>Speed</label>
+          <input id="tpSpeed" type="range" min="10" max="200">
+          <label>Size</label>
+          <input id="tpSize" type="range" min="20" max="90">
+          <label>Mic</label>
+          <input id="tpSens" type="range" min="1" max="100">
+          <div class="meter"><i id="tpMeter"></i></div>
+        </div>
+        <div id="viewport">
+          <div id="scroller"><div id="tpText"></div></div>
+          <div class="line"></div>
+          <textarea id="tpEditor"></textarea>
+        </div>
+      `;
+
+
+      const $ = id => doc.getElementById(id);
+
+      const playBtn = $("tpPlay");
+      const editBtn = $("tpEdit");
+      const topBtn = $("tpTop");
+      const modeSel = $("tpMode");
+      const speedRange = $("tpSpeed");
+      const sizeRange = $("tpSize");
+      const sensRange = $("tpSens");
+      const meter = $("tpMeter");
+      const viewport = $("viewport");
+      const scroller = $("scroller");
+      const tpText = $("tpText");
+      const editor = $("tpEditor");
+
+
+      /* ---------- state ---------- */
+
+      let text =
+        localStorage.getItem(TELEPROMPTER_TEXT_KEY) ||
+        "আপনার script এখানে লিখুন...";
+
+      let speed =
+        Number(localStorage.getItem(TELEPROMPTER_SPEED_KEY) || 40);
+
+      let size =
+        Number(localStorage.getItem(TELEPROMPTER_SIZE_KEY) || 36);
+
+      let sens =
+        Number(localStorage.getItem(TELEPROMPTER_SENS_KEY) || 60);
+
+      let mode =
+        localStorage.getItem(TELEPROMPTER_MODE_KEY) || "voice";
+
+      let playing = false;
+      let editing = false;
+      let closed = false;
+      let pos = 0;
+      let last = null;
+      let lastVoice = -100000;
+      let raf = null;
+
+      let micStream = null;
+      let audioCtx = null;
+      let analyser = null;
+      let samples = null;
+
+
+      /* ---------- init UI ---------- */
+
+      tpText.textContent = text;
+      speedRange.value = speed;
+      sizeRange.value = size;
+      sensRange.value = sens;
+      modeSel.value = mode;
+
+
+      function layout() {
+
+        tpText.style.fontSize = size + "px";
+
+        scroller.style.paddingTop =
+          Math.round(viewport.clientHeight * 0.45) + "px";
+
+        scroller.style.paddingBottom =
+          Math.round(viewport.clientHeight * 0.6) + "px";
+
+      }
+
+      layout();
+
+      setTimeout(layout, 120);
+
+      win.addEventListener("resize", layout);
+
+
+      /* ---------- microphone level (voice sync) ---------- */
+
+      async function ensureMic() {
+
+        if (analyser) {
+          return true;
+        }
+
+        try {
+
+          micStream =
+            await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: false
+              }
+            });
+
+          audioCtx =
+            new (window.AudioContext || window.webkitAudioContext)();
+
+          if (audioCtx.state === "suspended") {
+            await audioCtx.resume();
+          }
+
+          const source =
+            audioCtx.createMediaStreamSource(micStream);
+
+          analyser = audioCtx.createAnalyser();
+
+          analyser.fftSize = 1024;
+
+          source.connect(analyser);
+
+          samples = new Uint8Array(analyser.fftSize);
+
+          return true;
+
+        } catch (error) {
+
+          console.error(
+            "Teleprompter mic:",
+            error
+          );
+
+          showToast(
+            "Microphone পাওয়া যায়নি — Auto mode ব্যবহার হবে।"
+          );
+
+          mode = "auto";
+
+          modeSel.value = "auto";
+
+          return false;
+
+        }
+
+      }
+
+
+      function readLevel() {
+
+        analyser.getByteTimeDomainData(samples);
+
+        let sum = 0;
+
+        for (let i = 0; i < samples.length; i++) {
+
+          const x = (samples[i] - 128) / 128;
+
+          sum += x * x;
+
+        }
+
+        return Math.sqrt(sum / samples.length);
+
+      }
+
+
+      /* ---------- animation loop ---------- */
+
+      function frame(now) {
+
+        if (closed) {
+          return;
+        }
+
+        if (last === null) {
+          last = now;
+        }
+
+        const dt =
+          Math.min((now - last) / 1000, 0.1);
+
+        last = now;
+
+
+        if (analyser) {
+
+          const level = readLevel();
+
+          const threshold =
+            0.004 + (1 - sens / 100) * 0.08;
+
+          if (level > threshold) {
+            lastVoice = now;
+          }
+
+          meter.style.width =
+            Math.min(100, (level / 0.15) * 100) + "%";
+
+        }
+
+
+        const speaking =
+          now - lastVoice < 600;
+
+
+        if (
+          playing &&
+          !editing &&
+          (mode === "auto" || speaking)
+        ) {
+
+          pos += speed * dt;
+
+          const max =
+            Math.max(
+              0,
+              scroller.scrollHeight -
+              viewport.clientHeight * 0.55
+            );
+
+          if (pos > max) {
+            pos = max;
+          }
+
+          scroller.style.transform =
+            "translateY(-" + pos + "px)";
+
+        }
+
+        raf = win.requestAnimationFrame(frame);
+
+      }
+
+      raf = win.requestAnimationFrame(frame);
+
+
+      /* ---------- controls ---------- */
+
+      async function togglePlay() {
+
+        if (editing) {
+          return;
+        }
+
+        if (!playing) {
+
+          if (mode === "voice") {
+            await ensureMic();
+          }
+
+          playing = true;
+
+          playBtn.textContent = "⏸ Pause";
+
+        } else {
+
+          playing = false;
+
+          playBtn.textContent = "▶ Start";
+
+        }
+
+      }
+
+      playBtn.addEventListener("click", togglePlay);
+
+
+      doc.addEventListener(
+        "keydown",
+        event => {
+
+          if (
+            event.code === "Space" &&
+            !editing
+          ) {
+
+            event.preventDefault();
+
+            togglePlay();
+
+          }
+
+        }
+      );
+
+
+      topBtn.addEventListener(
+        "click",
+        () => {
+
+          pos = 0;
+
+          scroller.style.transform =
+            "translateY(0px)";
+
+        }
+      );
+
+
+      editBtn.addEventListener(
+        "click",
+        () => {
+
+          editing = !editing;
+
+          if (editing) {
+
+            playing = false;
+
+            playBtn.textContent = "▶ Start";
+
+            editor.value = text;
+
+            editor.style.display = "block";
+
+            editBtn.textContent = "✓ Done";
+
+            editor.focus();
+
+          } else {
+
+            text = editor.value;
+
+            localStorage.setItem(
+              TELEPROMPTER_TEXT_KEY,
+              text
+            );
+
+            tpText.textContent = text;
+
+            editor.style.display = "none";
+
+            editBtn.textContent = "✎ Edit";
+
+            layout();
+
+          }
+
+        }
+      );
+
+
+      modeSel.addEventListener(
+        "change",
+        async () => {
+
+          mode = modeSel.value;
+
+          localStorage.setItem(
+            TELEPROMPTER_MODE_KEY,
+            mode
+          );
+
+          if (mode === "voice" && playing) {
+            await ensureMic();
+          }
+
+        }
+      );
+
+
+      speedRange.addEventListener(
+        "input",
+        () => {
+
+          speed = Number(speedRange.value);
+
+          localStorage.setItem(
+            TELEPROMPTER_SPEED_KEY,
+            String(speed)
+          );
+
+        }
+      );
+
+
+      sizeRange.addEventListener(
+        "input",
+        () => {
+
+          size = Number(sizeRange.value);
+
+          localStorage.setItem(
+            TELEPROMPTER_SIZE_KEY,
+            String(size)
+          );
+
+          layout();
+
+        }
+      );
+
+
+      sensRange.addEventListener(
+        "input",
+        () => {
+
+          sens = Number(sensRange.value);
+
+          localStorage.setItem(
+            TELEPROMPTER_SENS_KEY,
+            String(sens)
+          );
+
+        }
+      );
+
+
+      /* ---------- cleanup ---------- */
+
+      function cleanup() {
+
+        if (closed) {
+          return;
+        }
+
+        closed = true;
+
+        if (raf) {
+
+          try {
+            win.cancelAnimationFrame(raf);
+          } catch {}
+
+        }
+
+        if (micStream) {
+
+          micStream
+            .getTracks()
+            .forEach(track => track.stop());
+
+          micStream = null;
+
+        }
+
+        if (audioCtx) {
+
+          audioCtx.close().catch(() => {});
+
+          audioCtx = null;
+
+        }
+
+        analyser = null;
+
+        tpWindow = null;
+
+        teleprompterBtn.classList.remove(
+          "active"
+        );
+
+      }
+
+      win.addEventListener("pagehide", cleanup);
+
+      win.addEventListener("unload", cleanup);
+
+    }
+
+
     teleprompterBtn.addEventListener(
       "click",
       () => {
+
+        if (
+          tpWindow &&
+          !tpWindow.closed
+        ) {
+
+          tpWindow.close();
+
+          return;
+
+        }
 
         openTeleprompter();
 
@@ -3570,11 +4021,11 @@
       () => {
 
         if (
-          teleprompterWindow &&
-          !teleprompterWindow.closed
+          tpWindow &&
+          !tpWindow.closed
         ) {
 
-          teleprompterWindow.close();
+          tpWindow.close();
 
         }
 
@@ -3630,7 +4081,8 @@
           recordingDisplayStream =
             await navigator.mediaDevices.getDisplayMedia({
               video: { frameRate: 30 },
-              audio: false
+              audio: false,
+              preferCurrentTab: true
             });
 
 
@@ -3945,7 +4397,7 @@
 
           if (
             event.target.closest(
-              "button, video, input"
+              "button, input"
             )
           ) {
 
