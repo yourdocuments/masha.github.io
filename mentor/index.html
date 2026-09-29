@@ -1,5012 +1,1474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Mentor Studio | Personal Course Studio</title>
-
-  <meta
-    name="description"
-    content="Private Mentor Studio for Personal Course Studio."
-  >
-
-  <link
-    rel="manifest"
-    href="../manifest.json"
-  >
-
-  <meta
-    name="theme-color"
-    content="#070b14"
-  >
-
-  <style>
-    /* =====================================================
-       RESET
-    ===================================================== */
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      width: 100%;
-      min-height: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      background:
-        #070b14;
-
-      color: #f8fafc;
-
-      overflow-x: hidden;
-    }
-
-    button,
-    input,
-    select {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-
-    /* =====================================================
-       APP
-    ===================================================== */
-
-    .app {
-      min-height: 100vh;
-
-      background:
-        radial-gradient(
-          circle at 15% 10%,
-          rgba(37, 99, 235, 0.13),
-          transparent 28%
-        ),
-        radial-gradient(
-          circle at 85% 80%,
-          rgba(124, 58, 237, 0.10),
-          transparent 30%
-        ),
-        #070b14;
-    }
-
-
-    /* =====================================================
-       TOP BAR
-    ===================================================== */
-
-    .topbar {
-      height: 72px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      padding: 0 20px;
-
-      border-bottom:
-        1px solid rgba(255,255,255,0.07);
-
-      background:
-        rgba(7,11,20,0.92);
-
-      backdrop-filter: blur(18px);
-
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      min-width: 0;
-    }
-
-
-    .brand-logo {
-      width: 42px;
-      height: 42px;
-
-      border-radius: 11px;
-
-      object-fit: contain;
-
-      background: #fff;
-
-      padding: 4px;
-    }
-
-
-    .brand-text {
-      min-width: 0;
-    }
-
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 900;
-
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-
-    .brand-subtitle {
-      margin-top: 2px;
-
-      font-size: 11px;
-
-      color: rgba(255,255,255,0.42);
-
-      white-space: nowrap;
-    }
-
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-
-    .mode-badge {
-      padding: 8px 11px;
-
-      border-radius: 999px;
-
-      background:
-        rgba(37,99,235,0.12);
-
-      border:
-        1px solid rgba(96,165,250,0.18);
-
-      color: #93c5fd;
-
-      font-size: 10px;
-      font-weight: 900;
-
-      letter-spacing: 0.10em;
-    }
-
-
-    .top-btn {
-      min-height: 38px;
-
-      padding: 0 13px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.045);
-
-      color: rgba(255,255,255,0.78);
-
-      font-size: 12px;
-      font-weight: 800;
-
-      transition: 0.2s ease;
-    }
-
-
-    .top-btn:hover {
-      background:
-        rgba(255,255,255,0.09);
-
-      color: #fff;
-    }
-
-
-    .top-btn.logout {
-      color: #fca5a5;
-
-      border-color:
-        rgba(248,113,113,0.14);
-    }
-
-
-    .top-btn:disabled {
-      opacity: 0.55;
-      cursor: wait;
-    }
-
-
-    /* =====================================================
-       MAIN
-    ===================================================== */
-
-    .main {
-      width: min(1500px, 100%);
-
-      margin: 0 auto;
-
-      padding: 20px;
-
-      display: grid;
-
-      grid-template-columns:
-        minmax(0, 1fr)
-        300px;
-
-      gap: 18px;
-    }
-
-
-    /* =====================================================
-       STUDIO
-    ===================================================== */
-
-    .studio {
-      min-width: 0;
-
-      display: flex;
-      flex-direction: column;
-
-      gap: 14px;
-    }
-
-
-    .studio-header {
-      display: flex;
-
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 15px;
-
-      padding: 18px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
-      border-radius: 18px;
-
-      background:
-        rgba(255,255,255,0.035);
-    }
-
-
-    .studio-header h1 {
-      font-size: 20px;
-
-      letter-spacing: -0.03em;
-    }
-
-
-    .studio-header p {
-      margin-top: 4px;
-
-      font-size: 12px;
-
-      color: rgba(255,255,255,0.45);
-    }
-
-
-    .sync-status {
-      display: inline-flex;
-
-      align-items: center;
-
-      gap: 7px;
-
-      padding: 8px 10px;
-
-      border-radius: 999px;
-
-      font-size: 10px;
-
-      font-weight: 900;
-
-      white-space: nowrap;
-    }
-
-
-    .sync-status::before {
-      content: "";
-
-      width: 7px;
-      height: 7px;
-
-      border-radius: 50%;
-
-      background: currentColor;
-    }
-
-
-    .sync-status.live {
-      color: #86efac;
-
-      background:
-        rgba(34,197,94,0.08);
-    }
-
-
-    .sync-status.local {
-      color: #fcd34d;
-
-      background:
-        rgba(245,158,11,0.08);
-    }
-
-
-    .sync-status.error {
-      color: #fca5a5;
-
-      background:
-        rgba(239,68,68,0.08);
-    }
-
-
-    /* =====================================================
-       STAGE
-    ===================================================== */
-
-    .stage {
-      position: relative;
-
-      width: 100%;
-
-      min-height: 540px;
-
-      aspect-ratio: 16 / 9;
-
-      max-height: calc(100vh - 250px);
-
-      border-radius: 20px;
-
-      overflow: hidden;
-
-      border:
-        1px solid rgba(255,255,255,0.09);
-
-      background:
-        #020617;
-
-      box-shadow:
-        0 30px 80px rgba(0,0,0,0.34);
-    }
-
-
-    .stage.empty {
-      display: flex;
-
-      align-items: center;
-      justify-content: center;
-
-      background:
-        radial-gradient(
-          circle at center,
-          rgba(37,99,235,0.09),
-          transparent 42%
-        ),
-        #020617;
-    }
-
-
-    .stage-placeholder {
-      text-align: center;
-
-      max-width: 430px;
-
-      padding: 30px;
-    }
-
-
-    .stage-icon {
-      width: 66px;
-      height: 66px;
-
-      margin: 0 auto 18px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      border-radius: 20px;
-
-      background:
-        rgba(37,99,235,0.12);
-
-      border:
-        1px solid rgba(96,165,250,0.16);
-
-      font-size: 28px;
-    }
-
-
-    .stage-placeholder h2 {
-      font-size: 20px;
-    }
-
-
-    .stage-placeholder p {
-      margin-top: 9px;
-
-      font-size: 13px;
-
-      line-height: 1.7;
-
-      color: rgba(255,255,255,0.45);
-    }
-
-
-    #mainImage {
-      position: absolute;
-
-      inset: 0;
-
-      width: 100%;
-      height: 100%;
-
-      object-fit: contain;
-
-      background: #020617;
-
-      display: none;
-    }
-
-
-    #mainVideo {
-      position: absolute;
-
-      inset: 0;
-
-      width: 100%;
-      height: 100%;
-
-      object-fit: contain;
-
-      background: #020617;
-
-      display: none;
-    }
-
-
-    /* =====================================================
-       STAGE LABEL
-    ===================================================== */
-
-    .stage-label {
-      position: absolute;
-
-      top: 16px;
-      left: 16px;
-
-      z-index: 12;
-
-      max-width: calc(100% - 32px);
-
-      padding: 9px 12px;
-
-      border-radius: 10px;
-
-      background:
-        rgba(2,6,23,0.78);
-
-      border:
-        1px solid rgba(255,255,255,0.10);
-
-      backdrop-filter: blur(12px);
-
-      cursor: move;
-
-      user-select: none;
-    }
-
-
-    .stage-label strong {
-      display: block;
-
-      font-size: 12px;
-    }
-
-
-    .stage-label span {
-      display: block;
-
-      margin-top: 2px;
-
-      font-size: 9px;
-
-      color: rgba(255,255,255,0.44);
-    }
-
-
-    /* =====================================================
-       BRAND BADGE
-    ===================================================== */
-
-    .brand-badge {
-      position: absolute;
-
-      right: 16px;
-      top: 16px;
-
-      z-index: 12;
-
-      max-width: 220px;
-
-      padding: 8px 11px;
-
-      border-radius: 10px;
-
-      background:
-        rgba(2,6,23,0.72);
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      color: #bfdbfe;
-
-      font-size: 10px;
-      font-weight: 800;
-
-      backdrop-filter: blur(12px);
-
-      cursor: move;
-
-      user-select: none;
-    }
-
-
-    /* =====================================================
-       MENTOR CAMERA
-    ===================================================== */
-
-    .mentor-camera {
-      position: absolute;
-
-      right: 18px;
-      bottom: 18px;
-
-      width: 220px;
-
-      aspect-ratio: 16 / 10;
-
-      z-index: 20;
-
-      overflow: hidden;
-
-      border-radius: 16px;
-
-      border:
-        1px solid rgba(255,255,255,0.15);
-
-      background:
-        #020617;
-
-      box-shadow:
-        0 20px 50px rgba(0,0,0,0.45);
-
-      cursor: move;
-
-      display: none;
-
-      touch-action: none;
-
-      transition: background .25s ease;
-    }
-
-
-    .mentor-camera video {
-      width: 100%;
-      height: 100%;
-
-      object-fit: cover;
-
-      transform: scaleX(-1);
-
-      background: transparent;
-
-      pointer-events: none;
-    }
-
-
-    .camera-label {
-      position: absolute;
-
-      left: 9px;
-      bottom: 9px;
-
-      padding: 6px 8px;
-
-      border-radius: 8px;
-
-      background:
-        rgba(2,6,23,0.75);
-
-      font-size: 9px;
-
-      font-weight: 800;
-    }
-
-
-    /* =====================================================
-       TOOLBAR
-    ===================================================== */
-
-    .toolbar {
-      display: grid;
-
-      grid-template-columns:
-        repeat(8, minmax(0, 1fr));
-
-      gap: 8px;
-
-      padding: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
-      border-radius: 16px;
-
-      background:
-        rgba(255,255,255,0.035);
-    }
-
-
-    .tool-btn {
-      min-height: 50px;
-
-      border-radius: 12px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
-      background:
-        rgba(255,255,255,0.04);
-
-      color: rgba(255,255,255,0.72);
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      flex-direction: column;
-
-      gap: 4px;
-
-      transition: 0.2s ease;
-    }
-
-
-    .tool-btn:hover {
-      color: #fff;
-
-      background:
-        rgba(255,255,255,0.08);
-    }
-
-
-    .tool-btn .icon {
-      font-size: 17px;
-    }
-
-
-    .tool-btn .label {
-      font-size: 9px;
-
-      font-weight: 800;
-    }
-
-
-    .tool-btn.record {
-      color: #fca5a5;
-    }
-
-
-    .tool-btn.record.active {
-      color: #fff;
-
-      background:
-        rgba(220,38,38,0.20);
-
-      border-color:
-        rgba(248,113,113,0.28);
-    }
-
-
-    .tool-btn.teleprompter.active {
-      color: #fff;
-
-      background:
-        rgba(124,58,237,0.22);
-
-      border-color:
-        rgba(167,139,250,0.30);
-    }
-
-
-    /* =====================================================
-       SIDE PANEL
-    ===================================================== */
-
-    .side {
-      min-width: 0;
-
-      display: flex;
-      flex-direction: column;
-
-      gap: 14px;
-    }
-
-
-    .panel {
-      padding: 17px;
-
-      border:
-        1px solid rgba(255,255,255,0.07);
-
-      border-radius: 18px;
-
-      background:
-        rgba(255,255,255,0.035);
-    }
-
-
-    .panel-title {
-      display: flex;
-
-      align-items: center;
-      justify-content: space-between;
-
-      gap: 10px;
-
-      margin-bottom: 14px;
-    }
-
-
-    .panel-title h3 {
-      font-size: 13px;
-    }
-
-
-    .panel-title span {
-      font-size: 10px;
-
-      color: rgba(255,255,255,0.38);
-    }
-
-
-    /* =====================================================
-       WELCOME
-    ===================================================== */
-
-    .welcome-box {
-      padding: 15px;
-
-      border-radius: 14px;
-
-      background:
-        linear-gradient(
-          135deg,
-          rgba(37,99,235,0.10),
-          rgba(79,70,229,0.07)
-        );
-
-      border:
-        1px solid rgba(96,165,250,0.10);
-    }
-
-
-    .welcome-box strong {
-      display: block;
-
-      font-size: 12px;
-    }
-
-
-    .welcome-box p {
-      margin-top: 6px;
-
-      color: rgba(255,255,255,0.47);
-
-      font-size: 11px;
-
-      line-height: 1.6;
-    }
-
-
-    /* =====================================================
-       STUDENTS
-    ===================================================== */
-
-    .student-list {
-      display: flex;
-
-      flex-direction: column;
-
-      gap: 8px;
-
-      max-height: 300px;
-
-      overflow-y: auto;
-    }
-
-
-    .student {
-      display: flex;
-
-      align-items: center;
-
-      gap: 10px;
-
-      padding: 9px;
-
-      border-radius: 11px;
-
-      background:
-        rgba(255,255,255,0.035);
-
-      border:
-        1px solid rgba(255,255,255,0.05);
-    }
-
-
-    .student-avatar {
-      width: 38px;
-      height: 38px;
-
-      flex: 0 0 38px;
-
-      border-radius: 10px;
-
-      object-fit: cover;
-
-      background:
-        rgba(255,255,255,0.08);
-    }
-
-
-    .student-info {
-      min-width: 0;
-    }
-
-
-    .student-name {
-      font-size: 11px;
-      font-weight: 800;
-
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-
-    .student-status {
-      margin-top: 3px;
-
-      font-size: 9px;
-
-      color: #86efac;
-    }
-
-
-    .empty-students {
-      padding: 20px 8px;
-
-      text-align: center;
-
-      color: rgba(255,255,255,0.34);
-
-      font-size: 11px;
-    }
-
-
-    /* =====================================================
-       SETTINGS
-    ===================================================== */
-
-    .setting {
-      margin-bottom: 13px;
-    }
-
-
-    .setting:last-child {
-      margin-bottom: 0;
-    }
-
-
-    .setting label {
-      display: block;
-
-      margin-bottom: 6px;
-
-      font-size: 10px;
-
-      font-weight: 800;
-
-      color: rgba(255,255,255,0.50);
-    }
-
-
-    .setting input,
-    .setting select {
-      width: 100%;
-
-      height: 42px;
-
-      padding: 0 11px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      outline: none;
-
-      background:
-        rgba(255,255,255,0.045);
-
-      color: #fff;
-
-      font-size: 11px;
-    }
-
-
-    .setting input:focus,
-    .setting select:focus {
-      border-color:
-        rgba(96,165,250,0.45);
-    }
-
-
-    .setting select option {
-      background: #111827;
-      color: #fff;
-    }
-
-
-    .setting input[type="color"] {
-      padding: 4px;
-      cursor: pointer;
-    }
-
-
-    .color-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-
-    .color-row input[type="color"] {
-      width: 54px;
-      flex-shrink: 0;
-    }
-
-
-    .color-row-reset {
-      height: 42px;
-      padding: 0 10px;
-
-      border-radius: 10px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.045);
-
-      color: rgba(255,255,255,0.75);
-
-      font-size: 9px;
-      font-weight: 800;
-    }
-
-
-    .color-row-reset:hover {
-      background:
-        rgba(255,255,255,0.09);
-
-      color: #fff;
-    }
-
-
-    .save-settings {
-      width: 100%;
-
-      height: 42px;
-
-      margin-top: 3px;
-
-      border: 0;
-
-      border-radius: 10px;
-
-      background:
-        #2563eb;
-
-      color: #fff;
-
-      font-size: 11px;
-      font-weight: 900;
-    }
-
-
-    .save-settings:hover {
-      background:
-        #1d4ed8;
-    }
-
-
-    /* =====================================================
-       VOICE CLONE
-    ===================================================== */
-
-    .voice-box {
-      padding: 14px;
-
-      border-radius: 13px;
-
-      background:
-        rgba(124,58,237,0.08);
-
-      border:
-        1px solid rgba(167,139,250,0.12);
-    }
-
-
-    .voice-box strong {
-      font-size: 11px;
-    }
-
-
-    .voice-box p {
-      margin-top: 6px;
-
-      font-size: 10px;
-
-      line-height: 1.6;
-
-      color: rgba(255,255,255,0.43);
-    }
-
-
-    .voice-file {
-      width: 100%;
-
-      margin-top: 11px;
-
-      font-size: 10px;
-    }
-
-
-    .voice-actions {
-      display: grid;
-
-      grid-template-columns: 1fr 1fr;
-
-      gap: 7px;
-
-      margin-top: 10px;
-    }
-
-
-    .small-btn {
-      height: 38px;
-
-      border-radius: 9px;
-
-      border:
-        1px solid rgba(255,255,255,0.08);
-
-      background:
-        rgba(255,255,255,0.05);
-
-      color: rgba(255,255,255,0.75);
-
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-
-    .small-btn.primary {
-      background:
-        #7c3aed;
-
-      border-color:
-        transparent;
-
-      color: #fff;
-    }
-
-
-    .small-btn:disabled {
-      opacity: 0.55;
-      cursor: wait;
-    }
-
-
-    .voice-status {
-      margin-top: 9px;
-
-      font-size: 9px;
-
-      color: rgba(255,255,255,0.40);
-
-      line-height: 1.5;
-    }
-
-
-    /* =====================================================
-       LOADING
-    ===================================================== */
-
-    .auth-loading {
-      position: fixed;
-
-      inset: 0;
-
-      z-index: 9999;
-
-      display: flex;
-
-      align-items: center;
-      justify-content: center;
-
-      background:
-        #070b14;
-    }
-
-
-    .auth-loading.hidden {
-      display: none;
-    }
-
-
-    .loader-card {
-      text-align: center;
-
-      padding: 30px;
-    }
-
-
-    .loader {
-      width: 40px;
-      height: 40px;
-
-      margin: 0 auto 15px;
-
-      border-radius: 50%;
-
-      border:
-        3px solid rgba(255,255,255,0.10);
-
-      border-top-color:
-        #60a5fa;
-
-      animation:
-        spin 0.8s linear infinite;
-    }
-
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-
-    .loader-card p {
-      font-size: 11px;
-
-      color: rgba(255,255,255,0.44);
-    }
-
-
-    /* =====================================================
-       TOAST
-    ===================================================== */
-
-    .toast {
-      position: fixed;
-
-      left: 50%;
-      bottom: 24px;
-
-      transform:
-        translate(-50%, 20px);
-
-      opacity: 0;
-
-      pointer-events: none;
-
-      z-index: 10000;
-
-      max-width: calc(100% - 30px);
-
-      padding: 12px 16px;
-
-      border-radius: 12px;
-
-      background:
-        rgba(15,23,42,0.95);
-
-      border:
-        1px solid rgba(255,255,255,0.10);
-
-      box-shadow:
-        0 15px 45px rgba(0,0,0,0.35);
-
-      font-size: 11px;
-
-      transition: 0.25s ease;
-    }
-
-
-    .toast.show {
-      opacity: 1;
-
-      transform:
-        translate(-50%, 0);
-    }
-
-
-    /* =====================================================
-       MOBILE
-    ===================================================== */
-
-    @media (max-width: 1050px) {
-
-      .main {
-        grid-template-columns: 1fr;
-      }
-
-      .side {
-        display: grid;
-
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
-      }
-
-    }
-
-
-    @media (max-width: 720px) {
-
-      .topbar {
-        height: 64px;
-
-        padding: 0 12px;
-      }
-
-
-      .brand-logo {
-        width: 36px;
-        height: 36px;
-      }
-
-
-      .brand-subtitle,
-      .mode-badge {
-        display: none;
-      }
-
-
-      .top-btn {
-        padding: 0 10px;
-      }
-
-
-      .main {
-        padding: 12px;
-      }
-
-
-      .studio-header {
-        padding: 14px;
-      }
-
-
-      .stage {
-        min-height: 300px;
-
-        max-height: none;
-
-        aspect-ratio: 16 / 10;
-
-        border-radius: 15px;
-      }
-
-
-      .toolbar {
-        grid-template-columns:
-          repeat(4, minmax(0, 1fr));
-      }
-
-
-      .side {
-        grid-template-columns: 1fr;
-      }
-
-
-      .mentor-camera {
-        width: 150px;
-
-        right: 10px;
-        bottom: 10px;
-      }
-
-    }
-
-
-    @media (max-width: 480px) {
-
-      .brand-title {
-        max-width: 145px;
-      }
-
-
-      .studio-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-      }
-
-
-      .toolbar {
-        grid-template-columns:
-          repeat(3, minmax(0, 1fr));
-      }
-
-
-      .tool-btn {
-        min-height: 46px;
-      }
-
-
-      .stage-label {
-        top: 10px;
-        left: 10px;
-      }
-
-
-      .brand-badge {
-        right: 10px;
-        top: 10px;
-
-        max-width: 150px;
-      }
-
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentor Studio | Personal Course Studio</title>
+<meta name="description" content="Private Mentor Studio for Personal Course Studio.">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#070b14">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%}
+body{min-height:100vh;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#070b14;color:#f8fafc;overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;background:radial-gradient(circle at 15% 10%,rgba(37,99,235,.13),transparent 28%),radial-gradient(circle at 85% 80%,rgba(124,58,237,.10),transparent 30%),#070b14}
+
+/* TOP BAR */
+.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(7,11,20,.92);backdrop-filter:blur(18px);position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-logo{width:42px;height:42px;border-radius:11px;object-fit:contain;background:#fff;padding:4px}
+.brand-text{min-width:0}
+.brand-title{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-subtitle{margin-top:2px;font-size:11px;color:rgba(255,255,255,.42);white-space:nowrap}
+.top-actions{display:flex;align-items:center;gap:8px}
+.mode-badge{padding:8px 11px;border-radius:999px;background:rgba(37,99,235,.12);border:1px solid rgba(96,165,250,.18);color:#93c5fd;font-size:10px;font-weight:900;letter-spacing:.10em}
+.top-btn{min-height:38px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:rgba(255,255,255,.78);font-size:12px;font-weight:800;transition:.2s ease}
+.top-btn:hover{background:rgba(255,255,255,.09);color:#fff}
+.top-btn.logout{color:#fca5a5;border-color:rgba(248,113,113,.14)}
+.top-btn:disabled{opacity:.55;cursor:wait}
+
+/* MAIN */
+.main{width:min(1500px,100%);margin:0 auto;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px}
+.studio{min-width:0;display:flex;flex-direction:column;gap:14px}
+.studio-header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:18px;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:rgba(255,255,255,.035)}
+.studio-header h1{font-size:20px;letter-spacing:-.03em}
+.studio-header p{margin-top:4px;font-size:12px;color:rgba(255,255,255,.45)}
+.sync-status{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}
+.sync-status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.sync-status.live{color:#86efac;background:rgba(34,197,94,.08)}
+.sync-status.local{color:#fcd34d;background:rgba(245,158,11,.08)}
+.sync-status.error{color:#fca5a5;background:rgba(239,68,68,.08)}
+
+/* STAGE */
+.stage{position:relative;width:100%;min-height:540px;aspect-ratio:16/9;max-height:calc(100vh - 250px);border-radius:20px;overflow:hidden;isolation:isolate;border:1px solid rgba(255,255,255,.09);background:#020617;box-shadow:0 30px 80px rgba(0,0,0,.34)}
+.stage.empty{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,rgba(37,99,235,.09),transparent 42%),#020617}
+.stage-placeholder{text-align:center;max-width:430px;padding:30px}
+.stage-icon{width:66px;height:66px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;border-radius:20px;background:rgba(37,99,235,.12);border:1px solid rgba(96,165,250,.16);font-size:28px}
+.stage-placeholder h2{font-size:20px}
+.stage-placeholder p{margin-top:9px;font-size:13px;line-height:1.7;color:rgba(255,255,255,.45)}
+#mainImage,#mainVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#020617;display:none}
+.stage-label{position:absolute;top:16px;left:16px;z-index:12;max-width:calc(100% - 32px);padding:9px 12px;border-radius:10px;background:rgba(2,6,23,.78);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(12px);cursor:move;user-select:none}
+.stage-label strong{display:block;font-size:12px}
+.stage-label span{display:block;margin-top:2px;font-size:9px;color:rgba(255,255,255,.44)}
+.brand-badge{position:absolute;right:16px;top:16px;z-index:12;max-width:220px;padding:8px 11px;border-radius:10px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.08);color:#bfdbfe;font-size:10px;font-weight:800;backdrop-filter:blur(12px);cursor:move;user-select:none}
+.stage.recording-clean .stage-label,.stage.recording-clean .brand-badge,.stage.recording-clean .camera-label{visibility:hidden}
+
+/* MENTOR CAMERA */
+.mentor-camera{position:absolute;right:18px;bottom:18px;width:220px;aspect-ratio:16/10;z-index:20;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.15);background:#020617;box-shadow:0 20px 50px rgba(0,0,0,.45);cursor:move;display:none;touch-action:none;transition:background .25s ease}
+.mentor-camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:transparent;pointer-events:none}
+.camera-label{position:absolute;left:9px;bottom:9px;z-index:2;padding:6px 8px;border-radius:8px;background:rgba(2,6,23,.75);font-size:9px;font-weight:800}
+.camera-frame{position:absolute;inset:0;z-index:0;display:none;background-size:cover;background-position:center;pointer-events:none}
+.mentor-camera.has-frame .camera-frame{display:block}
+.mentor-camera video{position:relative;z-index:1}
+.mentor-camera.has-frame video{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);border-radius:10px}
+
+/* TOOLBAR */
+.toolbar{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.035)}
+.tool-btn{min-height:50px;border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);color:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;transition:.2s ease}
+.tool-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tool-btn .icon{font-size:17px}
+.tool-btn .label{font-size:9px;font-weight:800}
+.tool-btn.record{color:#fca5a5}
+.tool-btn.record.active{color:#fff;background:rgba(220,38,38,.20);border-color:rgba(248,113,113,.28)}
+.tool-btn.teleprompter.active{color:#fff;background:rgba(124,58,237,.22);border-color:rgba(167,139,250,.30)}
+
+/* SIDE */
+.side{min-width:0;display:flex;flex-direction:column;gap:14px}
+.panel{padding:17px;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:rgba(255,255,255,.035)}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.panel-title h3{font-size:13px}
+.panel-title span{font-size:10px;color:rgba(255,255,255,.38)}
+.title-right{display:flex;align-items:center;gap:8px}
+.mini-toggle{height:26px;padding:0 10px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:rgba(255,255,255,.78);font-size:10px;font-weight:800;transition:.2s ease}
+.mini-toggle:hover{background:rgba(255,255,255,.10);color:#fff}
+
+/* WELCOME */
+.welcome-box{padding:15px;border-radius:14px;background:linear-gradient(135deg,rgba(37,99,235,.10),rgba(79,70,229,.07));border:1px solid rgba(96,165,250,.10)}
+.welcome-box strong{display:block;font-size:12px}
+.welcome-box p{margin-top:6px;color:rgba(255,255,255,.47);font-size:11px;line-height:1.6}
+
+/* STUDENTS */
+.student-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
+.student-list.collapsed{display:none}
+.panel.students-collapsed .panel-title{margin-bottom:0}
+.student{display:flex;align-items:center;gap:10px;padding:9px;border-radius:11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05)}
+.student-avatar{width:38px;height:38px;flex:0 0 38px;border-radius:10px;object-fit:cover;background:rgba(255,255,255,.08)}
+.student-info{min-width:0}
+.student-name{font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.student-status{margin-top:3px;font-size:9px;color:#86efac}
+.empty-students{padding:20px 8px;text-align:center;color:rgba(255,255,255,.34);font-size:11px}
+
+/* SETTINGS */
+.setting{margin-bottom:13px}
+.setting:last-child{margin-bottom:0}
+.setting label{display:block;margin-bottom:6px;font-size:10px;font-weight:800;color:rgba(255,255,255,.50)}
+.setting input,.setting select{width:100%;height:42px;padding:0 11px;border-radius:10px;border:1px solid rgba(255,255,255,.08);outline:none;background:rgba(255,255,255,.045);color:#fff;font-size:11px}
+.setting input:focus,.setting select:focus{border-color:rgba(96,165,250,.45)}
+.setting select option{background:#111827;color:#fff}
+.setting input[type="color"]{padding:4px;cursor:pointer}
+.setting label.check-row{display:flex;align-items:center;gap:10px;margin-bottom:0;cursor:pointer}
+.setting .check-row input{width:18px;height:18px;flex:0 0 18px;padding:0}
+.setting .check-row span{font-size:11px;font-weight:700;color:rgba(255,255,255,.72)}
+.color-row{display:flex;align-items:center;gap:8px}
+.color-row input[type="color"]{width:54px;flex-shrink:0}
+.color-row input[type="file"]{flex:1;min-width:0;padding:9px 8px;font-size:10px}
+.color-row-reset{height:42px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:rgba(255,255,255,.75);font-size:9px;font-weight:800}
+.color-row-reset:hover{background:rgba(255,255,255,.09);color:#fff}
+.save-settings{width:100%;height:42px;margin-top:3px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-size:11px;font-weight:900}
+.save-settings:hover{background:#1d4ed8}
+
+/* VOICE CLONE */
+.voice-box{padding:14px;border-radius:13px;background:rgba(124,58,237,.08);border:1px solid rgba(167,139,250,.12)}
+.voice-box strong{font-size:11px}
+.voice-box p{margin-top:6px;font-size:10px;line-height:1.6;color:rgba(255,255,255,.43)}
+.voice-file{width:100%;margin-top:11px;font-size:10px}
+.voice-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.small-btn{height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:rgba(255,255,255,.75);font-size:10px;font-weight:800}
+.small-btn.primary{background:#7c3aed;border-color:transparent;color:#fff}
+.small-btn:disabled{opacity:.55;cursor:wait}
+.voice-status{margin-top:9px;font-size:9px;color:rgba(255,255,255,.40);line-height:1.5}
+
+/* LOADING */
+.auth-loading{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#070b14}
+.auth-loading.hidden{display:none}
+.loader-card{text-align:center;padding:30px}
+.loader{width:40px;height:40px;margin:0 auto 15px;border-radius:50%;border:3px solid rgba(255,255,255,.10);border-top-color:#60a5fa;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-card p{font-size:11px;color:rgba(255,255,255,.44)}
+
+/* TOAST */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:10000;max-width:calc(100% - 30px);padding:12px 16px;border-radius:12px;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.10);box-shadow:0 15px 45px rgba(0,0,0,.35);font-size:11px;transition:.25s ease}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* RESPONSIVE */
+@media (max-width:1050px){.main{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){
+.topbar{height:64px;padding:0 12px}
+.brand-logo{width:36px;height:36px}
+.brand-subtitle,.mode-badge{display:none}
+.top-btn{padding:0 10px}
+.main{padding:12px}
+.studio-header{padding:14px}
+.stage{min-height:300px;max-height:none;aspect-ratio:16/10;border-radius:15px}
+.toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}
+.side{grid-template-columns:1fr}
+.mentor-camera{width:150px;right:10px;bottom:10px}
+}
+@media (max-width:480px){
+.brand-title{max-width:145px}
+.studio-header{align-items:flex-start;flex-direction:column}
+.toolbar{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tool-btn{min-height:46px}
+.stage-label{top:10px;left:10px}
+.brand-badge{right:10px;top:10px;max-width:150px}
+}
+</style>
 </head>
-
 <body>
 
-  <!-- =====================================================
-       FIREBASE AUTH LOADING
-  ====================================================== -->
-
-  <div
-    class="auth-loading"
-    id="authLoading"
-  >
-    <div class="loader-card">
-
-      <div class="loader"></div>
-
-      <p>
-        Checking Mentor authentication...
-      </p>
-
-    </div>
+<div class="auth-loading" id="authLoading">
+  <div class="loader-card">
+    <div class="loader"></div>
+    <p>Checking Mentor authentication...</p>
   </div>
+</div>
 
+<div class="app" id="app">
 
-  <div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <img id="topLogo" class="brand-logo" src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true" alt="SNK Business">
+      <div class="brand-text">
+        <div class="brand-title" id="studioNameTop">Personal Course Studio</div>
+        <div class="brand-subtitle" id="studioSubtitleTop">নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="mode-badge">MENTOR MODE</div>
+      <button class="top-btn" id="settingsTopBtn" type="button">⚙ Settings</button>
+      <button class="top-btn logout" id="logoutBtn" type="button">Logout</button>
+    </div>
+  </header>
 
-    <!-- ===================================================
-         TOP BAR
-    ==================================================== -->
+  <main class="main">
 
-    <header class="topbar">
+    <section class="studio">
 
-      <div class="brand">
+      <div class="studio-header">
+        <div>
+          <h1>Mentor Studio</h1>
+          <p>Create, teach and record your class.</p>
+        </div>
+        <div class="sync-status local" id="syncStatus">LOCAL MODE</div>
+      </div>
 
-        <img
-          id="topLogo"
-          class="brand-logo"
-          src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true"
-          alt="SNK Business"
-        >
+      <div class="stage empty" id="stage">
 
-        <div class="brand-text">
+        <div class="stage-placeholder" id="stagePlaceholder">
+          <div class="stage-icon">🎬</div>
+          <h2>Welcome to Mentor Studio</h2>
+          <p>Upload a slide/image or a main class video to begin your session.</p>
+        </div>
 
-          <div
-            class="brand-title"
-            id="studioNameTop"
-          >
-            Personal Course Studio
-          </div>
+        <img id="mainImage" alt="Class slide">
+        <video id="mainVideo" controls playsinline></video>
 
-          <div
-            class="brand-subtitle"
-            id="studioSubtitleTop"
-          >
-            নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য
-          </div>
+        <div class="stage-label" id="stageLabel">
+          <strong id="stageTitle">Zoom Demo</strong>
+          <span id="stageSubtitle">Personal Course Studio</span>
+        </div>
 
+        <div class="brand-badge" id="brandBadge">Shah Neil Khan / USHA.AI</div>
+
+        <div class="mentor-camera" id="mentorCameraBox">
+          <div class="camera-frame" id="cameraFrame"></div>
+          <video id="mentorCamera" autoplay muted playsinline></video>
+          <div class="camera-label">Mentor Camera</div>
         </div>
 
       </div>
 
-
-      <div class="top-actions">
-
-        <div class="mode-badge">
-          MENTOR MODE
-        </div>
-
-        <button
-          class="top-btn"
-          id="settingsTopBtn"
-          type="button"
-        >
-          ⚙ Settings
-        </button>
-
-        <button
-          class="top-btn logout"
-          id="logoutBtn"
-          type="button"
-        >
-          Logout
-        </button>
-
+      <div class="toolbar">
+        <button class="tool-btn" id="slideBtn" type="button"><span class="icon">🖼️</span><span class="label">Slide / Image</span></button>
+        <button class="tool-btn" id="videoBtn" type="button"><span class="icon">🎬</span><span class="label">Main Video</span></button>
+        <button class="tool-btn" id="cameraBtn" type="button"><span class="icon">📷</span><span class="label">Mentor Camera</span></button>
+        <button class="tool-btn" id="clearBtn" type="button"><span class="icon">🧹</span><span class="label">Clear</span></button>
+        <button class="tool-btn" id="playBtn" type="button"><span class="icon" id="playIcon">▶</span><span class="label" id="playLabel">Play</span></button>
+        <button class="tool-btn" id="fullscreenBtn" type="button"><span class="icon">⛶</span><span class="label">Fullscreen</span></button>
+        <button class="tool-btn teleprompter" id="teleprompterBtn" type="button"><span class="icon">📜</span><span class="label">Teleprompter</span></button>
+        <button class="tool-btn record" id="recordBtn" type="button"><span class="icon" id="recordIcon">●</span><span class="label" id="recordLabel">Record</span></button>
       </div>
 
-    </header>
+      <input type="file" id="slideInput" accept="image/*" hidden>
+      <input type="file" id="videoInput" accept="video/*" hidden>
 
+    </section>
 
-    <!-- ===================================================
-         MAIN
-    ==================================================== -->
+    <aside class="side">
 
-    <main class="main">
-
-
-      <!-- ================================================
-           STUDIO
-      ================================================= -->
-
-      <section class="studio">
-
-
-        <div class="studio-header">
-
-          <div>
-
-            <h1>
-              Mentor Studio
-            </h1>
-
-            <p>
-              Create, teach and record your class.
-            </p>
-
-          </div>
-
-
-          <div
-            class="sync-status local"
-            id="syncStatus"
-          >
-            LOCAL MODE
-          </div>
-
+      <section class="panel">
+        <div class="panel-title"><h3>Studio</h3><span>Mentor</span></div>
+        <div class="welcome-box">
+          <strong id="welcomeTitle">আপনার ক্লাস শুরু করার জন্য প্রস্তুত?</strong>
+          <p id="welcomeText">Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন।</p>
         </div>
-
-
-        <!-- ============================================
-             STAGE
-        ============================================= -->
-
-        <div
-          class="stage empty"
-          id="stage"
-        >
-
-
-          <div
-            class="stage-placeholder"
-            id="stagePlaceholder"
-          >
-
-            <div class="stage-icon">
-              🎬
-            </div>
-
-            <h2>
-              Welcome to Mentor Studio
-            </h2>
-
-            <p>
-              Upload a slide/image or a main class
-              video to begin your session.
-            </p>
-
-          </div>
-
-
-          <img
-            id="mainImage"
-            alt="Class slide"
-          >
-
-
-          <video
-            id="mainVideo"
-            controls
-            playsinline
-          ></video>
-
-
-          <div
-            class="stage-label"
-            id="stageLabel"
-          >
-
-            <strong id="stageTitle">
-              Zoom Demo
-            </strong>
-
-            <span id="stageSubtitle">
-              Personal Course Studio
-            </span>
-
-          </div>
-
-
-          <div
-            class="brand-badge"
-            id="brandBadge"
-          >
-            Shah Neil Khan / USHA.AI
-          </div>
-
-
-          <div
-            class="mentor-camera"
-            id="mentorCameraBox"
-          >
-
-            <video
-              id="mentorCamera"
-              autoplay
-              muted
-              playsinline
-            ></video>
-
-            <div class="camera-label">
-              Mentor Camera
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ============================================
-             TOOLBAR
-        ============================================= -->
-
-        <div class="toolbar">
-
-          <button
-            class="tool-btn"
-            id="slideBtn"
-            type="button"
-          >
-            <span class="icon">🖼️</span>
-            <span class="label">Slide / Image</span>
-          </button>
-
-
-          <button
-            class="tool-btn"
-            id="videoBtn"
-            type="button"
-          >
-            <span class="icon">🎬</span>
-            <span class="label">Main Video</span>
-          </button>
-
-
-          <button
-            class="tool-btn"
-            id="cameraBtn"
-            type="button"
-          >
-            <span class="icon">📷</span>
-            <span class="label">Mentor Camera</span>
-          </button>
-
-
-          <button
-            class="tool-btn"
-            id="clearBtn"
-            type="button"
-          >
-            <span class="icon">🧹</span>
-            <span class="label">Clear</span>
-          </button>
-
-
-          <button
-            class="tool-btn"
-            id="playBtn"
-            type="button"
-          >
-            <span
-              class="icon"
-              id="playIcon"
-            >
-              ▶
-            </span>
-
-            <span
-              class="label"
-              id="playLabel"
-            >
-              Play
-            </span>
-          </button>
-
-
-          <button
-            class="tool-btn"
-            id="fullscreenBtn"
-            type="button"
-          >
-            <span class="icon">⛶</span>
-            <span class="label">Fullscreen</span>
-          </button>
-
-
-          <button
-            class="tool-btn teleprompter"
-            id="teleprompterBtn"
-            type="button"
-          >
-            <span class="icon">📜</span>
-            <span class="label">Teleprompter</span>
-          </button>
-
-
-          <button
-            class="tool-btn record"
-            id="recordBtn"
-            type="button"
-          >
-            <span
-              class="icon"
-              id="recordIcon"
-            >
-              ●
-            </span>
-
-            <span
-              class="label"
-              id="recordLabel"
-            >
-              Record
-            </span>
-          </button>
-
-        </div>
-
-
-        <!-- Hidden upload inputs -->
-
-        <input
-          type="file"
-          id="slideInput"
-          accept="image/*"
-          hidden
-        >
-
-        <input
-          type="file"
-          id="videoInput"
-          accept="video/*"
-          hidden
-        >
-
       </section>
 
-
-      <!-- ================================================
-           SIDE
-      ================================================= -->
-
-      <aside class="side">
-
-
-        <!-- ============================================
-             WELCOME
-        ============================================= -->
-
-        <section class="panel">
-
-          <div class="panel-title">
-
-            <h3>
-              Studio
-            </h3>
-
-            <span>
-              Mentor
-            </span>
-
+      <section class="panel" id="studentsPanel">
+        <div class="panel-title">
+          <h3>Students</h3>
+          <div class="title-right">
+            <span id="studentCount">0</span>
+            <button type="button" class="mini-toggle" id="studentsToggle">Hide</button>
           </div>
+        </div>
+        <div class="student-list" id="studentList">
+          <div class="empty-students">No students added yet.</div>
+        </div>
+      </section>
 
+      <section class="panel" id="settingsPanel">
+        <div class="panel-title"><h3>Studio Settings</h3><span>Local</span></div>
 
-          <div class="welcome-box">
-
-            <strong id="welcomeTitle">
-              আপনার ক্লাস শুরু করার জন্য প্রস্তুত?
-            </strong>
-
-            <p id="welcomeText">
-              Slide, video অথবা mentor camera
-              ব্যবহার করে আপনার class তৈরি করুন।
-            </p>
-
+        <div class="setting">
+          <label for="studioName">Studio Name</label>
+          <input id="studioName" type="text" value="Personal Course Studio">
+        </div>
+        <div class="setting">
+          <label for="studioSubtitle">Subtitle</label>
+          <input id="studioSubtitle" type="text" value="নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য">
+        </div>
+        <div class="setting">
+          <label for="selectedBrand">Selected Brand</label>
+          <input id="selectedBrand" type="text" value="Shah Neil Khan / USHA.AI">
+        </div>
+        <div class="setting">
+          <label for="cameraBgInput">Mentor Camera Background</label>
+          <div class="color-row">
+            <input id="cameraBgInput" type="color" value="#020617">
+            <button type="button" class="color-row-reset" id="cameraBgReset">Reset</button>
           </div>
-
-        </section>
-
-
-        <!-- ============================================
-             STUDENTS
-        ============================================= -->
-
-        <section class="panel">
-
-          <div class="panel-title">
-
-            <h3>
-              Students
-            </h3>
-
-            <span id="studentCount">
-              0
-            </span>
-
+        </div>
+        <div class="setting">
+          <label for="cameraFrameInput">Mentor Camera Frame Image</label>
+          <div class="color-row">
+            <input id="cameraFrameInput" type="file" accept="image/*">
+            <button type="button" class="color-row-reset" id="cameraFrameReset">Remove</button>
           </div>
+        </div>
+        <div class="setting">
+          <label for="zoomTitle">Stage Title</label>
+          <input id="zoomTitle" type="text" value="Zoom Demo">
+        </div>
+        <div class="setting">
+          <label for="welcomeSetting">Welcome Text</label>
+          <input id="welcomeSetting" type="text" value="আপনার ক্লাস শুরু করার জন্য প্রস্তুত?">
+        </div>
+        <div class="setting">
+          <label class="check-row" for="hideLabelsRecord">
+            <input id="hideLabelsRecord" type="checkbox" checked>
+            <span>Hide labels while recording</span>
+          </label>
+        </div>
 
+        <button class="save-settings" id="saveSettings" type="button">Save Settings</button>
+      </section>
 
-          <div
-            class="student-list"
-            id="studentList"
-          >
-
-            <div class="empty-students">
-              No students added yet.
-            </div>
-
+      <section class="panel">
+        <div class="panel-title"><h3>Mentor Voice Clone</h3><span>Step 3</span></div>
+        <div class="voice-box">
+          <strong>Mentor vocal identity</strong>
+          <p>আপনার mentor voice sample দিয়ে original class narration-এর জন্য voice clone backend ব্যবহার করা যাবে।</p>
+          <input class="voice-file" id="voiceSample" type="file" accept="audio/*">
+          <div class="voice-actions">
+            <button class="small-btn" id="voicePreviewBtn" type="button">▶ Preview</button>
+            <button class="small-btn primary" id="cloneVoiceBtn" type="button">Clone Voice</button>
           </div>
-
-        </section>
-
-
-        <!-- ============================================
-             SETTINGS
-        ============================================= -->
-
-        <section
-          class="panel"
-          id="settingsPanel"
-        >
-
-          <div class="panel-title">
-
-            <h3>
-              Studio Settings
-            </h3>
-
-            <span>
-              Local
-            </span>
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="studioName">
-              Studio Name
-            </label>
-
-            <input
-              id="studioName"
-              type="text"
-              value="Personal Course Studio"
-            >
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="studioSubtitle">
-              Subtitle
-            </label>
-
-            <input
-              id="studioSubtitle"
-              type="text"
-              value="নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য"
-            >
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="selectedBrand">
-              Selected Brand
-            </label>
-
-            <input
-              id="selectedBrand"
-              type="text"
-              value="Shah Neil Khan / USHA.AI"
-            >
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="cameraBgInput">
-              Mentor Camera Background
-            </label>
-
-            <div class="color-row">
-
-              <input
-                id="cameraBgInput"
-                type="color"
-                value="#020617"
-              >
-
-              <button
-                type="button"
-                class="color-row-reset"
-                id="cameraBgReset"
-              >
-                Reset
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="zoomTitle">
-              Stage Title
-            </label>
-
-            <input
-              id="zoomTitle"
-              type="text"
-              value="Zoom Demo"
-            >
-
-          </div>
-
-
-          <div class="setting">
-
-            <label for="welcomeSetting">
-              Welcome Text
-            </label>
-
-            <input
-              id="welcomeSetting"
-              type="text"
-              value="আপনার ক্লাস শুরু করার জন্য প্রস্তুত?"
-            >
-
-          </div>
-
-
-          <button
-            class="save-settings"
-            id="saveSettings"
-            type="button"
-          >
-            Save Settings
-          </button>
-
-        </section>
-
-
-        <!-- ============================================
-             VOICE CLONE
-        ============================================= -->
-
-        <section class="panel">
-
-          <div class="panel-title">
-
-            <h3>
-              Mentor Voice Clone
-            </h3>
-
-            <span>
-              Step 3
-            </span>
-
-          </div>
-
-
-          <div class="voice-box">
-
-            <strong>
-              Mentor vocal identity
-            </strong>
-
-            <p>
-              আপনার mentor voice sample দিয়ে
-              original class narration-এর জন্য
-              voice clone backend ব্যবহার করা যাবে।
-            </p>
-
-
-            <input
-              class="voice-file"
-              id="voiceSample"
-              type="file"
-              accept="audio/*"
-            >
-
-
-            <div class="voice-actions">
-
-              <button
-                class="small-btn"
-                id="voicePreviewBtn"
-                type="button"
-              >
-                ▶ Preview
-              </button>
-
-              <button
-                class="small-btn primary"
-                id="cloneVoiceBtn"
-                type="button"
-              >
-                Clone Voice
-              </button>
-
-            </div>
-
-
-            <div
-              class="voice-status"
-              id="voiceStatus"
-            >
-              Voice clone API connected না থাকলে
-              এখানে actual clone হবে না।
-            </div>
-
-          </div>
-
-        </section>
-
-      </aside>
-
-    </main>
-
-  </div>
-
-
-  <!-- =====================================================
-       TOAST
-  ====================================================== -->
-
-  <div
-    class="toast"
-    id="toast"
-  ></div>
-
-
-  <!-- =====================================================
-       FIREBASE + APP
-  ====================================================== -->
-
-  <script type="module">
-
-    /* =====================================================
-       FIREBASE
-    ===================================================== */
-
-    import {
-      db
-    } from "../firebase.js";
-
-
-    /* =====================================================
-       CENTRAL AUTH GUARD
-    ===================================================== */
-
-    import {
-      protectMentor,
-      logoutStudio
-    } from "../auth-guard.js";
-
-
-    /* =====================================================
-       FIRESTORE
-    ===================================================== */
-
-    import {
-      collection,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-
-    /* =====================================================
-       CONFIG
-    ===================================================== */
-
-    const SETTINGS_KEY =
-      "personalCourseStudioSettings";
-
-
-    const STUDENTS_KEY =
-      "personalCourseStudioStudents";
-
-
-    const VOICE_API_KEY =
-      "personalCourseStudioVoiceCloneApi";
-
-
-    const TELEPROMPTER_TEXT_KEY =
-      "personalCourseStudioTeleprompterText";
-
-
-    const TELEPROMPTER_SPEED_KEY =
-      "personalCourseStudioTeleprompterSpeed";
-
-
-    const TELEPROMPTER_SIZE_KEY =
-      "personalCourseStudioTeleprompterSize";
-
-
-    const DEFAULT_CAMERA_BG =
-      "#020617";
-
-
-    /* =====================================================
-       ELEMENTS
-    ===================================================== */
-
-    const authLoading =
-      document.getElementById("authLoading");
-
-
-    const syncStatus =
-      document.getElementById("syncStatus");
-
-
-    const logoutBtn =
-      document.getElementById("logoutBtn");
-
-
-    const stage =
-      document.getElementById("stage");
-
-
-    const stagePlaceholder =
-      document.getElementById("stagePlaceholder");
-
-
-    const mainImage =
-      document.getElementById("mainImage");
-
-
-    const mainVideo =
-      document.getElementById("mainVideo");
-
-
-    const stageLabel =
-      document.getElementById("stageLabel");
-
-
-    const stageTitle =
-      document.getElementById("stageTitle");
-
-
-    const stageSubtitle =
-      document.getElementById("stageSubtitle");
-
-
-    const brandBadge =
-      document.getElementById("brandBadge");
-
-
-    const mentorCameraBox =
-      document.getElementById("mentorCameraBox");
-
-
-    const mentorCamera =
-      document.getElementById("mentorCamera");
-
-
-    const slideInput =
-      document.getElementById("slideInput");
-
-
-    const videoInput =
-      document.getElementById("videoInput");
-
-
-    const studentList =
-      document.getElementById("studentList");
-
-
-    const studentCount =
-      document.getElementById("studentCount");
-
-
-    const studioNameTop =
-      document.getElementById("studioNameTop");
-
-
-    const studioSubtitleTop =
-      document.getElementById("studioSubtitleTop");
-
-
-    const welcomeTitle =
-      document.getElementById("welcomeTitle");
-
-
-    const welcomeText =
-      document.getElementById("welcomeText");
-
-
-    const studioName =
-      document.getElementById("studioName");
-
-
-    const studioSubtitle =
-      document.getElementById("studioSubtitle");
-
-
-    const selectedBrand =
-      document.getElementById("selectedBrand");
-
-
-    const cameraBgInput =
-      document.getElementById("cameraBgInput");
-
-
-    const cameraBgReset =
-      document.getElementById("cameraBgReset");
-
-
-    const zoomTitle =
-      document.getElementById("zoomTitle");
-
-
-    const welcomeSetting =
-      document.getElementById("welcomeSetting");
-
-
-    const saveSettings =
-      document.getElementById("saveSettings");
-
-
-    const settingsTopBtn =
-      document.getElementById("settingsTopBtn");
-
-
-    const settingsPanel =
-      document.getElementById("settingsPanel");
-
-
-    const slideBtn =
-      document.getElementById("slideBtn");
-
-
-    const videoBtn =
-      document.getElementById("videoBtn");
-
-
-    const cameraBtn =
-      document.getElementById("cameraBtn");
-
-
-    const clearBtn =
-      document.getElementById("clearBtn");
-
-
-    const playBtn =
-      document.getElementById("playBtn");
-
-
-    const playIcon =
-      document.getElementById("playIcon");
-
-
-    const playLabel =
-      document.getElementById("playLabel");
-
-
-    const fullscreenBtn =
-      document.getElementById("fullscreenBtn");
-
-
-    const teleprompterBtn =
-      document.getElementById("teleprompterBtn");
-
-
-    const recordBtn =
-      document.getElementById("recordBtn");
-
-
-    const recordLabel =
-      document.getElementById("recordLabel");
-
-
-    const voiceSample =
-      document.getElementById("voiceSample");
-
-
-    const voicePreviewBtn =
-      document.getElementById("voicePreviewBtn");
-
-
-    const cloneVoiceBtn =
-      document.getElementById("cloneVoiceBtn");
-
-
-    const voiceStatus =
-      document.getElementById("voiceStatus");
-
-
-    const toast =
-      document.getElementById("toast");
-
-
-    /* =====================================================
-       DEFAULT SETTINGS
-    ===================================================== */
-
-    const defaultSettings = {
-
-      studioName:
-        "Personal Course Studio",
-
-      studioSubtitle:
-        "নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য",
-
-      studioLogo:
-        "CS",
-
-      selectedBrand:
-        "Shah Neil Khan / USHA.AI",
-
-      zoomTitle:
-        "Zoom Demo",
-
-      welcomeText:
-        "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
-
-      cameraBg:
-        DEFAULT_CAMERA_BG
-
+          <div class="voice-status" id="voiceStatus">Voice clone API connected না থাকলে এখানে actual clone হবে না।</div>
+        </div>
+      </section>
+
+    </aside>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+
+import { db } from "../firebase.js";
+import { protectMentor, logoutStudio } from "../auth-guard.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+/* ================= CONFIG ================= */
+
+const SETTINGS_KEY = "personalCourseStudioSettings";
+const STUDENTS_KEY = "personalCourseStudioStudents";
+const STUDENTS_HIDDEN_KEY = "personalCourseStudioStudentsHidden";
+const HIDE_LABELS_KEY = "personalCourseStudioHideLabelsOnRecord";
+const VOICE_API_KEY = "personalCourseStudioVoiceCloneApi";
+const TELEPROMPTER_TEXT_KEY = "personalCourseStudioTeleprompterText";
+const TELEPROMPTER_SPEED_KEY = "personalCourseStudioTeleprompterSpeed";
+const TELEPROMPTER_SIZE_KEY = "personalCourseStudioTeleprompterSize";
+const TELEPROMPTER_MODE_KEY = "personalCourseStudioTeleprompterMode";
+const TELEPROMPTER_SENS_KEY = "personalCourseStudioTeleprompterSens";
+const DEFAULT_CAMERA_BG = "#020617";
+
+/* ================= ELEMENTS ================= */
+
+const $ = id => document.getElementById(id);
+
+const authLoading = $("authLoading");
+const syncStatus = $("syncStatus");
+const logoutBtn = $("logoutBtn");
+const stage = $("stage");
+const stagePlaceholder = $("stagePlaceholder");
+const mainImage = $("mainImage");
+const mainVideo = $("mainVideo");
+const stageLabel = $("stageLabel");
+const stageTitle = $("stageTitle");
+const stageSubtitle = $("stageSubtitle");
+const brandBadge = $("brandBadge");
+const mentorCameraBox = $("mentorCameraBox");
+const mentorCamera = $("mentorCamera");
+const slideInput = $("slideInput");
+const videoInput = $("videoInput");
+const studentList = $("studentList");
+const studentCount = $("studentCount");
+const studentsPanel = $("studentsPanel");
+const studentsToggle = $("studentsToggle");
+const studioNameTop = $("studioNameTop");
+const studioSubtitleTop = $("studioSubtitleTop");
+const welcomeTitle = $("welcomeTitle");
+const welcomeText = $("welcomeText");
+const studioName = $("studioName");
+const studioSubtitle = $("studioSubtitle");
+const selectedBrand = $("selectedBrand");
+const cameraBgInput = $("cameraBgInput");
+const cameraBgReset = $("cameraBgReset");
+const zoomTitle = $("zoomTitle");
+const welcomeSetting = $("welcomeSetting");
+const hideLabelsRecord = $("hideLabelsRecord");
+const saveSettings = $("saveSettings");
+const settingsTopBtn = $("settingsTopBtn");
+const settingsPanel = $("settingsPanel");
+const slideBtn = $("slideBtn");
+const videoBtn = $("videoBtn");
+const cameraBtn = $("cameraBtn");
+const clearBtn = $("clearBtn");
+const playBtn = $("playBtn");
+const playIcon = $("playIcon");
+const playLabel = $("playLabel");
+const fullscreenBtn = $("fullscreenBtn");
+const teleprompterBtn = $("teleprompterBtn");
+const recordBtn = $("recordBtn");
+const recordLabel = $("recordLabel");
+const voiceSample = $("voiceSample");
+const voicePreviewBtn = $("voicePreviewBtn");
+const cloneVoiceBtn = $("cloneVoiceBtn");
+const voiceStatus = $("voiceStatus");
+const toast = $("toast");
+
+/* ================= DEFAULT SETTINGS ================= */
+
+const defaultSettings = {
+  studioName: "Personal Course Studio",
+  studioSubtitle: "নিজের ক্লাস ও কোর্স ভিডিও তৈরির জন্য",
+  studioLogo: "CS",
+  selectedBrand: "Shah Neil Khan / USHA.AI",
+  zoomTitle: "Zoom Demo",
+  welcomeText: "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
+  cameraBg: DEFAULT_CAMERA_BG
+};
+
+function getSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+    return { ...defaultSettings, ...(saved || {}) };
+  } catch {
+    return { ...defaultSettings };
+  }
+}
+
+function saveLocalSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applySettings(settings) {
+  studioName.value = settings.studioName || "";
+  studioSubtitle.value = settings.studioSubtitle || "";
+  selectedBrand.value = settings.selectedBrand || "";
+  zoomTitle.value = settings.zoomTitle || "";
+  welcomeSetting.value = settings.welcomeText || "";
+
+  studioNameTop.textContent = settings.studioName || "Personal Course Studio";
+  studioSubtitleTop.textContent = settings.studioSubtitle || "";
+  stageTitle.textContent = settings.zoomTitle || "Zoom Demo";
+  stageSubtitle.textContent = settings.studioName || "Personal Course Studio";
+  brandBadge.textContent = settings.selectedBrand || "";
+  welcomeTitle.textContent = settings.welcomeText || "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?";
+  welcomeText.textContent = "Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন.";
+
+  const cameraBg = settings.cameraBg || DEFAULT_CAMERA_BG;
+  mentorCameraBox.style.background = cameraBg;
+  if (cameraBgInput) cameraBgInput.value = cameraBg;
+}
+
+/* ================= TOAST ================= */
+
+let toastTimer = null;
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function setSyncStatus(text, type) {
+  syncStatus.textContent = text;
+  syncStatus.className = "sync-status " + type;
+}
+
+/* ================= MENTOR AUTH ================= */
+
+protectMentor()
+  .then(user => {
+    console.log("Mentor authenticated:", user.email);
+    authLoading.classList.add("hidden");
+    loadLocalData();
+    listenToStudents();
+    initializeStudio();
+    registerServiceWorker();
+  })
+  .catch(error => {
+    console.error("Mentor auth guard:", error);
+    window.location.replace("../login/");
+  });
+
+logoutBtn.addEventListener("click", async () => {
+  logoutBtn.disabled = true;
+  logoutBtn.textContent = "Logging out...";
+  await logoutStudio();
+});
+
+function loadLocalData() {
+  applySettings(getSettings());
+  setSyncStatus("LOCAL MODE", "local");
+}
+
+/* ================= STUDENTS ================= */
+
+function listenToStudents() {
+  try {
+    const studentsRef = collection(db, "students");
+    onSnapshot(
+      studentsRef,
+      snapshot => {
+        const students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        localStorage.setItem(STUDENTS_KEY, JSON.stringify(students));
+        renderStudents(students);
+        setSyncStatus("LIVE SYNC", "live");
+      },
+      error => {
+        console.error("Student sync error:", error);
+        renderLocalStudents();
+        setSyncStatus("LOCAL MODE", "local");
+      }
+    );
+  } catch (error) {
+    console.error("Firestore error:", error);
+    renderLocalStudents();
+    setSyncStatus("LOCAL MODE", "local");
+  }
+}
+
+function renderLocalStudents() {
+  try {
+    const students = JSON.parse(localStorage.getItem(STUDENTS_KEY) || "[]");
+    renderStudents(Array.isArray(students) ? students : []);
+  } catch {
+    renderStudents([]);
+  }
+}
+
+function renderStudents(students) {
+  studentCount.textContent = String(students.length);
+
+  if (!students.length) {
+    studentList.innerHTML = `<div class="empty-students">No students added yet.</div>`;
+    return;
+  }
+
+  studentList.innerHTML = students.map(student => {
+    const image = student.image || student.photo || student.avatar || student.imageUrl || "";
+    const avatar = image ||
+      "https://ui-avatars.com/api/?name=" +
+      encodeURIComponent(student.name || "Student") +
+      "&background=1e293b&color=ffffff";
+
+    return `
+      <div class="student">
+        <img class="student-avatar" src="${escapeHtml(avatar)}" alt="" loading="lazy">
+        <div class="student-info">
+          <div class="student-name">${escapeHtml(student.name || "Student")}</div>
+          <div class="student-status">Active</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+/* ================= STUDENTS HIDE / SHOW ================= */
+
+function applyStudentsVisibility(hidden) {
+  studentList.classList.toggle("collapsed", hidden);
+  studentsPanel.classList.toggle("students-collapsed", hidden);
+  studentsToggle.textContent = hidden ? "Show" : "Hide";
+}
+
+applyStudentsVisibility(localStorage.getItem(STUDENTS_HIDDEN_KEY) === "1");
+
+studentsToggle.addEventListener("click", () => {
+  const hidden = !studentList.classList.contains("collapsed");
+  localStorage.setItem(STUDENTS_HIDDEN_KEY, hidden ? "1" : "0");
+  applyStudentsVisibility(hidden);
+});
+
+/* ================= SETTINGS ================= */
+
+saveSettings.addEventListener("click", () => {
+  const settings = {
+    ...getSettings(),
+    studioName: studioName.value.trim() || "Personal Course Studio",
+    studioSubtitle: studioSubtitle.value.trim(),
+    selectedBrand: selectedBrand.value.trim(),
+    zoomTitle: zoomTitle.value.trim() || "Zoom Demo",
+    welcomeText: welcomeSetting.value.trim() || "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
+    cameraBg: cameraBgInput.value || DEFAULT_CAMERA_BG
+  };
+  saveLocalSettings(settings);
+  applySettings(settings);
+  showToast("Studio settings saved.");
+});
+
+cameraBgInput.addEventListener("input", () => {
+  mentorCameraBox.style.background = cameraBgInput.value;
+});
+
+cameraBgReset.addEventListener("click", () => {
+  cameraBgInput.value = DEFAULT_CAMERA_BG;
+  mentorCameraBox.style.background = DEFAULT_CAMERA_BG;
+});
+
+settingsTopBtn.addEventListener("click", () => {
+  settingsPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+/* ================= SLIDE ================= */
+
+slideBtn.addEventListener("click", () => slideInput.click());
+
+slideInput.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  mainImage.src = URL.createObjectURL(file);
+  mainImage.style.display = "block";
+  mainVideo.style.display = "none";
+  stagePlaceholder.style.display = "none";
+  stage.classList.remove("empty");
+  showToast("Slide loaded.");
+});
+
+/* ================= MAIN VIDEO ================= */
+
+videoBtn.addEventListener("click", () => videoInput.click());
+
+videoInput.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  mainVideo.src = URL.createObjectURL(file);
+  mainVideo.style.display = "block";
+  mainImage.style.display = "none";
+  stagePlaceholder.style.display = "none";
+  stage.classList.remove("empty");
+  showToast("Main video loaded.");
+});
+
+/* ================= CLEAR ================= */
+
+clearBtn.addEventListener("click", () => {
+  mainImage.removeAttribute("src");
+  mainVideo.pause();
+  mainVideo.removeAttribute("src");
+  mainVideo.load();
+  mainImage.style.display = "none";
+  mainVideo.style.display = "none";
+  stagePlaceholder.style.display = "block";
+  stage.classList.add("empty");
+  showToast("Stage cleared.");
+});
+
+/* ================= PLAY / PAUSE ================= */
+
+playBtn.addEventListener("click", async () => {
+  if (mainVideo.style.display !== "none" && mainVideo.src) {
+    try {
+      if (mainVideo.paused) await mainVideo.play();
+      else mainVideo.pause();
+    } catch (error) {
+      console.error("Video playback:", error);
+    }
+    return;
+  }
+  showToast("আগে একটি main video load করুন।");
+});
+
+mainVideo.addEventListener("play", () => {
+  playIcon.textContent = "⏸";
+  playLabel.textContent = "Pause";
+});
+
+mainVideo.addEventListener("pause", () => {
+  playIcon.textContent = "▶";
+  playLabel.textContent = "Play";
+});
+
+mainVideo.addEventListener("ended", () => {
+  playIcon.textContent = "▶";
+  playLabel.textContent = "Play";
+});
+
+/* ================= CAMERA ================= */
+
+let cameraStream = null;
+
+cameraBtn.addEventListener("click", async () => {
+  if (cameraStream) {
+    stopCamera();
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast("এই browser-এ camera support নেই।");
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    mentorCamera.srcObject = cameraStream;
+    mentorCameraBox.style.display = "block";
+    cameraBtn.querySelector(".label").textContent = "Stop Camera";
+    showToast("Mentor camera started.");
+  } catch (error) {
+    console.error("Camera error:", error);
+    showToast("Camera permission পাওয়া যায়নি।");
+  }
+});
+
+function stopCamera() {
+  if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+  cameraStream = null;
+  mentorCamera.srcObject = null;
+  mentorCameraBox.style.display = "none";
+  cameraBtn.querySelector(".label").textContent = "Mentor Camera";
+}
+
+/* ================= FULLSCREEN ================= */
+
+fullscreenBtn.addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) await stage.requestFullscreen();
+    else await document.exitFullscreen();
+  } catch (error) {
+    console.error("Fullscreen:", error);
+    showToast("Fullscreen চালু করা যায়নি।");
+  }
+});
+
+/* ================= TELEPROMPTER =================
+   Floating window (Document Picture-in-Picture when
+   supported, otherwise a popup). It is a SEPARATE window,
+   so it never appears in a stage recording.
+   Script scrolls with the mentor's voice (mic level).
+=================================================== */
+
+let tpWindow = null;
+
+async function openTeleprompter() {
+  if (tpWindow && !tpWindow.closed) {
+    tpWindow.focus();
+    return;
+  }
+
+  const width = Math.min(Math.round(screen.availWidth * 0.7), 1000);
+  const height = 320;
+  let win = null;
+
+  if ("documentPictureInPicture" in window) {
+    try {
+      win = await window.documentPictureInPicture.requestWindow({ width, height });
+    } catch (error) {
+      console.error("Document PiP:", error);
+      win = null;
+    }
+  }
+
+  if (!win) {
+    const left = Math.round((screen.availLeft || 0) + (screen.availWidth - width) / 2);
+    win = window.open(
+      "",
+      "mentorTeleprompter",
+      "width=" + width + ",height=" + height + ",left=" + left + ",top=0,resizable=yes"
+    );
+  }
+
+  if (!win) {
+    showToast("Popup blocked — browser-এ popup allow করুন।");
+    return;
+  }
+
+  tpWindow = win;
+  buildTeleprompter(win);
+  teleprompterBtn.classList.add("active");
+}
+
+function buildTeleprompter(win) {
+  const doc = win.document;
+  doc.title = "Teleprompter";
+  doc.head.innerHTML = "";
+  doc.body.innerHTML = "";
+
+  const style = doc.createElement("style");
+  style.textContent = `
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 10px; background: #111; border-bottom: 1px solid #222; }
+    .bar button, .bar select { height: 32px; padding: 0 10px; border: 1px solid #333; background: #1c1c1c; color: #fff; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .bar button:hover { background: #2a2a2a; }
+    .bar label { font-size: 10px; color: #9ca3af; }
+    .bar input[type=range] { width: 80px; }
+    .meter { width: 60px; height: 8px; border-radius: 99px; background: #222; overflow: hidden; }
+    .meter i { display: block; height: 100%; width: 0; background: #22c55e; }
+    #viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+    #scroller { padding: 0 6vw; will-change: transform; }
+    #tpText { white-space: pre-wrap; word-break: break-word; text-align: center; line-height: 1.5; }
+    .line { position: absolute; left: 0; right: 0; top: 45%; border-top: 2px solid rgba(96,165,250,0.55); pointer-events: none; }
+    #tpEditor { display: none; position: absolute; inset: 0; width: 100%; height: 100%; padding: 16px; background: #0a0a0a; color: #fff; border: 0; outline: none; resize: none; font-size: 18px; font-family: inherit; }
+  `;
+  doc.head.appendChild(style);
+
+  doc.body.innerHTML = `
+    <div class="bar">
+      <button id="tpPlay">▶ Start</button>
+      <button id="tpEdit">✎ Edit</button>
+      <button id="tpTop">⤒ Top</button>
+      <select id="tpMode">
+        <option value="voice">🎙 Voice</option>
+        <option value="auto">⏱ Auto</option>
+      </select>
+      <label>Speed</label>
+      <input id="tpSpeed" type="range" min="10" max="200">
+      <label>Size</label>
+      <input id="tpSize" type="range" min="20" max="90">
+      <label>Mic</label>
+      <input id="tpSens" type="range" min="1" max="100">
+      <div class="meter"><i id="tpMeter"></i></div>
+    </div>
+    <div id="viewport">
+      <div id="scroller"><div id="tpText"></div></div>
+      <div class="line"></div>
+      <textarea id="tpEditor"></textarea>
+    </div>
+  `;
+
+  const d = id => doc.getElementById(id);
+  const tpPlayBtn = d("tpPlay");
+  const editBtn = d("tpEdit");
+  const topBtn = d("tpTop");
+  const modeSel = d("tpMode");
+  const speedRange = d("tpSpeed");
+  const sizeRange = d("tpSize");
+  const sensRange = d("tpSens");
+  const meter = d("tpMeter");
+  const viewport = d("viewport");
+  const scroller = d("scroller");
+  const tpText = d("tpText");
+  const editor = d("tpEditor");
+
+  let text = localStorage.getItem(TELEPROMPTER_TEXT_KEY) || "আপনার script এখানে লিখুন...";
+  let speed = Number(localStorage.getItem(TELEPROMPTER_SPEED_KEY) || 40);
+  let size = Number(localStorage.getItem(TELEPROMPTER_SIZE_KEY) || 36);
+  let sens = Number(localStorage.getItem(TELEPROMPTER_SENS_KEY) || 60);
+  let mode = localStorage.getItem(TELEPROMPTER_MODE_KEY) || "voice";
+
+  let playing = false;
+  let editing = false;
+  let closed = false;
+  let pos = 0;
+  let last = null;
+  let lastVoice = -100000;
+  let raf = null;
+  let micStream = null;
+  let audioCtx = null;
+  let analyser = null;
+  let samples = null;
+
+  tpText.textContent = text;
+  speedRange.value = speed;
+  sizeRange.value = size;
+  sensRange.value = sens;
+  modeSel.value = mode;
+
+  function layout() {
+    tpText.style.fontSize = size + "px";
+    scroller.style.paddingTop = Math.round(viewport.clientHeight * 0.45) + "px";
+    scroller.style.paddingBottom = Math.round(viewport.clientHeight * 0.6) + "px";
+  }
+
+  layout();
+  setTimeout(layout, 120);
+  win.addEventListener("resize", layout);
+
+  async function ensureMic() {
+    if (analyser) return true;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false }
+      });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+      const source = audioCtx.createMediaStreamSource(micStream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      source.connect(analyser);
+      samples = new Uint8Array(analyser.fftSize);
+      return true;
+    } catch (error) {
+      console.error("Teleprompter mic:", error);
+      showToast("Microphone পাওয়া যায়নি — Auto mode ব্যবহার হবে।");
+      mode = "auto";
+      modeSel.value = "auto";
+      return false;
+    }
+  }
+
+  function readLevel() {
+    analyser.getByteTimeDomainData(samples);
+    let sum = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const x = (samples[i] - 128) / 128;
+      sum += x * x;
+    }
+    return Math.sqrt(sum / samples.length);
+  }
+
+  function frame(now) {
+    if (closed) return;
+    if (last === null) last = now;
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+
+    if (analyser) {
+      const level = readLevel();
+      const threshold = 0.004 + (1 - sens / 100) * 0.08;
+      if (level > threshold) lastVoice = now;
+      meter.style.width = Math.min(100, (level / 0.15) * 100) + "%";
+    }
+
+    const speaking = now - lastVoice < 600;
+
+    if (playing && !editing && (mode === "auto" || speaking)) {
+      pos += speed * dt;
+      const max = Math.max(0, scroller.scrollHeight - viewport.clientHeight * 0.55);
+      if (pos > max) pos = max;
+      scroller.style.transform = "translateY(-" + pos + "px)";
+    }
+
+    raf = win.requestAnimationFrame(frame);
+  }
+
+  raf = win.requestAnimationFrame(frame);
+
+  async function togglePlay() {
+    if (editing) return;
+    if (!playing) {
+      if (mode === "voice") await ensureMic();
+      playing = true;
+      tpPlayBtn.textContent = "⏸ Pause";
+    } else {
+      playing = false;
+      tpPlayBtn.textContent = "▶ Start";
+    }
+  }
+
+  tpPlayBtn.addEventListener("click", togglePlay);
+
+  doc.addEventListener("keydown", event => {
+    if (event.code === "Space" && !editing) {
+      event.preventDefault();
+      togglePlay();
+    }
+  });
+
+  topBtn.addEventListener("click", () => {
+    pos = 0;
+    scroller.style.transform = "translateY(0px)";
+  });
+
+  editBtn.addEventListener("click", () => {
+    editing = !editing;
+    if (editing) {
+      playing = false;
+      tpPlayBtn.textContent = "▶ Start";
+      editor.value = text;
+      editor.style.display = "block";
+      editBtn.textContent = "✓ Done";
+      editor.focus();
+    } else {
+      text = editor.value;
+      localStorage.setItem(TELEPROMPTER_TEXT_KEY, text);
+      tpText.textContent = text;
+      editor.style.display = "none";
+      editBtn.textContent = "✎ Edit";
+      layout();
+    }
+  });
+
+  modeSel.addEventListener("change", async () => {
+    mode = modeSel.value;
+    localStorage.setItem(TELEPROMPTER_MODE_KEY, mode);
+    if (mode === "voice" && playing) await ensureMic();
+  });
+
+  speedRange.addEventListener("input", () => {
+    speed = Number(speedRange.value);
+    localStorage.setItem(TELEPROMPTER_SPEED_KEY, String(speed));
+  });
+
+  sizeRange.addEventListener("input", () => {
+    size = Number(sizeRange.value);
+    localStorage.setItem(TELEPROMPTER_SIZE_KEY, String(size));
+    layout();
+  });
+
+  sensRange.addEventListener("input", () => {
+    sens = Number(sensRange.value);
+    localStorage.setItem(TELEPROMPTER_SENS_KEY, String(sens));
+  });
+
+  function cleanup() {
+    if (closed) return;
+    closed = true;
+    if (raf) {
+      try { win.cancelAnimationFrame(raf); } catch {}
+    }
+    if (micStream) {
+      micStream.getTracks().forEach(track => track.stop());
+      micStream = null;
+    }
+    if (audioCtx) {
+      audioCtx.close().catch(() => {});
+      audioCtx = null;
+    }
+    analyser = null;
+    tpWindow = null;
+    teleprompterBtn.classList.remove("active");
+  }
+
+  win.addEventListener("pagehide", cleanup);
+  win.addEventListener("unload", cleanup);
+}
+
+teleprompterBtn.addEventListener("click", () => {
+  if (tpWindow && !tpWindow.closed) {
+    tpWindow.close();
+    return;
+  }
+  openTeleprompter();
+});
+
+window.addEventListener("beforeunload", () => {
+  if (tpWindow && !tpWindow.closed) tpWindow.close();
+});
+
+/* ================= STAGE-ONLY RECORDING =================
+   Video -> only the stage area (Element / Region Capture)
+   Audio -> mentor's microphone ONLY
+   In the share dialog choose "This Tab" (Chrome / Edge).
+=================================================== */
+
+let recorder = null;
+let recordedChunks = [];
+let recordingDisplayStream = null;
+let recordingMicStream = null;
+let savedVideoControls = true;
+
+function isHideLabelsOn() {
+  return localStorage.getItem(HIDE_LABELS_KEY) !== "0";
+}
+
+hideLabelsRecord.checked = isHideLabelsOn();
+
+hideLabelsRecord.addEventListener("change", () => {
+  localStorage.setItem(HIDE_LABELS_KEY, hideLabelsRecord.checked ? "1" : "0");
+});
+
+function stopRecordingStreams() {
+  [recordingDisplayStream, recordingMicStream].forEach(stream => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+  });
+  recordingDisplayStream = null;
+  recordingMicStream = null;
+}
+
+function setCleanView(on) {
+  if (on) {
+    savedVideoControls = mainVideo.controls;
+    mainVideo.controls = false;
+    if (isHideLabelsOn()) stage.classList.add("recording-clean");
+  } else {
+    mainVideo.controls = savedVideoControls;
+    stage.classList.remove("recording-clean");
+  }
+}
+
+async function restrictToStage(track) {
+  if (window.RestrictionTarget && typeof track.restrictTo === "function") {
+    const target = await RestrictionTarget.fromElement(stage);
+    await track.restrictTo(target);
+    return true;
+  }
+
+  if (window.CropTarget && typeof track.cropTo === "function") {
+    const target = await CropTarget.fromElement(stage);
+    await track.cropTo(target);
+    return true;
+  }
+
+  return false;
+}
+
+recordBtn.addEventListener("click", async () => {
+
+  if (recorder) {
+    recorder.stop();
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    showToast("এই browser-এ screen recording support নেই।");
+    return;
+  }
+
+  try {
+
+    stage.scrollIntoView({ block: "center" });
+
+    recordingDisplayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: 30 },
+      audio: false,
+      preferCurrentTab: true
+    });
+
+    const videoTrack = recordingDisplayStream.getVideoTracks()[0];
+
+    const cropped = await restrictToStage(videoTrack);
+
+    if (!cropped) {
+      showToast("Stage-only recording এই browser-এ নেই — পুরো tab record হবে। Chrome/Edge ব্যবহার করুন।");
+    }
+
+    try {
+      recordingMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (micError) {
+      console.error("Microphone error:", micError);
+      showToast("Microphone permission পাওয়া যায়নি — audio ছাড়া recording হবে।");
+      recordingMicStream = null;
+    }
+
+    const combinedStream = new MediaStream([
+      ...recordingDisplayStream.getVideoTracks(),
+      ...(recordingMicStream ? recordingMicStream.getAudioTracks() : [])
+    ]);
+
+    recordedChunks = [];
+
+    const mimeType = ["video/webm;codecs=vp9,opus", "video/webm"]
+      .find(type => MediaRecorder.isTypeSupported(type)) || "";
+
+    const options = mimeType
+      ? { mimeType, videoBitsPerSecond: 5000000 }
+      : { videoBitsPerSecond: 5000000 };
+
+    recorder = new MediaRecorder(combinedStream, options);
+
+    recorder.ondataavailable = event => {
+      if (event.data && event.data.size > 0) recordedChunks.push(event.data);
     };
 
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `mentor-class-${Date.now()}.webm`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-    /* =====================================================
-       LOCAL SETTINGS
-    ===================================================== */
+      stopRecordingStreams();
+      setCleanView(false);
+      recorder = null;
 
-    function getSettings() {
+      recordBtn.classList.remove("active");
+      recordLabel.textContent = "Record";
+      showToast("Recording saved.");
+    };
+
+    recorder.onerror = error => {
+      console.error("MediaRecorder error:", error);
+      showToast("Recording error হয়েছে।");
+    };
+
+    videoTrack.addEventListener("ended", () => {
+      if (recorder && recorder.state !== "inactive") recorder.stop();
+    });
+
+    setCleanView(true);
+
+    recorder.start();
+
+    recordBtn.classList.add("active");
+    recordLabel.textContent = "Stop";
+    showToast("Recording started (stage only, mic audio).");
+
+  } catch (error) {
+    console.error("Recording error:", error);
+    showToast("Recording শুরু করা যায়নি। Dialog-এ 'This Tab' select করুন।");
+    stopRecordingStreams();
+    setCleanView(false);
+    recorder = null;
+  }
+});
+
+/* ================= DRAGGABLE ELEMENTS ================= */
+
+function makeDraggable(element, container) {
+  let dragging = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  element.addEventListener("pointerdown", event => {
+    if (event.target.closest("button, input")) return;
+
+    dragging = true;
+    element.setPointerCapture(event.pointerId);
+
+    const elementRect = element.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    startX = event.clientX;
+    startY = event.clientY;
+    startLeft = elementRect.left - containerRect.left;
+    startTop = elementRect.top - containerRect.top;
+
+    element.style.left = `${startLeft}px`;
+    element.style.top = `${startTop}px`;
+    element.style.right = "auto";
+    element.style.bottom = "auto";
+
+    event.preventDefault();
+  });
+
+  element.addEventListener("pointermove", event => {
+    if (!dragging) return;
+
+    const containerRect = container.getBoundingClientRect();
+    let left = startLeft + (event.clientX - startX);
+    let top = startTop + (event.clientY - startY);
+
+    const maxLeft = Math.max(0, containerRect.width - element.offsetWidth);
+    const maxTop = Math.max(0, containerRect.height - element.offsetHeight);
+
+    left = Math.max(0, Math.min(left, maxLeft));
+    top = Math.max(0, Math.min(top, maxTop));
+
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+  });
+
+  element.addEventListener("pointerup", event => {
+    dragging = false;
+    try { element.releasePointerCapture(event.pointerId); } catch {}
+  });
+
+  element.addEventListener("pointercancel", () => {
+    dragging = false;
+  });
+}
+
+makeDraggable(stageLabel, stage);
+makeDraggable(mentorCameraBox, stage);
+makeDraggable(brandBadge, stage);
+
+/* ================= VOICE SAMPLE PREVIEW ================= */
+
+let voiceAudio = null;
+let voiceObjectUrl = null;
+
+voicePreviewBtn.addEventListener("click", () => {
+  const file = voiceSample.files?.[0];
+
+  if (!file) {
+    showToast("আগে একটি mentor voice sample select করুন।");
+    return;
+  }
+
+  if (voiceAudio) voiceAudio.pause();
+  if (voiceObjectUrl) URL.revokeObjectURL(voiceObjectUrl);
+
+  voiceObjectUrl = URL.createObjectURL(file);
+  voiceAudio = new Audio(voiceObjectUrl);
+
+  voiceAudio.play()
+    .then(() => {
+      voiceStatus.textContent = "Voice sample playing...";
+    })
+    .catch(error => {
+      console.error("Voice preview:", error);
+      voiceStatus.textContent = "Voice sample play করা যায়নি.";
+    });
+});
+
+/* ================= VOICE CLONE ================= */
+
+cloneVoiceBtn.addEventListener("click", async () => {
+  const sample = voiceSample.files?.[0];
+
+  if (!sample) {
+    showToast("আগে mentor voice sample upload করুন।");
+    return;
+  }
+
+  const apiUrl = localStorage.getItem(VOICE_API_KEY) || "";
+
+  if (!apiUrl) {
+    voiceStatus.textContent = "Voice clone API connected নেই। Backend endpoint যোগ করলে actual voice clone হবে।";
+    showToast("Voice clone API connected নেই।");
+    return;
+  }
+
+  try {
+    cloneVoiceBtn.disabled = true;
+    cloneVoiceBtn.textContent = "Processing...";
+    voiceStatus.textContent = "Voice clone request পাঠানো হচ্ছে...";
+
+    const formData = new FormData();
+    formData.append("voiceSample", sample);
+
+    if (videoInput.files?.[0]) formData.append("sourceVideo", videoInput.files[0]);
+
+    formData.append("mode", "voice-clone");
+    formData.append("preserveTiming", "true");
+
+    const response = await fetch(apiUrl, { method: "POST", body: formData });
+
+    if (!response.ok) throw new Error(`API error ${response.status}`);
+
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+
+      const result = await response.json();
+
+      if (result.audioUrl) {
+        if (voiceAudio) voiceAudio.pause();
+        voiceAudio = new Audio(result.audioUrl);
+        voiceStatus.textContent = "Cloned voice generated successfully.";
+        voiceAudio.play().catch(error => console.error("Cloned audio playback:", error));
+
+      } else if (result.videoUrl) {
+        mainVideo.src = result.videoUrl;
+        mainVideo.style.display = "block";
+        mainImage.style.display = "none";
+        stagePlaceholder.style.display = "none";
+        stage.classList.remove("empty");
+        voiceStatus.textContent = "Cloned video generated successfully.";
+
+      } else {
+        voiceStatus.textContent = "API response পাওয়া গেছে, কিন্তু audio/video URL পাওয়া যায়নি.";
+      }
+
+    } else {
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      if (voiceAudio) voiceAudio.pause();
+      voiceAudio = new Audio(url);
+      voiceStatus.textContent = "Cloned voice generated successfully.";
+      voiceAudio.play().catch(error => console.error("Generated audio playback:", error));
+
+    }
+
+  } catch (error) {
+    console.error("Voice clone error:", error);
+    voiceStatus.textContent = "Voice clone request failed. API endpoint check করুন।";
+  } finally {
+    cloneVoiceBtn.disabled = false;
+    cloneVoiceBtn.textContent = "Clone Voice";
+  }
+});
+
+/* ================= CAMERA FRAME IMAGE ================= */
+
+const CAMERA_FRAME_KEY = "personalCourseStudioCameraFrame";
+const cameraFrame = $("cameraFrame");
+const cameraFrameInput = $("cameraFrameInput");
+const cameraFrameReset = $("cameraFrameReset");
+
+function applyCameraFrame(dataUrl) {
+  if (dataUrl) {
+    cameraFrame.style.backgroundImage = `url("${dataUrl}")`;
+    mentorCameraBox.classList.add("has-frame");
+  } else {
+    cameraFrame.style.backgroundImage = "";
+    mentorCameraBox.classList.remove("has-frame");
+  }
+}
+
+function loadCameraFrame() {
+  try {
+    applyCameraFrame(localStorage.getItem(CAMERA_FRAME_KEY) || "");
+  } catch {
+    applyCameraFrame("");
+  }
+}
+
+cameraFrameInput.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const img = new Image();
+
+    img.onload = () => {
+      const maxSide = 700;
+      const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+
+      applyCameraFrame(dataUrl);
 
       try {
-
-        const saved =
-          JSON.parse(
-            localStorage.getItem(
-              SETTINGS_KEY
-            ) || "null"
-          );
-
-        return {
-          ...defaultSettings,
-          ...(saved || {})
-        };
-
+        localStorage.setItem(CAMERA_FRAME_KEY, dataUrl);
+        showToast("Camera frame image saved.");
       } catch {
-
-        return {
-          ...defaultSettings
-        };
-
+        showToast("Image apply hoyeche, kintu save kora jayni (choto image din).");
       }
-
-    }
-
-
-    function saveLocalSettings(settings) {
-
-      localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify(settings)
-      );
-
-    }
-
-
-    /* =====================================================
-       APPLY SETTINGS
-    ===================================================== */
-
-    function applySettings(settings) {
-
-      studioName.value =
-        settings.studioName || "";
-
-      studioSubtitle.value =
-        settings.studioSubtitle || "";
-
-      selectedBrand.value =
-        settings.selectedBrand || "";
-
-      zoomTitle.value =
-        settings.zoomTitle || "";
-
-      welcomeSetting.value =
-        settings.welcomeText || "";
-
-
-      studioNameTop.textContent =
-        settings.studioName ||
-        "Personal Course Studio";
-
-
-      studioSubtitleTop.textContent =
-        settings.studioSubtitle || "";
-
-
-      stageTitle.textContent =
-        settings.zoomTitle ||
-        "Zoom Demo";
-
-
-      stageSubtitle.textContent =
-        settings.studioName ||
-        "Personal Course Studio";
-
-
-      brandBadge.textContent =
-        settings.selectedBrand ||
-        "";
-
-
-      welcomeTitle.textContent =
-        settings.welcomeText ||
-        "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?";
-
-
-      welcomeText.textContent =
-        "Slide, video অথবা mentor camera ব্যবহার করে আপনার class তৈরি করুন.";
-
-
-      const cameraBg =
-        settings.cameraBg ||
-        DEFAULT_CAMERA_BG;
-
-      mentorCameraBox.style.background =
-        cameraBg;
-
-      if (cameraBgInput) {
-
-        cameraBgInput.value =
-          cameraBg;
-
-      }
-
-    }
-
-
-    /* =====================================================
-       TOAST
-    ===================================================== */
-
-    let toastTimer = null;
-
-
-    function showToast(message) {
-
-      toast.textContent =
-        message;
-
-      toast.classList.add("show");
-
-
-      clearTimeout(toastTimer);
-
-
-      toastTimer =
-        setTimeout(
-          () => {
-            toast.classList.remove("show");
-          },
-          2600
-        );
-
-    }
-
-
-    /* =====================================================
-       SYNC STATUS
-    ===================================================== */
-
-    function setSyncStatus(
-      text,
-      type
-    ) {
-
-      syncStatus.textContent =
-        text;
-
-      syncStatus.className =
-        "sync-status " + type;
-
-    }
-
-
-    /* =====================================================
-       CENTRAL MENTOR AUTH
-    ===================================================== */
-
-    protectMentor()
-      .then((user) => {
-
-        console.log(
-          "Mentor authenticated:",
-          user.email
-        );
-
-
-        authLoading.classList.add(
-          "hidden"
-        );
-
-
-        /*
-          auth-guard.js handles:
-
-          1. Firebase authentication
-          2. Mentor email verification
-          3. Admin rejection
-          4. Unknown user rejection
-          5. SessionStorage
-          6. Redirect to login
-        */
-
-
-        loadLocalData();
-
-        listenToStudents();
-
-        initializeStudio();
-
-        registerServiceWorker();
-
-      })
-      .catch((error) => {
-
-        console.error(
-          "Mentor auth guard:",
-          error
-        );
-
-
-        window.location.replace(
-          "../login/"
-        );
-
-      });
-
-
-    /* =====================================================
-       LOGOUT
-    ===================================================== */
-
-    logoutBtn.addEventListener(
-      "click",
-      async () => {
-
-        logoutBtn.disabled = true;
-
-        logoutBtn.textContent =
-          "Logging out...";
-
-
-        await logoutStudio();
-
-      }
-    );
-
-
-    /* =====================================================
-       LOCAL DATA
-    ===================================================== */
-
-    function loadLocalData() {
-
-      const settings =
-        getSettings();
-
-      applySettings(settings);
-
-      setSyncStatus(
-        "LOCAL MODE",
-        "local"
-      );
-
-    }
-
-
-    /* =====================================================
-       FIRESTORE STUDENTS
-    ===================================================== */
-
-    function listenToStudents() {
-
-      try {
-
-        const studentsRef =
-          collection(
-            db,
-            "students"
-          );
-
-
-        onSnapshot(
-          studentsRef,
-
-          snapshot => {
-
-            const students =
-              snapshot.docs.map(
-                studentDoc => ({
-                  id: studentDoc.id,
-                  ...studentDoc.data()
-                })
-              );
-
-
-            localStorage.setItem(
-              STUDENTS_KEY,
-              JSON.stringify(students)
-            );
-
-
-            renderStudents(
-              students
-            );
-
-
-            setSyncStatus(
-              "LIVE SYNC",
-              "live"
-            );
-
-          },
-
-          error => {
-
-            console.error(
-              "Student sync error:",
-              error
-            );
-
-
-            renderLocalStudents();
-
-
-            setSyncStatus(
-              "LOCAL MODE",
-              "local"
-            );
-
-          }
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Firestore error:",
-          error
-        );
-
-
-        renderLocalStudents();
-
-
-        setSyncStatus(
-          "LOCAL MODE",
-          "local"
-        );
-
-      }
-
-    }
-
-
-    /* =====================================================
-       LOCAL STUDENTS
-    ===================================================== */
-
-    function renderLocalStudents() {
-
-      try {
-
-        const students =
-          JSON.parse(
-            localStorage.getItem(
-              STUDENTS_KEY
-            ) || "[]"
-          );
-
-
-        renderStudents(
-          Array.isArray(students)
-            ? students
-            : []
-        );
-
-      } catch {
-
-        renderStudents([]);
-
-      }
-
-    }
-
-
-    /* =====================================================
-       RENDER STUDENTS
-    ===================================================== */
-
-    function renderStudents(
-      students
-    ) {
-
-      studentCount.textContent =
-        String(students.length);
-
-
-      if (!students.length) {
-
-        studentList.innerHTML = `
-          <div class="empty-students">
-            No students added yet.
-          </div>
-        `;
-
-        return;
-
-      }
-
-
-      studentList.innerHTML =
-        students.map(
-          student => {
-
-            const image =
-              student.image ||
-              student.photo ||
-              student.avatar ||
-              student.imageUrl ||
-              "";
-
-
-            const avatar =
-              image ||
-              "https://ui-avatars.com/api/?name=" +
-              encodeURIComponent(
-                student.name || "Student"
-              ) +
-              "&background=1e293b&color=ffffff";
-
-
-            return `
-              <div class="student">
-
-                <img
-                  class="student-avatar"
-                  src="${escapeHtml(avatar)}"
-                  alt=""
-                  loading="lazy"
-                >
-
-                <div class="student-info">
-
-                  <div class="student-name">
-                    ${escapeHtml(
-                      student.name ||
-                      "Student"
-                    )}
-                  </div>
-
-                  <div class="student-status">
-                    Active
-                  </div>
-
-                </div>
-
-              </div>
-            `;
-
-          }
-        ).join("");
-
-    }
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ===================================================== */
-
-    function escapeHtml(value) {
-
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-    }
-
-
-    /* =====================================================
-       SETTINGS
-    ===================================================== */
-
-    saveSettings.addEventListener(
-      "click",
-      () => {
-
-        const settings = {
-
-          ...getSettings(),
-
-          studioName:
-            studioName.value.trim() ||
-            "Personal Course Studio",
-
-          studioSubtitle:
-            studioSubtitle.value.trim(),
-
-          selectedBrand:
-            selectedBrand.value.trim(),
-
-          zoomTitle:
-            zoomTitle.value.trim() ||
-            "Zoom Demo",
-
-          welcomeText:
-            welcomeSetting.value.trim() ||
-            "আপনার ক্লাস শুরু করার জন্য প্রস্তুত?",
-
-          cameraBg:
-            cameraBgInput.value ||
-            DEFAULT_CAMERA_BG
-
-        };
-
-
-        saveLocalSettings(
-          settings
-        );
-
-
-        applySettings(
-          settings
-        );
-
-
-        showToast(
-          "Studio settings saved."
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       CAMERA BACKGROUND — LIVE PREVIEW + RESET
-    ===================================================== */
-
-    cameraBgInput.addEventListener(
-      "input",
-      () => {
-
-        mentorCameraBox.style.background =
-          cameraBgInput.value;
-
-      }
-    );
-
-
-    cameraBgReset.addEventListener(
-      "click",
-      () => {
-
-        cameraBgInput.value =
-          DEFAULT_CAMERA_BG;
-
-        mentorCameraBox.style.background =
-          DEFAULT_CAMERA_BG;
-
-      }
-    );
-
-
-    /* =====================================================
-       SETTINGS BUTTON
-    ===================================================== */
-
-    settingsTopBtn.addEventListener(
-      "click",
-      () => {
-
-        settingsPanel.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        });
-
-      }
-    );
-
-
-    /* =====================================================
-       SLIDE
-    ===================================================== */
-
-    slideBtn.addEventListener(
-      "click",
-      () => {
-
-        slideInput.click();
-
-      }
-    );
-
-
-    slideInput.addEventListener(
-      "change",
-      event => {
-
-        const file =
-          event.target.files?.[0];
-
-        if (!file) {
-          return;
-        }
-
-
-        const url =
-          URL.createObjectURL(file);
-
-
-        mainImage.src =
-          url;
-
-        mainImage.style.display =
-          "block";
-
-        mainVideo.style.display =
-          "none";
-
-        stagePlaceholder.style.display =
-          "none";
-
-        stage.classList.remove(
-          "empty"
-        );
-
-
-        showToast(
-          "Slide loaded."
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       MAIN VIDEO
-    ===================================================== */
-
-    videoBtn.addEventListener(
-      "click",
-      () => {
-
-        videoInput.click();
-
-      }
-    );
-
-
-    videoInput.addEventListener(
-      "change",
-      event => {
-
-        const file =
-          event.target.files?.[0];
-
-        if (!file) {
-          return;
-        }
-
-
-        const url =
-          URL.createObjectURL(file);
-
-
-        mainVideo.src =
-          url;
-
-        mainVideo.style.display =
-          "block";
-
-        mainImage.style.display =
-          "none";
-
-        stagePlaceholder.style.display =
-          "none";
-
-        stage.classList.remove(
-          "empty"
-        );
-
-
-        showToast(
-          "Main video loaded."
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       CLEAR
-    ===================================================== */
-
-    clearBtn.addEventListener(
-      "click",
-      () => {
-
-        mainImage.removeAttribute(
-          "src"
-        );
-
-
-        mainVideo.pause();
-
-
-        mainVideo.removeAttribute(
-          "src"
-        );
-
-
-        mainVideo.load();
-
-
-        mainImage.style.display =
-          "none";
-
-
-        mainVideo.style.display =
-          "none";
-
-
-        stagePlaceholder.style.display =
-          "block";
-
-
-        stage.classList.add(
-          "empty"
-        );
-
-
-        showToast(
-          "Stage cleared."
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       PLAY / PAUSE
-    ===================================================== */
-
-    playBtn.addEventListener(
-      "click",
-      async () => {
-
-        if (
-          mainVideo.style.display !==
-          "none" &&
-          mainVideo.src
-        ) {
-
-          try {
-
-            if (mainVideo.paused) {
-
-              await mainVideo.play();
-
-            } else {
-
-              mainVideo.pause();
-
-            }
-
-          } catch (error) {
-
-            console.error(
-              "Video playback:",
-              error
-            );
-
-          }
-
-          return;
-
-        }
-
-
-        showToast(
-          "আগে একটি main video load করুন।"
-        );
-
-      }
-    );
-
-
-    mainVideo.addEventListener(
-      "play",
-      () => {
-
-        playIcon.textContent =
-          "⏸";
-
-        playLabel.textContent =
-          "Pause";
-
-      }
-    );
-
-
-    mainVideo.addEventListener(
-      "pause",
-      () => {
-
-        playIcon.textContent =
-          "▶";
-
-        playLabel.textContent =
-          "Play";
-
-      }
-    );
-
-
-    mainVideo.addEventListener(
-      "ended",
-      () => {
-
-        playIcon.textContent =
-          "▶";
-
-        playLabel.textContent =
-          "Play";
-
-      }
-    );
-
-
-    /* =====================================================
-       CAMERA
-    ===================================================== */
-
-    let cameraStream = null;
-
-
-    cameraBtn.addEventListener(
-      "click",
-      async () => {
-
-        if (cameraStream) {
-
-          stopCamera();
-
-          return;
-
-        }
-
-
-        if (
-          !navigator.mediaDevices ||
-          !navigator.mediaDevices.getUserMedia
-        ) {
-
-          showToast(
-            "এই browser-এ camera support নেই।"
-          );
-
-          return;
-
-        }
-
-
-        try {
-
-          cameraStream =
-            await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: true
-            });
-
-
-          mentorCamera.srcObject =
-            cameraStream;
-
-
-          mentorCameraBox.style.display =
-            "block";
-
-
-          cameraBtn.querySelector(
-            ".label"
-          ).textContent =
-            "Stop Camera";
-
-
-          showToast(
-            "Mentor camera started."
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Camera error:",
-            error
-          );
-
-
-          showToast(
-            "Camera permission পাওয়া যায়নি।"
-          );
-
-        }
-
-      }
-    );
-
-
-    function stopCamera() {
-
-      if (cameraStream) {
-
-        cameraStream
-          .getTracks()
-          .forEach(
-            track => track.stop()
-          );
-
-      }
-
-
-      cameraStream = null;
-
-      mentorCamera.srcObject =
-        null;
-
-      mentorCameraBox.style.display =
-        "none";
-
-
-      cameraBtn.querySelector(
-        ".label"
-      ).textContent =
-        "Mentor Camera";
-
-    }
-
-
-    /* =====================================================
-       FULLSCREEN
-    ===================================================== */
-
-    fullscreenBtn.addEventListener(
-      "click",
-      async () => {
-
-        try {
-
-          if (
-            !document.fullscreenElement
-          ) {
-
-            await stage.requestFullscreen();
-
-          } else {
-
-            await document.exitFullscreen();
-
-          }
-
-        } catch (error) {
-
-          console.error(
-            "Fullscreen:",
-            error
-          );
-
-
-          showToast(
-            "Fullscreen চালু করা যায়নি।"
-          );
-
-        }
-
-      }
-    );
-
-
-    /* =====================================================
-       TELEPROMPTER
-       Floating window (Picture-in-Picture when the browser
-       supports it, otherwise a popup). It is a SEPARATE
-       window, so it is not part of a "This Tab" recording.
-       The script scrolls up together with the mentor's
-       voice (microphone level).
-    ===================================================== */
-
-    const TELEPROMPTER_MODE_KEY =
-      "personalCourseStudioTeleprompterMode";
-
-    const TELEPROMPTER_SENS_KEY =
-      "personalCourseStudioTeleprompterSens";
-
-
-    let tpWindow = null;
-
-
-    async function openTeleprompter() {
-
-      if (
-        tpWindow &&
-        !tpWindow.closed
-      ) {
-
-        tpWindow.focus();
-
-        return;
-
-      }
-
-
-      const width =
-        Math.min(
-          Math.round(screen.availWidth * 0.7),
-          1000
-        );
-
-      const height = 320;
-
-      let win = null;
-
-
-      if ("documentPictureInPicture" in window) {
-
-        try {
-
-          win =
-            await window.documentPictureInPicture
-              .requestWindow({ width, height });
-
-        } catch (error) {
-
-          console.error(
-            "Document PiP:",
-            error
-          );
-
-          win = null;
-
-        }
-
-      }
-
-
-      if (!win) {
-
-        const left =
-          Math.round(
-            (screen.availLeft || 0) +
-            (screen.availWidth - width) / 2
-          );
-
-        win =
-          window.open(
-            "",
-            "mentorTeleprompter",
-            "width=" + width +
-            ",height=" + height +
-            ",left=" + left +
-            ",top=0,resizable=yes"
-          );
-
-      }
-
-
-      if (!win) {
-
-        showToast(
-          "Popup blocked — browser-এ popup allow করুন।"
-        );
-
-        return;
-
-      }
-
-
-      tpWindow = win;
-
-      buildTeleprompter(win);
-
-      teleprompterBtn.classList.add(
-        "active"
-      );
-
-    }
-
-
-    function buildTeleprompter(win) {
-
-      const doc = win.document;
-
-      doc.title = "Teleprompter";
-
-      doc.head.innerHTML = "";
-
-      doc.body.innerHTML = "";
-
-
-      const style =
-        doc.createElement("style");
-
-      style.textContent = `
-        * { box-sizing: border-box; }
-        html, body {
-          margin: 0;
-          height: 100%;
-          background: #000;
-          color: #fff;
-          font-family: Inter, system-ui, sans-serif;
-          overflow: hidden;
-        }
-        body {
-          display: flex;
-          flex-direction: column;
-        }
-        .bar {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          background: #111;
-          border-bottom: 1px solid #222;
-        }
-        .bar button, .bar select {
-          height: 32px;
-          padding: 0 10px;
-          border: 1px solid #333;
-          background: #1c1c1c;
-          color: #fff;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-        .bar button:hover { background: #2a2a2a; }
-        .bar label { font-size: 10px; color: #9ca3af; }
-        .bar input[type=range] { width: 80px; }
-        .meter {
-          width: 60px;
-          height: 8px;
-          border-radius: 99px;
-          background: #222;
-          overflow: hidden;
-        }
-        .meter i {
-          display: block;
-          height: 100%;
-          width: 0;
-          background: #22c55e;
-        }
-        #viewport {
-          position: relative;
-          flex: 1;
-          min-height: 0;
-          overflow: hidden;
-        }
-        #scroller {
-          padding: 0 6vw;
-          will-change: transform;
-        }
-        #tpText {
-          white-space: pre-wrap;
-          word-break: break-word;
-          text-align: center;
-          line-height: 1.5;
-        }
-        .line {
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: 45%;
-          border-top: 2px solid rgba(96,165,250,0.55);
-          pointer-events: none;
-        }
-        #tpEditor {
-          display: none;
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          padding: 16px;
-          background: #0a0a0a;
-          color: #fff;
-          border: 0;
-          outline: none;
-          resize: none;
-          font-size: 18px;
-          font-family: inherit;
-        }
-      `;
-
-      doc.head.appendChild(style);
-
-
-      doc.body.innerHTML = `
-        <div class="bar">
-          <button id="tpPlay">▶ Start</button>
-          <button id="tpEdit">✎ Edit</button>
-          <button id="tpTop">⤒ Top</button>
-          <select id="tpMode">
-            <option value="voice">🎙 Voice</option>
-            <option value="auto">⏱ Auto</option>
-          </select>
-          <label>Speed</label>
-          <input id="tpSpeed" type="range" min="10" max="200">
-          <label>Size</label>
-          <input id="tpSize" type="range" min="20" max="90">
-          <label>Mic</label>
-          <input id="tpSens" type="range" min="1" max="100">
-          <div class="meter"><i id="tpMeter"></i></div>
-        </div>
-        <div id="viewport">
-          <div id="scroller"><div id="tpText"></div></div>
-          <div class="line"></div>
-          <textarea id="tpEditor"></textarea>
-        </div>
-      `;
-
-
-      const $ = id => doc.getElementById(id);
-
-      const playBtn = $("tpPlay");
-      const editBtn = $("tpEdit");
-      const topBtn = $("tpTop");
-      const modeSel = $("tpMode");
-      const speedRange = $("tpSpeed");
-      const sizeRange = $("tpSize");
-      const sensRange = $("tpSens");
-      const meter = $("tpMeter");
-      const viewport = $("viewport");
-      const scroller = $("scroller");
-      const tpText = $("tpText");
-      const editor = $("tpEditor");
-
-
-      /* ---------- state ---------- */
-
-      let text =
-        localStorage.getItem(TELEPROMPTER_TEXT_KEY) ||
-        "আপনার script এখানে লিখুন...";
-
-      let speed =
-        Number(localStorage.getItem(TELEPROMPTER_SPEED_KEY) || 40);
-
-      let size =
-        Number(localStorage.getItem(TELEPROMPTER_SIZE_KEY) || 36);
-
-      let sens =
-        Number(localStorage.getItem(TELEPROMPTER_SENS_KEY) || 60);
-
-      let mode =
-        localStorage.getItem(TELEPROMPTER_MODE_KEY) || "voice";
-
-      let playing = false;
-      let editing = false;
-      let closed = false;
-      let pos = 0;
-      let last = null;
-      let lastVoice = -100000;
-      let raf = null;
-
-      let micStream = null;
-      let audioCtx = null;
-      let analyser = null;
-      let samples = null;
-
-
-      /* ---------- init UI ---------- */
-
-      tpText.textContent = text;
-      speedRange.value = speed;
-      sizeRange.value = size;
-      sensRange.value = sens;
-      modeSel.value = mode;
-
-
-      function layout() {
-
-        tpText.style.fontSize = size + "px";
-
-        scroller.style.paddingTop =
-          Math.round(viewport.clientHeight * 0.45) + "px";
-
-        scroller.style.paddingBottom =
-          Math.round(viewport.clientHeight * 0.6) + "px";
-
-      }
-
-      layout();
-
-      setTimeout(layout, 120);
-
-      win.addEventListener("resize", layout);
-
-
-      /* ---------- microphone level (voice sync) ---------- */
-
-      async function ensureMic() {
-
-        if (analyser) {
-          return true;
-        }
-
-        try {
-
-          micStream =
-            await navigator.mediaDevices.getUserMedia({
-              audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: false
-              }
-            });
-
-          audioCtx =
-            new (window.AudioContext || window.webkitAudioContext)();
-
-          if (audioCtx.state === "suspended") {
-            await audioCtx.resume();
-          }
-
-          const source =
-            audioCtx.createMediaStreamSource(micStream);
-
-          analyser = audioCtx.createAnalyser();
-
-          analyser.fftSize = 1024;
-
-          source.connect(analyser);
-
-          samples = new Uint8Array(analyser.fftSize);
-
-          return true;
-
-        } catch (error) {
-
-          console.error(
-            "Teleprompter mic:",
-            error
-          );
-
-          showToast(
-            "Microphone পাওয়া যায়নি — Auto mode ব্যবহার হবে।"
-          );
-
-          mode = "auto";
-
-          modeSel.value = "auto";
-
-          return false;
-
-        }
-
-      }
-
-
-      function readLevel() {
-
-        analyser.getByteTimeDomainData(samples);
-
-        let sum = 0;
-
-        for (let i = 0; i < samples.length; i++) {
-
-          const x = (samples[i] - 128) / 128;
-
-          sum += x * x;
-
-        }
-
-        return Math.sqrt(sum / samples.length);
-
-      }
-
-
-      /* ---------- animation loop ---------- */
-
-      function frame(now) {
-
-        if (closed) {
-          return;
-        }
-
-        if (last === null) {
-          last = now;
-        }
-
-        const dt =
-          Math.min((now - last) / 1000, 0.1);
-
-        last = now;
-
-
-        if (analyser) {
-
-          const level = readLevel();
-
-          const threshold =
-            0.004 + (1 - sens / 100) * 0.08;
-
-          if (level > threshold) {
-            lastVoice = now;
-          }
-
-          meter.style.width =
-            Math.min(100, (level / 0.15) * 100) + "%";
-
-        }
-
-
-        const speaking =
-          now - lastVoice < 600;
-
-
-        if (
-          playing &&
-          !editing &&
-          (mode === "auto" || speaking)
-        ) {
-
-          pos += speed * dt;
-
-          const max =
-            Math.max(
-              0,
-              scroller.scrollHeight -
-              viewport.clientHeight * 0.55
-            );
-
-          if (pos > max) {
-            pos = max;
-          }
-
-          scroller.style.transform =
-            "translateY(-" + pos + "px)";
-
-        }
-
-        raf = win.requestAnimationFrame(frame);
-
-      }
-
-      raf = win.requestAnimationFrame(frame);
-
-
-      /* ---------- controls ---------- */
-
-      async function togglePlay() {
-
-        if (editing) {
-          return;
-        }
-
-        if (!playing) {
-
-          if (mode === "voice") {
-            await ensureMic();
-          }
-
-          playing = true;
-
-          playBtn.textContent = "⏸ Pause";
-
-        } else {
-
-          playing = false;
-
-          playBtn.textContent = "▶ Start";
-
-        }
-
-      }
-
-      playBtn.addEventListener("click", togglePlay);
-
-
-      doc.addEventListener(
-        "keydown",
-        event => {
-
-          if (
-            event.code === "Space" &&
-            !editing
-          ) {
-
-            event.preventDefault();
-
-            togglePlay();
-
-          }
-
-        }
-      );
-
-
-      topBtn.addEventListener(
-        "click",
-        () => {
-
-          pos = 0;
-
-          scroller.style.transform =
-            "translateY(0px)";
-
-        }
-      );
-
-
-      editBtn.addEventListener(
-        "click",
-        () => {
-
-          editing = !editing;
-
-          if (editing) {
-
-            playing = false;
-
-            playBtn.textContent = "▶ Start";
-
-            editor.value = text;
-
-            editor.style.display = "block";
-
-            editBtn.textContent = "✓ Done";
-
-            editor.focus();
-
-          } else {
-
-            text = editor.value;
-
-            localStorage.setItem(
-              TELEPROMPTER_TEXT_KEY,
-              text
-            );
-
-            tpText.textContent = text;
-
-            editor.style.display = "none";
-
-            editBtn.textContent = "✎ Edit";
-
-            layout();
-
-          }
-
-        }
-      );
-
-
-      modeSel.addEventListener(
-        "change",
-        async () => {
-
-          mode = modeSel.value;
-
-          localStorage.setItem(
-            TELEPROMPTER_MODE_KEY,
-            mode
-          );
-
-          if (mode === "voice" && playing) {
-            await ensureMic();
-          }
-
-        }
-      );
-
-
-      speedRange.addEventListener(
-        "input",
-        () => {
-
-          speed = Number(speedRange.value);
-
-          localStorage.setItem(
-            TELEPROMPTER_SPEED_KEY,
-            String(speed)
-          );
-
-        }
-      );
-
-
-      sizeRange.addEventListener(
-        "input",
-        () => {
-
-          size = Number(sizeRange.value);
-
-          localStorage.setItem(
-            TELEPROMPTER_SIZE_KEY,
-            String(size)
-          );
-
-          layout();
-
-        }
-      );
-
-
-      sensRange.addEventListener(
-        "input",
-        () => {
-
-          sens = Number(sensRange.value);
-
-          localStorage.setItem(
-            TELEPROMPTER_SENS_KEY,
-            String(sens)
-          );
-
-        }
-      );
-
-
-      /* ---------- cleanup ---------- */
-
-      function cleanup() {
-
-        if (closed) {
-          return;
-        }
-
-        closed = true;
-
-        if (raf) {
-
-          try {
-            win.cancelAnimationFrame(raf);
-          } catch {}
-
-        }
-
-        if (micStream) {
-
-          micStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-          micStream = null;
-
-        }
-
-        if (audioCtx) {
-
-          audioCtx.close().catch(() => {});
-
-          audioCtx = null;
-
-        }
-
-        analyser = null;
-
-        tpWindow = null;
-
-        teleprompterBtn.classList.remove(
-          "active"
-        );
-
-      }
-
-      win.addEventListener("pagehide", cleanup);
-
-      win.addEventListener("unload", cleanup);
-
-    }
-
-
-    teleprompterBtn.addEventListener(
-      "click",
-      () => {
-
-        if (
-          tpWindow &&
-          !tpWindow.closed
-        ) {
-
-          tpWindow.close();
-
-          return;
-
-        }
-
-        openTeleprompter();
-
-      }
-    );
-
-
-    window.addEventListener(
-      "beforeunload",
-      () => {
-
-        if (
-          tpWindow &&
-          !tpWindow.closed
-        ) {
-
-          tpWindow.close();
-
-        }
-
-      }
-    );
-
-
-    /* =====================================================
-       SCREEN RECORDING
-       Video  -> screen/tab share (getDisplayMedia)
-       Audio  -> mentor's microphone ONLY
-                 (main video / tab audio is never recorded)
-    ===================================================== */
-
-    let recorder = null;
-
-    let recordedChunks = [];
-
-    let recordingDisplayStream = null;
-
-    let recordingMicStream = null;
-
-
-    recordBtn.addEventListener(
-      "click",
-      async () => {
-
-        if (recorder) {
-
-          recorder.stop();
-
-          return;
-
-        }
-
-
-        if (
-          !navigator.mediaDevices ||
-          !navigator.mediaDevices.getDisplayMedia
-        ) {
-
-          showToast(
-            "এই browser-এ screen recording support নেই।"
-          );
-
-          return;
-
-        }
-
-
-        try {
-
-          recordingDisplayStream =
-            await navigator.mediaDevices.getDisplayMedia({
-              video: { frameRate: 30 },
-              audio: false,
-              preferCurrentTab: true
-            });
-
-
-          try {
-
-            recordingMicStream =
-              await navigator.mediaDevices.getUserMedia({
-                audio: true
-              });
-
-          } catch (micError) {
-
-            console.error(
-              "Microphone error:",
-              micError
-            );
-
-
-            showToast(
-              "Microphone permission পাওয়া যায়নি — audio ছাড়া recording হবে।"
-            );
-
-            recordingMicStream = null;
-
-          }
-
-
-          const combinedStream =
-            new MediaStream([
-              ...recordingDisplayStream.getVideoTracks(),
-              ...(
-                recordingMicStream
-                  ? recordingMicStream.getAudioTracks()
-                  : []
-              )
-            ]);
-
-
-          recordedChunks = [];
-
-
-          let mimeType =
-            "video/webm";
-
-
-          if (
-            !MediaRecorder.isTypeSupported(
-              "video/webm"
-            )
-          ) {
-
-            mimeType = "";
-
-          }
-
-
-          recorder =
-            mimeType
-              ? new MediaRecorder(
-                  combinedStream,
-                  {
-                    mimeType
-                  }
-                )
-              : new MediaRecorder(
-                  combinedStream
-                );
-
-
-          recorder.ondataavailable =
-            event => {
-
-              if (
-                event.data &&
-                event.data.size > 0
-              ) {
-
-                recordedChunks.push(
-                  event.data
-                );
-
-              }
-
-            };
-
-
-          recorder.onstop =
-            () => {
-
-              const blob =
-                new Blob(
-                  recordedChunks,
-                  {
-                    type:
-                      "video/webm"
-                  }
-                );
-
-
-              const url =
-                URL.createObjectURL(
-                  blob
-                );
-
-
-              const link =
-                document.createElement(
-                  "a"
-                );
-
-
-              link.href =
-                url;
-
-
-              link.download =
-                `mentor-class-${Date.now()}.webm`;
-
-
-              document.body.appendChild(
-                link
-              );
-
-
-              link.click();
-
-
-              link.remove();
-
-
-              setTimeout(
-                () => {
-                  URL.revokeObjectURL(
-                    url
-                  );
-                },
-                1000
-              );
-
-
-              if (recordingDisplayStream) {
-
-                recordingDisplayStream
-                  .getTracks()
-                  .forEach(
-                    track => track.stop()
-                  );
-
-                recordingDisplayStream = null;
-
-              }
-
-
-              if (recordingMicStream) {
-
-                recordingMicStream
-                  .getTracks()
-                  .forEach(
-                    track => track.stop()
-                  );
-
-                recordingMicStream = null;
-
-              }
-
-
-              recorder = null;
-
-
-              recordBtn.classList.remove(
-                "active"
-              );
-
-
-              recordLabel.textContent =
-                "Record";
-
-
-              showToast(
-                "Recording saved."
-              );
-
-            };
-
-
-          recorder.onerror =
-            error => {
-
-              console.error(
-                "MediaRecorder error:",
-                error
-              );
-
-              showToast(
-                "Recording error হয়েছে।"
-              );
-
-            };
-
-
-          recorder.start();
-
-
-          recordBtn.classList.add(
-            "active"
-          );
-
-
-          recordLabel.textContent =
-            "Stop";
-
-
-          showToast(
-            "Recording started (mic audio only)."
-          );
-
-
-          const videoTrack =
-            recordingDisplayStream
-              .getVideoTracks()[0];
-
-
-          if (videoTrack) {
-
-            videoTrack.addEventListener(
-              "ended",
-              () => {
-
-                if (
-                  recorder &&
-                  recorder.state !==
-                  "inactive"
-                ) {
-
-                  recorder.stop();
-
-                }
-
-              }
-            );
-
-          }
-
-        } catch (error) {
-
-          console.error(
-            "Recording error:",
-            error
-          );
-
-
-          showToast(
-            "Screen recording শুরু করা যায়নি।"
-          );
-
-
-          if (recordingDisplayStream) {
-
-            recordingDisplayStream
-              .getTracks()
-              .forEach(
-                track => track.stop()
-              );
-
-            recordingDisplayStream = null;
-
-          }
-
-
-          if (recordingMicStream) {
-
-            recordingMicStream
-              .getTracks()
-              .forEach(
-                track => track.stop()
-              );
-
-            recordingMicStream = null;
-
-          }
-
-
-          recorder = null;
-
-        }
-
-      }
-    );
-
-
-    /* =====================================================
-       DRAGGABLE ELEMENTS
-    ===================================================== */
-
-    function makeDraggable(
-      element,
-      container
-    ) {
-
-      let dragging = false;
-
-      let startX = 0;
-      let startY = 0;
-
-      let startLeft = 0;
-      let startTop = 0;
-
-
-      element.addEventListener(
-        "pointerdown",
-        event => {
-
-          if (
-            event.target.closest(
-              "button, input"
-            )
-          ) {
-
-            return;
-
-          }
-
-
-          dragging = true;
-
-
-          element.setPointerCapture(
-            event.pointerId
-          );
-
-
-          const elementRect =
-            element.getBoundingClientRect();
-
-
-          const containerRect =
-            container.getBoundingClientRect();
-
-
-          startX =
-            event.clientX;
-
-          startY =
-            event.clientY;
-
-
-          startLeft =
-            elementRect.left -
-            containerRect.left;
-
-
-          startTop =
-            elementRect.top -
-            containerRect.top;
-
-
-          element.style.left =
-            `${startLeft}px`;
-
-
-          element.style.top =
-            `${startTop}px`;
-
-
-          element.style.right =
-            "auto";
-
-
-          element.style.bottom =
-            "auto";
-
-
-          event.preventDefault();
-
-        }
-      );
-
-
-      element.addEventListener(
-        "pointermove",
-        event => {
-
-          if (!dragging) {
-            return;
-          }
-
-
-          const containerRect =
-            container.getBoundingClientRect();
-
-
-          let left =
-            startLeft +
-            (
-              event.clientX -
-              startX
-            );
-
-
-          let top =
-            startTop +
-            (
-              event.clientY -
-              startY
-            );
-
-
-          const maxLeft =
-            Math.max(
-              0,
-              containerRect.width -
-              element.offsetWidth
-            );
-
-
-          const maxTop =
-            Math.max(
-              0,
-              containerRect.height -
-              element.offsetHeight
-            );
-
-
-          left =
-            Math.max(
-              0,
-              Math.min(
-                left,
-                maxLeft
-              )
-            );
-
-
-          top =
-            Math.max(
-              0,
-              Math.min(
-                top,
-                maxTop
-              )
-            );
-
-
-          element.style.left =
-            `${left}px`;
-
-
-          element.style.top =
-            `${top}px`;
-
-        }
-      );
-
-
-      element.addEventListener(
-        "pointerup",
-        event => {
-
-          dragging = false;
-
-
-          try {
-
-            element.releasePointerCapture(
-              event.pointerId
-            );
-
-          } catch {}
-
-        }
-      );
-
-
-      element.addEventListener(
-        "pointercancel",
-        () => {
-
-          dragging = false;
-
-        }
-      );
-
-    }
-
-
-    makeDraggable(
-      stageLabel,
-      stage
-    );
-
-
-    makeDraggable(
-      mentorCameraBox,
-      stage
-    );
-
-
-    makeDraggable(
-      brandBadge,
-      stage
-    );
-
-
-    /* =====================================================
-       VOICE SAMPLE PREVIEW
-    ===================================================== */
-
-    let voiceAudio = null;
-
-    let voiceObjectUrl = null;
-
-
-    voicePreviewBtn.addEventListener(
-      "click",
-      () => {
-
-        const file =
-          voiceSample.files?.[0];
-
-
-        if (!file) {
-
-          showToast(
-            "আগে একটি mentor voice sample select করুন।"
-          );
-
-          return;
-
-        }
-
-
-        if (voiceAudio) {
-
-          voiceAudio.pause();
-
-        }
-
-
-        if (voiceObjectUrl) {
-
-          URL.revokeObjectURL(
-            voiceObjectUrl
-          );
-
-        }
-
-
-        voiceObjectUrl =
-          URL.createObjectURL(
-            file
-          );
-
-
-        voiceAudio =
-          new Audio(
-            voiceObjectUrl
-          );
-
-
-        voiceAudio.play()
-          .then(() => {
-
-            voiceStatus.textContent =
-              "Voice sample playing...";
-
-          })
-          .catch(error => {
-
-            console.error(
-              "Voice preview:",
-              error
-            );
-
-
-            voiceStatus.textContent =
-              "Voice sample play করা যায়নি.";
-
-          });
-
-      }
-    );
-
-
-    /* =====================================================
-       VOICE CLONE
-    ===================================================== */
-
-    cloneVoiceBtn.addEventListener(
-      "click",
-      async () => {
-
-        const sample =
-          voiceSample.files?.[0];
-
-
-        if (!sample) {
-
-          showToast(
-            "আগে mentor voice sample upload করুন।"
-          );
-
-          return;
-
-        }
-
-
-        const apiUrl =
-          localStorage.getItem(
-            VOICE_API_KEY
-          ) || "";
-
-
-        if (!apiUrl) {
-
-          voiceStatus.textContent =
-            "Voice clone API connected নেই। Backend endpoint যোগ করলে actual voice clone হবে।";
-
-
-          showToast(
-            "Voice clone API connected নেই।"
-          );
-
-          return;
-
-        }
-
-
-        try {
-
-          cloneVoiceBtn.disabled =
-            true;
-
-
-          cloneVoiceBtn.textContent =
-            "Processing...";
-
-
-          voiceStatus.textContent =
-            "Voice clone request পাঠানো হচ্ছে...";
-
-
-          const formData =
-            new FormData();
-
-
-          formData.append(
-            "voiceSample",
-            sample
-          );
-
-
-          if (
-            videoInput.files?.[0]
-          ) {
-
-            formData.append(
-              "sourceVideo",
-              videoInput.files[0]
-            );
-
-          }
-
-
-          formData.append(
-            "mode",
-            "voice-clone"
-          );
-
-
-          formData.append(
-            "preserveTiming",
-            "true"
-          );
-
-
-          const response =
-            await fetch(
-              apiUrl,
-              {
-                method: "POST",
-                body: formData
-              }
-            );
-
-
-          if (!response.ok) {
-
-            throw new Error(
-              `API error ${response.status}`
-            );
-
-          }
-
-
-          const contentType =
-            response.headers.get(
-              "content-type"
-            ) || "";
-
-
-          if (
-            contentType.includes(
-              "application/json"
-            )
-          ) {
-
-            const result =
-              await response.json();
-
-
-            if (
-              result.audioUrl
-            ) {
-
-              if (voiceAudio) {
-                voiceAudio.pause();
-              }
-
-
-              voiceAudio =
-                new Audio(
-                  result.audioUrl
-                );
-
-
-              voiceStatus.textContent =
-                "Cloned voice generated successfully.";
-
-
-              voiceAudio.play()
-                .catch(error => {
-
-                  console.error(
-                    "Cloned audio playback:",
-                    error
-                  );
-
-                });
-
-
-            } else if (
-              result.videoUrl
-            ) {
-
-              mainVideo.src =
-                result.videoUrl;
-
-
-              mainVideo.style.display =
-                "block";
-
-
-              mainImage.style.display =
-                "none";
-
-
-              stagePlaceholder.style.display =
-                "none";
-
-
-              stage.classList.remove(
-                "empty"
-              );
-
-
-              voiceStatus.textContent =
-                "Cloned video generated successfully.";
-
-            } else {
-
-              voiceStatus.textContent =
-                "API response পাওয়া গেছে, কিন্তু audio/video URL পাওয়া যায়নি.";
-
-            }
-
-          } else {
-
-            const blob =
-              await response.blob();
-
-
-            const url =
-              URL.createObjectURL(
-                blob
-              );
-
-
-            if (voiceAudio) {
-              voiceAudio.pause();
-            }
-
-
-            voiceAudio =
-              new Audio(url);
-
-
-            voiceStatus.textContent =
-              "Cloned voice generated successfully.";
-
-
-            voiceAudio.play()
-              .catch(error => {
-
-                console.error(
-                  "Generated audio playback:",
-                  error
-                );
-
-              });
-
-          }
-
-        } catch (error) {
-
-          console.error(
-            "Voice clone error:",
-            error
-          );
-
-
-          voiceStatus.textContent =
-            "Voice clone request failed. API endpoint check করুন।";
-
-        } finally {
-
-          cloneVoiceBtn.disabled =
-            false;
-
-
-          cloneVoiceBtn.textContent =
-            "Clone Voice";
-
-        }
-
-      }
-    );
-
-
-    /* =====================================================
-       INITIALIZE
-    ===================================================== */
-
-    function initializeStudio() {
-
-      const settings =
-        getSettings();
-
-
-      applySettings(
-        settings
-      );
-
-
-      renderLocalStudents();
-
-    }
-
-
-    /* =====================================================
-       SERVICE WORKER
-    ===================================================== */
-
-    function registerServiceWorker() {
-
-      if (
-        "serviceWorker" in navigator
-      ) {
-
-        navigator.serviceWorker
-          .register("../sw.js")
-          .catch(
-            error => {
-
-              console.log(
-                "Service worker:",
-                error
-              );
-
-            }
-          );
-
-      }
-
-    }
-
-
-    /* =====================================================
-       CLEANUP
-    ===================================================== */
-
-    window.addEventListener(
-      "beforeunload",
-      () => {
-
-        if (cameraStream) {
-
-          cameraStream
-            .getTracks()
-            .forEach(
-              track => track.stop()
-            );
-
-        }
-
-
-        if (voiceAudio) {
-
-          voiceAudio.pause();
-
-        }
-
-
-        if (voiceObjectUrl) {
-
-          URL.revokeObjectURL(
-            voiceObjectUrl
-          );
-
-        }
-
-      }
-    );
-
-  </script>
+    };
+
+    img.onerror = () => showToast("Image load kora jayni.");
+
+    img.src = reader.result;
+  };
+
+  reader.readAsDataURL(file);
+});
+
+cameraFrameReset.addEventListener("click", () => {
+  try { localStorage.removeItem(CAMERA_FRAME_KEY); } catch {}
+  cameraFrameInput.value = "";
+  applyCameraFrame("");
+  showToast("Camera frame image removed.");
+});
+
+loadCameraFrame();
+
+/* ================= INITIALIZE ================= */
+
+function initializeStudio() {
+  applySettings(getSettings());
+  renderLocalStudents();
+}
+
+function registerServiceWorker() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("../sw.js")
+      .catch(error => console.log("Service worker:", error));
+  }
+}
+
+window.addEventListener("beforeunload", () => {
+  if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+  if (voiceAudio) voiceAudio.pause();
+  if (voiceObjectUrl) URL.revokeObjectURL(voiceObjectUrl);
+});
+
+</script>
 
 </body>
 </html>
