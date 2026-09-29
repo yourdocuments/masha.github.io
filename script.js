@@ -1,6 +1,21 @@
+```javascript
 /* =========================================================
    PERSONAL COURSE STUDIO
    SCRIPT.JS
+   =========================================================
+   Includes:
+   - Student management
+   - Image upload
+   - Main video upload
+   - Mentor video upload
+   - Main video play / pause
+   - Fullscreen
+   - Screen recording
+   - Settings
+   - Brand settings
+   - Mentor background
+   - Mentor camera/window drag & move
+   - Mouse + Touch + Pointer support
    ========================================================= */
 
 
@@ -93,26 +108,48 @@ let recordingStream = null;
 
 
 /* =========================================================
+   MENTOR DRAG VARIABLES
+   ========================================================= */
+
+let mentorDragging = false;
+
+let mentorDragPointerId = null;
+
+let mentorStartPointerX = 0;
+
+let mentorStartPointerY = 0;
+
+let mentorStartLeft = 0;
+
+let mentorStartTop = 0;
+
+
+/* =========================================================
    RENDER STUDENTS
    ========================================================= */
 
 function renderStudents() {
 
-  if (!studentsList) return;
+  if (!studentsList) {
+    return;
+  }
 
   studentsList.innerHTML = "";
 
-  students.forEach((name, index) => {
+  students.forEach(function (name, index) {
 
     const student =
       document.createElement("div");
 
-    student.className = "student";
+    student.className =
+      "student";
 
     const initials =
       name
         .split(" ")
-        .map(word => word.charAt(0))
+        .map(function (word) {
+          return word.charAt(0);
+        })
         .join("")
         .substring(0, 2)
         .toUpperCase();
@@ -155,19 +192,24 @@ function renderStudents() {
         ".student-menu"
       );
 
-    removeButton.addEventListener(
-      "click",
-      function () {
+    if (removeButton) {
 
-        removeStudent(index);
+      removeButton.addEventListener(
+        "click",
+        function () {
 
-      }
+          removeStudent(index);
+
+        }
+      );
+
+    }
+
+    studentsList.appendChild(
+      student
     );
 
-    studentsList.appendChild(student);
-
   });
-
 
   updateStudentCount();
 
@@ -180,7 +222,9 @@ function renderStudents() {
 
 function updateStudentCount() {
 
-  if (!studentCount) return;
+  if (!studentCount) {
+    return;
+  }
 
   studentCount.textContent =
     students.length +
@@ -229,7 +273,9 @@ function addStudent() {
 
   }
 
-  students.push(cleanName);
+  students.push(
+    cleanName
+  );
 
   renderStudents();
 
@@ -250,7 +296,9 @@ function removeStudent(index) {
     index < 0 ||
     index >= students.length
   ) {
+
     return;
+
   }
 
   if (students.length === 1) {
@@ -266,7 +314,10 @@ function removeStudent(index) {
   const removedName =
     students[index];
 
-  students.splice(index, 1);
+  students.splice(
+    index,
+    1
+  );
 
   renderStudents();
 
@@ -297,7 +348,9 @@ if (imageUpload) {
       }
 
       if (
-        !file.type.startsWith("image/")
+        !file.type.startsWith(
+          "image/"
+        )
       ) {
 
         showToast(
@@ -311,18 +364,33 @@ if (imageUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
-      mainImage.src = url;
+      if (mainImage) {
 
-      mainImage.style.display =
-        "block";
+        mainImage.src =
+          url;
 
-      mainVideo.style.display =
-        "none";
+        mainImage.style.display =
+          "block";
 
-      welcomeContent.style.display =
-        "none";
+      }
+
+      if (mainVideo) {
+
+        mainVideo.style.display =
+          "none";
+
+      }
+
+      if (welcomeContent) {
+
+        welcomeContent.style.display =
+          "none";
+
+      }
 
       setStatus(
         "Slide ready"
@@ -357,7 +425,9 @@ if (videoUpload) {
       }
 
       if (
-        !file.type.startsWith("video/")
+        !file.type.startsWith(
+          "video/"
+        )
       ) {
 
         showToast(
@@ -371,20 +441,35 @@ if (videoUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
-      mainVideo.src = url;
+      if (mainVideo) {
 
-      mainVideo.style.display =
-        "block";
+        mainVideo.src =
+          url;
 
-      mainImage.style.display =
-        "none";
+        mainVideo.style.display =
+          "block";
 
-      welcomeContent.style.display =
-        "none";
+        mainVideo.load();
 
-      mainVideo.load();
+      }
+
+      if (mainImage) {
+
+        mainImage.style.display =
+          "none";
+
+      }
+
+      if (welcomeContent) {
+
+        welcomeContent.style.display =
+          "none";
+
+      }
 
       setStatus(
         "Video ready"
@@ -419,7 +504,9 @@ if (mentorUpload) {
       }
 
       if (
-        !file.type.startsWith("video/")
+        !file.type.startsWith(
+          "video/"
+        )
       ) {
 
         showToast(
@@ -433,24 +520,39 @@ if (mentorUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
-      mentorVideo.src = url;
+      if (mentorVideo) {
 
-      mentorVideo.style.display =
-        "block";
+        mentorVideo.src =
+          url;
 
-      mentorPlaceholder.style.display =
-        "none";
+        mentorVideo.style.display =
+          "block";
 
-      mentorVideo.muted = true;
+        mentorVideo.muted =
+          true;
 
-      mentorVideo.loop = true;
+        mentorVideo.loop =
+          true;
 
-      mentorVideo.playsInline = true;
+        mentorVideo.playsInline =
+          true;
 
-      mentorVideo.play()
-        .catch(() => {});
+        mentorVideo
+          .play()
+          .catch(function () {});
+
+      }
+
+      if (mentorPlaceholder) {
+
+        mentorPlaceholder.style.display =
+          "none";
+
+      }
 
       showToast(
         "Mentor video loaded"
@@ -488,7 +590,7 @@ function toggleMainPlay() {
 
     mainVideo
       .play()
-      .catch(() => {
+      .catch(function () {
 
         showToast(
           "Video play করা যাচ্ছে না"
@@ -582,7 +684,6 @@ function clearMainContent() {
 
   }
 
-
   if (mainVideo) {
 
     mainVideo.pause();
@@ -598,7 +699,6 @@ function clearMainContent() {
 
   }
 
-
   if (welcomeContent) {
 
     welcomeContent.style.display =
@@ -606,20 +706,19 @@ function clearMainContent() {
 
   }
 
-
   if (imageUpload) {
 
-    imageUpload.value = "";
+    imageUpload.value =
+      "";
 
   }
-
 
   if (videoUpload) {
 
-    videoUpload.value = "";
+    videoUpload.value =
+      "";
 
   }
-
 
   setStatus(
     "Ready"
@@ -656,14 +755,16 @@ function fullscreenStage() {
 
     if (request) {
 
-      request.call(stage)
-        .catch(() => {
+      Promise.resolve(
+        request.call(stage)
+      )
+      .catch(function () {
 
-          showToast(
-            "Fullscreen unavailable"
-          );
+        showToast(
+          "Fullscreen unavailable"
+        );
 
-        });
+      });
 
     } else {
 
@@ -681,7 +782,9 @@ function fullscreenStage() {
 
     if (exit) {
 
-      exit.call(document);
+      exit.call(
+        document
+      );
 
     }
 
@@ -728,7 +831,6 @@ async function startRecording() {
 
   }
 
-
   try {
 
     recordingStream =
@@ -748,7 +850,10 @@ async function startRecording() {
 
 
     const options = {
-      videoBitsPerSecond: 6000000
+
+      videoBitsPerSecond:
+        6000000
+
     };
 
 
@@ -810,7 +915,8 @@ async function startRecording() {
     );
 
 
-    isRecording = true;
+    isRecording =
+      true;
 
 
     updateRecordingUI(
@@ -829,7 +935,8 @@ async function startRecording() {
 
 
     const videoTrack =
-      recordingStream.getVideoTracks()[0];
+      recordingStream
+        .getVideoTracks()[0];
 
 
     if (videoTrack) {
@@ -849,7 +956,6 @@ async function startRecording() {
 
     }
 
-
   } catch (error) {
 
     console.error(
@@ -858,15 +964,16 @@ async function startRecording() {
     );
 
 
-    if (
-      recordingStream
-    ) {
+    if (recordingStream) {
 
       recordingStream
         .getTracks()
         .forEach(
-          track =>
-            track.stop()
+          function (track) {
+
+            track.stop();
+
+          }
         );
 
     }
@@ -875,6 +982,7 @@ async function startRecording() {
     showToast(
       "Screen recording permission দেওয়া হয়নি"
     );
+
 
     setStatus(
       "Ready"
@@ -892,11 +1000,8 @@ async function startRecording() {
 function stopRecording() {
 
   if (!mediaRecorder) {
-
     return;
-
   }
-
 
   if (
     mediaRecorder.state !==
@@ -907,20 +1012,22 @@ function stopRecording() {
 
   }
 
-
   if (recordingStream) {
 
     recordingStream
       .getTracks()
       .forEach(
-        track =>
-          track.stop()
+        function (track) {
+
+          track.stop();
+
+        }
       );
 
   }
 
-
-  isRecording = false;
+  isRecording =
+    false;
 
   updateRecordingUI(
     false
@@ -1016,11 +1123,14 @@ function finishRecording() {
   );
 
 
-  recordedChunks = [];
+  recordedChunks =
+    [];
 
-  mediaRecorder = null;
+  mediaRecorder =
+    null;
 
-  recordingStream = null;
+  recordingStream =
+    null;
 
 }
 
@@ -1036,7 +1146,6 @@ function updateRecordingUI(
   if (!recordTopBtn) {
     return;
   }
-
 
   if (recording) {
 
@@ -1158,8 +1267,12 @@ function saveSettings() {
   }
 
 
-  brandBadge.textContent =
-    name;
+  if (brandBadge) {
+
+    brandBadge.textContent =
+      name;
+
+  }
 
 
   localStorage.setItem(
@@ -1221,6 +1334,42 @@ function loadSettings() {
 
   }
 
+
+  /* Restore Mentor Position */
+
+  if (mentorCard) {
+
+    const savedLeft =
+      localStorage.getItem(
+        "courseStudioMentorLeft"
+      );
+
+    const savedTop =
+      localStorage.getItem(
+        "courseStudioMentorTop"
+      );
+
+    if (
+      savedLeft !== null &&
+      savedTop !== null
+    ) {
+
+      mentorCard.style.left =
+        savedLeft + "px";
+
+      mentorCard.style.top =
+        savedTop + "px";
+
+      mentorCard.style.right =
+        "auto";
+
+      mentorCard.style.bottom =
+        "auto";
+
+    }
+
+  }
+
 }
 
 
@@ -1255,6 +1404,478 @@ function changeMentorBackground(
 
 
 /* =========================================================
+   MENTOR DRAG / MOVE
+   =========================================================
+   Mouse + Touch + Pointer Events
+   ========================================================= */
+
+function initializeMentorDrag() {
+
+  if (!mentorCard) {
+    return;
+  }
+
+
+  /*
+   * Important:
+   * We use pointer events so the same system
+   * works with mouse, touch and pen.
+   */
+
+  mentorCard.addEventListener(
+    "pointerdown",
+    mentorPointerDown
+  );
+
+
+  document.addEventListener(
+    "pointermove",
+    mentorPointerMove
+  );
+
+
+  document.addEventListener(
+    "pointerup",
+    mentorPointerUp
+  );
+
+
+  document.addEventListener(
+    "pointercancel",
+    mentorPointerUp
+  );
+
+
+  /*
+   * Prevent browser native drag behavior.
+   */
+
+  mentorCard.addEventListener(
+    "dragstart",
+    function (event) {
+
+      event.preventDefault();
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   MENTOR POINTER DOWN
+   ========================================================= */
+
+function mentorPointerDown(
+  event
+) {
+
+  if (!mentorCard) {
+    return;
+  }
+
+
+  /*
+   * Do not start dragging when clicking
+   * buttons, inputs or interactive controls.
+   */
+
+  const interactive =
+    event.target.closest(
+      "button, input, select, textarea, a, label"
+    );
+
+
+  if (interactive) {
+    return;
+  }
+
+
+  /*
+   * Only primary mouse button.
+   * Touch and pen are allowed.
+   */
+
+  if (
+    event.pointerType === "mouse" &&
+    event.button !== 0
+  ) {
+
+    return;
+
+  }
+
+
+  const stage =
+    document.getElementById(
+      "stage"
+    );
+
+
+  if (!stage) {
+    return;
+  }
+
+
+  const mentorRect =
+    mentorCard.getBoundingClientRect();
+
+
+  const stageRect =
+    stage.getBoundingClientRect();
+
+
+  /*
+   * Convert current screen position
+   * into stage-relative position.
+   */
+
+  const currentLeft =
+    mentorRect.left -
+    stageRect.left +
+    stage.scrollLeft;
+
+
+  const currentTop =
+    mentorRect.top -
+    stageRect.top +
+    stage.scrollTop;
+
+
+  mentorStartPointerX =
+    event.clientX;
+
+  mentorStartPointerY =
+    event.clientY;
+
+
+  mentorStartLeft =
+    currentLeft;
+
+  mentorStartTop =
+    currentTop;
+
+
+  mentorDragging =
+    true;
+
+
+  mentorDragPointerId =
+    event.pointerId;
+
+
+  try {
+
+    mentorCard.setPointerCapture(
+      event.pointerId
+    );
+
+  } catch (error) {
+    /* Pointer capture may not be available */
+  }
+
+
+  mentorCard.classList.add(
+    "dragging"
+  );
+
+
+  /*
+   * Switch from right/bottom positioning
+   * to left/top positioning.
+   */
+
+  mentorCard.style.left =
+    currentLeft + "px";
+
+  mentorCard.style.top =
+    currentTop + "px";
+
+  mentorCard.style.right =
+    "auto";
+
+  mentorCard.style.bottom =
+    "auto";
+
+
+  /*
+   * Prevent text selection / page scrolling.
+   */
+
+  event.preventDefault();
+
+}
+
+
+/* =========================================================
+   MENTOR POINTER MOVE
+   ========================================================= */
+
+function mentorPointerMove(
+  event
+) {
+
+  if (!mentorDragging) {
+    return;
+  }
+
+
+  if (
+    mentorDragPointerId !== null &&
+    event.pointerId !== mentorDragPointerId
+  ) {
+
+    return;
+
+  }
+
+
+  const stage =
+    document.getElementById(
+      "stage"
+    );
+
+
+  if (!stage) {
+    return;
+  }
+
+
+  const stageRect =
+    stage.getBoundingClientRect();
+
+
+  const mentorRect =
+    mentorCard.getBoundingClientRect();
+
+
+  const deltaX =
+    event.clientX -
+    mentorStartPointerX;
+
+
+  const deltaY =
+    event.clientY -
+    mentorStartPointerY;
+
+
+  let newLeft =
+    mentorStartLeft +
+    deltaX;
+
+
+  let newTop =
+    mentorStartTop +
+    deltaY;
+
+
+  /*
+   * Keep Mentor window inside stage.
+   */
+
+  const stageWidth =
+    stage.clientWidth;
+
+  const stageHeight =
+    stage.clientHeight;
+
+
+  const mentorWidth =
+    mentorRect.width;
+
+  const mentorHeight =
+    mentorRect.height;
+
+
+  const minLeft =
+    0;
+
+  const minTop =
+    0;
+
+
+  const maxLeft =
+    Math.max(
+      0,
+      stageWidth -
+      mentorWidth
+    );
+
+
+  const maxTop =
+    Math.max(
+      0,
+      stageHeight -
+      mentorHeight
+    );
+
+
+  newLeft =
+    Math.max(
+      minLeft,
+      Math.min(
+        newLeft,
+        maxLeft
+      )
+    );
+
+
+  newTop =
+    Math.max(
+      minTop,
+      Math.min(
+        newTop,
+        maxTop
+      )
+    );
+
+
+  mentorCard.style.left =
+    newLeft + "px";
+
+  mentorCard.style.top =
+    newTop + "px";
+
+
+  event.preventDefault();
+
+}
+
+
+/* =========================================================
+   MENTOR POINTER UP
+   ========================================================= */
+
+function mentorPointerUp(
+  event
+) {
+
+  if (!mentorDragging) {
+    return;
+  }
+
+
+  if (
+    mentorDragPointerId !== null &&
+    event.pointerId !== mentorDragPointerId
+  ) {
+
+    return;
+
+  }
+
+
+  mentorDragging =
+    false;
+
+
+  mentorDragPointerId =
+    null;
+
+
+  if (mentorCard) {
+
+    mentorCard.classList.remove(
+      "dragging"
+    );
+
+
+    /*
+     * Save current position.
+     */
+
+    const left =
+      parseFloat(
+        mentorCard.style.left
+      );
+
+    const top =
+      parseFloat(
+        mentorCard.style.top
+      );
+
+
+    if (!Number.isNaN(left)) {
+
+      localStorage.setItem(
+        "courseStudioMentorLeft",
+        String(left)
+      );
+
+    }
+
+
+    if (!Number.isNaN(top)) {
+
+      localStorage.setItem(
+        "courseStudioMentorTop",
+        String(top)
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   RESET MENTOR POSITION
+   ========================================================= */
+
+function resetMentorPosition() {
+
+  if (!mentorCard) {
+    return;
+  }
+
+
+  const stage =
+    document.getElementById(
+      "stage"
+    );
+
+
+  if (!stage) {
+    return;
+  }
+
+
+  /*
+   * Put Mentor back to the default
+   * top-right position.
+   */
+
+  mentorCard.style.left =
+    "auto";
+
+  mentorCard.style.top =
+    "20px";
+
+  mentorCard.style.right =
+    "20px";
+
+  mentorCard.style.bottom =
+    "auto";
+
+
+  localStorage.removeItem(
+    "courseStudioMentorLeft"
+  );
+
+  localStorage.removeItem(
+    "courseStudioMentorTop"
+  );
+
+
+  showToast(
+    "Mentor position reset"
+  );
+
+}
+
+
+/* =========================================================
    STATUS
    ========================================================= */
 
@@ -1276,7 +1897,8 @@ function setStatus(
    TOAST
    ========================================================= */
 
-let toastTimer = null;
+let toastTimer =
+  null;
 
 
 function showToast(
@@ -1334,31 +1956,46 @@ function createFileDate() {
   const month =
     String(
       now.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const day =
     String(
       now.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const hour =
     String(
       now.getHours()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const minute =
     String(
       now.getMinutes()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const second =
     String(
       now.getSeconds()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   return (
@@ -1430,10 +2067,13 @@ document.addEventListener(
   "keydown",
   function (event) {
 
-    /* ESC = Close settings */
+    /*
+     * ESC = Close settings
+     */
 
     if (
-      event.key === "Escape"
+      event.key ===
+      "Escape"
     ) {
 
       closeSettings();
@@ -1441,16 +2081,48 @@ document.addEventListener(
     }
 
 
-    /* CTRL + ENTER = Recording */
+    /*
+     * CTRL + ENTER = Recording
+     */
 
     if (
       event.ctrlKey &&
-      event.key === "Enter"
+      event.key ===
+        "Enter"
     ) {
 
       event.preventDefault();
 
       toggleRecording();
+
+    }
+
+
+    /*
+     * R = Reset Mentor position
+     *
+     * Only when not typing in an input.
+     */
+
+    const tag =
+      document.activeElement
+        ? document.activeElement.tagName
+        : "";
+
+
+    const typing =
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      tag === "SELECT";
+
+
+    if (
+      !typing &&
+      event.key.toLowerCase() ===
+        "r"
+    ) {
+
+      resetMentorPosition();
 
     }
 
@@ -1465,6 +2137,8 @@ document.addEventListener(
 renderStudents();
 
 loadSettings();
+
+initializeMentorDrag();
 
 setStatus(
   "Ready"
@@ -1485,3 +2159,4 @@ window.addEventListener(
 
   }
 );
+```
