@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    PERSONAL COURSE STUDIO
    SCRIPT.JS
