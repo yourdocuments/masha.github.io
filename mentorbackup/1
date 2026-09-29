@@ -1,0 +1,2784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Mentor Studio | Personal Course Studio
+    </title>
+
+    <meta
+        name="description"
+        content="Private Mentor Studio for Personal Course Studio."
+    >
+
+    <meta
+        name="theme-color"
+        content="#08111f"
+    >
+
+    <style>
+        /* =====================================================
+           PERSONAL COURSE STUDIO
+           MENTOR STUDIO
+           STEP 3.6
+           ===================================================== */
+
+        :root {
+            --bg: #070b12;
+            --bg-soft: #0b111c;
+            --panel: #101827;
+            --panel-2: #121d2d;
+
+            --border: rgba(255,255,255,.09);
+            --border-soft: rgba(255,255,255,.06);
+
+            --text: #f5f7fb;
+            --muted: #8e9aad;
+
+            --blue: #2563eb;
+            --blue-light: #60a5fa;
+            --green: #34d399;
+            --red: #ef4444;
+
+            --stage: #05080d;
+
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(37,99,235,.12),
+                    transparent 32%
+                ),
+                var(--bg);
+
+            color: var(--text);
+
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* =====================================================
+           APP
+           ===================================================== */
+
+        .app {
+            width: 100%;
+            height: 100vh;
+
+            display: grid;
+
+            grid-template-rows:
+                64px
+                minmax(0, 1fr)
+                54px;
+        }
+
+        /* =====================================================
+           TOPBAR
+           ===================================================== */
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 16px;
+
+            padding:
+                0 18px;
+
+            background:
+                rgba(8,12,20,.94);
+
+            border-bottom:
+                1px solid var(--border);
+
+            backdrop-filter:
+                blur(18px);
+
+            z-index: 100;
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            min-width: 0;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #60a5fa
+                );
+
+            color: white;
+
+            font-weight: 900;
+            font-size: 16px;
+
+            box-shadow:
+                0 10px 30px
+                rgba(37,99,235,.25);
+        }
+
+        .brand-title {
+            min-width: 0;
+        }
+
+        .brand-title strong {
+            display: block;
+
+            font-size: 14px;
+            line-height: 1.2;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-title span {
+            display: block;
+
+            margin-top: 3px;
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+            white-space: nowrap;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            flex-shrink: 0;
+        }
+
+        .top-btn {
+            height: 38px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+
+            padding:
+                0 13px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,255,255,.045);
+
+            color: var(--text);
+
+            cursor: pointer;
+
+            transition:
+                .2s ease;
+        }
+
+        .top-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+
+            border-color:
+                rgba(255,255,255,.15);
+        }
+
+        .record-main-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #dc2626,
+                    #ef4444
+                );
+
+            border-color:
+                transparent;
+
+            font-weight: 800;
+
+            box-shadow:
+                0 8px 24px
+                rgba(239,68,68,.18);
+        }
+
+        .record-main-btn:hover {
+            transform:
+                translateY(-1px);
+        }
+
+        /* =====================================================
+           WORKSPACE
+           ===================================================== */
+
+        .workspace {
+            min-height: 0;
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1fr)
+                240px;
+
+            gap: 12px;
+
+            padding: 12px;
+        }
+
+        /* =====================================================
+           STAGE AREA
+           ===================================================== */
+
+        .stage-wrap {
+            min-width: 0;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background:
+                rgba(255,255,255,.025);
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                var(--radius);
+
+            overflow: hidden;
+        }
+
+        .stage-header {
+            height: 46px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 12px;
+
+            padding:
+                0 13px;
+
+            border-bottom:
+                1px solid var(--border-soft);
+
+            background:
+                rgba(255,255,255,.015);
+
+            flex-shrink: 0;
+        }
+
+        .stage-header-left {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            min-width: 0;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background:
+                var(--green);
+
+            box-shadow:
+                0 0 12px
+                rgba(52,211,153,.6);
+        }
+
+        .stage-title {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .stage-subtitle {
+            color: var(--muted);
+
+            font-size: 10px;
+        }
+
+        .stage-actions {
+            display: flex;
+            align-items: center;
+
+            gap: 6px;
+        }
+
+        .mini-btn {
+            width: 32px;
+            height: 32px;
+
+            display: grid;
+            place-items: center;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 9px;
+
+            background:
+                rgba(255,255,255,.04);
+
+            color: white;
+
+            cursor: pointer;
+        }
+
+        .mini-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
+
+        /* =====================================================
+           STAGE
+           ===================================================== */
+
+        #stage {
+            position: relative;
+
+            min-width: 0;
+            min-height: 0;
+
+            flex: 1;
+
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #101827,
+                    #05080d 70%
+                );
+
+            user-select: none;
+        }
+
+        #stage::after {
+            content: "";
+
+            position: absolute;
+            inset: 0;
+
+            pointer-events: none;
+
+            border:
+                1px solid rgba(255,255,255,.025);
+
+            z-index: 10;
+        }
+
+        #welcomeContent {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            padding: 30px;
+
+            z-index: 2;
+
+            pointer-events: none;
+        }
+
+        .welcome-icon {
+            width: 74px;
+            height: 74px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 22px;
+
+            background:
+                rgba(37,99,235,.12);
+
+            border:
+                1px solid
+                rgba(96,165,250,.18);
+
+            color:
+                var(--blue-light);
+
+            font-size: 30px;
+
+            margin-bottom: 16px;
+        }
+
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 850;
+        }
+
+        .welcome-text {
+            max-width: 430px;
+
+            margin-top: 8px;
+
+            color: var(--muted);
+
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =====================================================
+           MAIN IMAGE / VIDEO
+           ===================================================== */
+
+        #mainImage,
+        #mainVideo {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+
+            display: none;
+
+            background: #000;
+
+            z-index: 1;
+        }
+
+        /* =====================================================
+           MENTOR CARD
+           ===================================================== */
+
+        #mentorCard {
+            position: absolute;
+
+            top: 24px;
+            right: 24px;
+
+            width: 230px;
+            height: 150px;
+
+            min-width: 130px;
+            min-height: 90px;
+
+            max-width: 45%;
+            max-height: 45%;
+
+            overflow: hidden;
+
+            border-radius: 18px;
+
+            background:
+                #101827;
+
+            border:
+                1px solid
+                rgba(255,255,255,.15);
+
+            box-shadow:
+                0 20px 55px
+                rgba(0,0,0,.5);
+
+            z-index: 30;
+
+            cursor: move;
+
+            touch-action: none;
+        }
+
+        #mentorVideo,
+        #mentorCameraVideo,
+        #mentorAICanvas {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            display: none;
+
+            background: #101827;
+        }
+
+        #mentorPlaceholder {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #172236,
+                    #0c1320
+                );
+
+            color:
+                rgba(255,255,255,.7);
+        }
+
+        .mentor-avatar {
+            width: 48px;
+            height: 48px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background:
+                rgba(96,165,250,.12);
+
+            border:
+                1px solid
+                rgba(96,165,250,.2);
+
+            font-size: 20px;
+
+            margin-bottom: 7px;
+        }
+
+        .mentor-placeholder-text {
+            font-size: 11px;
+            font-weight: 700;
+
+            color:
+                rgba(255,255,255,.5);
+        }
+
+        #mentorSourceLabel {
+            position: absolute;
+
+            left: 9px;
+            bottom: 8px;
+
+            padding:
+                5px 8px;
+
+            border-radius: 7px;
+
+            background:
+                rgba(0,0,0,.62);
+
+            color: white;
+
+            font-size: 9px;
+            font-weight: 800;
+
+            letter-spacing:
+                .05em;
+
+            z-index: 4;
+
+            pointer-events: none;
+        }
+
+        #mentorResize {
+            position: absolute;
+
+            right: 5px;
+            bottom: 5px;
+
+            width: 20px;
+            height: 20px;
+
+            border-radius: 7px;
+
+            background:
+                rgba(255,255,255,.12);
+
+            border:
+                1px solid
+                rgba(255,255,255,.16);
+
+            cursor:
+                nwse-resize;
+
+            z-index: 8;
+        }
+
+        #mentorResize::before {
+            content: "";
+
+            position: absolute;
+
+            right: 5px;
+            bottom: 5px;
+
+            width: 7px;
+            height: 7px;
+
+            border-right:
+                2px solid white;
+
+            border-bottom:
+                2px solid white;
+
+            opacity: .8;
+        }
+
+        /* =====================================================
+           BRAND BADGE
+           ===================================================== */
+
+        #brandBadge {
+            position: absolute;
+
+            left: 20px;
+            bottom: 20px;
+
+            z-index: 25;
+
+            padding:
+                9px 13px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(0,0,0,.62);
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            color: white;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            backdrop-filter:
+                blur(8px);
+
+            pointer-events: none;
+        }
+
+        /* =====================================================
+           TOOLBAR
+           ===================================================== */
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+
+            gap: 7px;
+
+            padding:
+                9px;
+
+            border-top:
+                1px solid var(--border-soft);
+
+            background:
+                rgba(255,255,255,.015);
+
+            flex-shrink: 0;
+
+            overflow-x: auto;
+        }
+
+        .tool-btn {
+            min-width: 38px;
+            height: 36px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+
+            padding:
+                0 11px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.04);
+
+            color: white;
+
+            cursor: pointer;
+
+            white-space: nowrap;
+
+            font-size: 11px;
+            font-weight: 700;
+
+            transition:
+                .2s ease;
+        }
+
+        .tool-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
+
+        .tool-btn.primary {
+            background:
+                #2563eb;
+
+            border-color:
+                #2563eb;
+        }
+
+        .tool-btn.danger {
+            color:
+                #fca5a5;
+        }
+
+        /* =====================================================
+           SIDE PANEL
+           ===================================================== */
+
+        .side-panel {
+            min-width: 0;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background:
+                rgba(255,255,255,.025);
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                var(--radius);
+
+            overflow: hidden;
+        }
+
+        .side-header {
+            min-height: 46px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 8px;
+
+            padding:
+                0 13px;
+
+            border-bottom:
+                1px solid var(--border-soft);
+
+            flex-shrink: 0;
+        }
+
+        .side-header strong {
+            font-size: 12px;
+        }
+
+        .side-header span {
+            color: var(--muted);
+
+            font-size: 10px;
+        }
+
+        .side-content {
+            min-height: 0;
+
+            overflow-y: auto;
+
+            padding: 10px;
+        }
+
+        /* =====================================================
+           PANELS
+           ===================================================== */
+
+        .panel {
+            padding: 11px;
+
+            margin-bottom: 9px;
+
+            border:
+                1px solid var(--border-soft);
+
+            border-radius: 13px;
+
+            background:
+                rgba(255,255,255,.025);
+        }
+
+        .panel:last-child {
+            margin-bottom: 0;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 8px;
+
+            margin-bottom: 9px;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .panel-title span {
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .button-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0,1fr));
+
+            gap: 6px;
+        }
+
+        .side-btn {
+            min-height: 36px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 9px;
+
+            background:
+                rgba(255,255,255,.035);
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            transition:
+                .2s ease;
+        }
+
+        .side-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
+
+        .side-btn.active {
+            background:
+                rgba(37,99,235,.22);
+
+            border-color:
+                rgba(96,165,250,.4);
+
+            color:
+                #bfdbfe;
+        }
+
+        .side-btn.full {
+            grid-column:
+                1 / -1;
+        }
+
+        /* =====================================================
+           CAMERA STATUS
+           ===================================================== */
+
+        #cameraStatus {
+            margin-top: 8px;
+
+            padding:
+                8px 9px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(255,255,255,.03);
+
+            color: var(--muted);
+
+            font-size: 9px;
+
+            text-align: center;
+        }
+
+        /* =====================================================
+           COLOR INPUT
+           ===================================================== */
+
+        .color-row {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            margin-top: 8px;
+        }
+
+        .color-row span {
+            flex: 1;
+
+            color: var(--muted);
+
+            font-size: 10px;
+        }
+
+        #backgroundColor {
+            width: 40px;
+            height: 28px;
+
+            padding: 2px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 7px;
+
+            background:
+                transparent;
+
+            cursor: pointer;
+        }
+
+        /* =====================================================
+           STUDENTS
+           ===================================================== */
+
+        #studentsList {
+            min-height: 20px;
+        }
+
+        .student-item {
+            border-bottom:
+                1px solid var(--border-soft);
+        }
+
+        .student-item:last-child {
+            border-bottom: 0;
+        }
+
+        /* =====================================================
+           STATUSBAR
+           ===================================================== */
+
+        .statusbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 10px;
+
+            padding:
+                0 15px;
+
+            background:
+                rgba(8,12,20,.94);
+
+            border-top:
+                1px solid var(--border);
+
+            color: var(--muted);
+
+            font-size: 10px;
+
+            z-index: 100;
+        }
+
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+        }
+
+        .status-online {
+            display: flex;
+            align-items: center;
+
+            gap: 6px;
+
+            color:
+                #86efac;
+        }
+
+        /* =====================================================
+           SETTINGS MODAL
+           ===================================================== */
+
+        #settingsModal {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 12000;
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            background:
+                rgba(0,0,0,.7);
+
+            backdrop-filter:
+                blur(10px);
+        }
+
+        .settings-card {
+            width:
+                min(460px, 100%);
+
+            background:
+                #0e1624;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 30px 100px
+                rgba(0,0,0,.55);
+
+            overflow: hidden;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding:
+                16px;
+
+            border-bottom:
+                1px solid var(--border-soft);
+        }
+
+        .settings-header strong {
+            font-size: 15px;
+        }
+
+        .settings-close {
+            width: 34px;
+            height: 34px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.07);
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+        }
+
+        .settings-body {
+            padding: 16px;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: var(--muted);
+
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .field input {
+            width: 100%;
+
+            height: 42px;
+
+            padding:
+                0 12px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.04);
+
+            color: white;
+
+            outline: none;
+        }
+
+        .settings-footer {
+            display: flex;
+            justify-content: flex-end;
+
+            gap: 8px;
+
+            padding:
+                13px 16px;
+
+            border-top:
+                1px solid var(--border-soft);
+        }
+
+        /* =====================================================
+           HIDDEN INPUTS
+           ===================================================== */
+
+        .hidden-input {
+            display: none !important;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 900px) {
+
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                height: auto;
+                min-height: 100vh;
+
+                grid-template-rows:
+                    60px
+                    auto
+                    50px;
+            }
+
+            .workspace {
+                grid-template-columns:
+                    1fr;
+
+                min-height:
+                    calc(100vh - 110px);
+            }
+
+            .stage-wrap {
+                min-height:
+                    65vh;
+            }
+
+            .side-panel {
+                max-height:
+                    none;
+            }
+
+            .side-content {
+                display: grid;
+
+                grid-template-columns:
+                    repeat(2, minmax(0,1fr));
+
+                gap: 8px;
+
+                overflow: visible;
+            }
+
+            .panel {
+                margin-bottom: 0;
+            }
+
+            .students-panel {
+                grid-column:
+                    1 / -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .topbar {
+                padding:
+                    0 10px;
+            }
+
+            .brand-title span {
+                display: none;
+            }
+
+            .top-btn span {
+                display: none;
+            }
+
+            .workspace {
+                padding: 7px;
+                gap: 7px;
+            }
+
+            .stage-wrap {
+                min-height:
+                    58vh;
+            }
+
+            #mentorCard {
+                width: 170px;
+                height: 112px;
+
+                top: 12px;
+                right: 12px;
+            }
+
+            #brandBadge {
+                left: 12px;
+                bottom: 12px;
+            }
+
+            .toolbar {
+                padding:
+                    7px;
+            }
+
+            .tool-btn {
+                padding:
+                    0 9px;
+            }
+
+            .side-content {
+                grid-template-columns:
+                    1fr;
+            }
+
+            .students-panel {
+                grid-column:
+                    auto;
+            }
+        }
+    </style>
+
+    <!-- =====================================================
+         MEDIAPIPE
+         ===================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+    ></script>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+    ></script>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         TOPBAR
+         ===================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand-area">
+
+            <div class="brand-icon">
+                SNK
+            </div>
+
+            <div class="brand-title">
+
+                <strong>
+                    Personal Course Studio
+                </strong>
+
+                <span>
+                    Mentor Studio • Private Workspace
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="top-actions">
+
+            <button
+                type="button"
+                class="top-btn"
+                id="settingsBtn"
+            >
+                ⚙
+                <span>
+                    Settings
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="top-btn"
+                id="openTeleprompterTopBtn"
+            >
+                📜
+                <span>
+                    Teleprompter
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="top-btn record-main-btn"
+                id="recordBtn"
+            >
+                ●
+                <span>
+                    Record
+                </span>
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         WORKSPACE
+         ===================================================== -->
+
+    <main class="workspace">
+
+        <!-- =================================================
+             STAGE
+             ================================================= -->
+
+        <section class="stage-wrap">
+
+            <div class="stage-header">
+
+                <div class="stage-header-left">
+
+                    <span class="live-dot"></span>
+
+                    <div>
+                        <div class="stage-title">
+                            Course Stage
+                        </div>
+
+                        <div class="stage-subtitle">
+                            Main content + Mentor camera
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="stage-actions">
+
+                    <button
+                        type="button"
+                        class="mini-btn"
+                        id="stageUploadImageBtn"
+                        title="Upload image"
+                    >
+                        🖼
+                    </button>
+
+                    <button
+                        type="button"
+                        class="mini-btn"
+                        id="stageUploadVideoBtn"
+                        title="Upload video"
+                    >
+                        🎬
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 MAIN STAGE
+                 ============================================= -->
+
+            <div id="stage">
+
+                <div id="welcomeContent">
+
+                    <div class="welcome-icon">
+                        🎓
+                    </div>
+
+                    <div class="welcome-title">
+                        Personal Course Studio
+                    </div>
+
+                    <div class="welcome-text">
+                        Upload your course slide,
+                        image or video, then add
+                        your mentor camera and
+                        teleprompter.
+                    </div>
+
+                </div>
+
+
+                <!-- Main Image -->
+
+                <img
+                    id="mainImage"
+                    alt="Main course content"
+                >
+
+
+                <!-- Main Video -->
+
+                <video
+                    id="mainVideo"
+                    playsinline
+                    controls
+                ></video>
+
+
+                <!-- Mentor -->
+
+                <div id="mentorCard">
+
+                    <video
+                        id="mentorVideo"
+                        playsinline
+                    ></video>
+
+                    <video
+                        id="mentorCameraVideo"
+                        autoplay
+                        muted
+                        playsinline
+                    ></video>
+
+                    <canvas
+                        id="mentorAICanvas"
+                    ></canvas>
+
+                    <div
+                        id="mentorPlaceholder"
+                    >
+
+                        <div class="mentor-avatar">
+                            👤
+                        </div>
+
+                        <div
+                            class="mentor-placeholder-text"
+                        >
+                            Mentor Camera
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="mentorSourceLabel"
+                    >
+                        MENTOR
+                    </div>
+
+                    <div
+                        id="mentorResize"
+                        title="Resize mentor"
+                    ></div>
+
+                </div>
+
+
+                <!-- Brand -->
+
+                <div id="brandBadge">
+                    Personal Course Studio
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 TOOLBAR
+                 ============================================= -->
+
+            <div class="toolbar">
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="uploadMainBtn"
+                >
+                    🖼 Upload Image
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="uploadVideoBtn"
+                >
+                    🎬 Upload Video
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="mainPlayBtn"
+                >
+                    ▶ Play
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="mainPauseBtn"
+                >
+                    ❚❚ Pause
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="uploadMentorBtn"
+                >
+                    👤 Mentor Video
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn primary"
+                    id="startCameraBtn"
+                >
+                    📷 Camera
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="stopCameraBtn"
+                >
+                    ■ Stop Camera
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="switchCameraBtn"
+                >
+                    🔄 Switch
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SIDE PANEL
+             ================================================= -->
+
+        <aside class="side-panel">
+
+            <div class="side-header">
+
+                <div>
+                    <strong>
+                        Studio Controls
+                    </strong>
+
+                    <span>
+                        Mentor / AI / Students
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="side-content">
+
+                <!-- =========================================
+                     CAMERA
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Mentor Camera
+                        </span>
+
+                        <span>
+                            LIVE
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="startCameraSideBtn"
+                        >
+                            📷 Start
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="stopCameraSideBtn"
+                        >
+                            ■ Stop
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="switchCameraSideBtn"
+                        >
+                            🔄 Switch Camera
+                        </button>
+
+                    </div>
+
+                    <div id="cameraStatus">
+                        Camera not started
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     AI BACKGROUND
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            AI Background
+                        </span>
+
+                        <span>
+                            SEGMENTATION
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn active"
+                            id="bgOriginalBtn"
+                        >
+                            Original
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgRemoveBtn"
+                        >
+                            Remove
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgBlurBtn"
+                        >
+                            Blur
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgImageBtn"
+                        >
+                            Image
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="bgColorBtn"
+                        >
+                            Solid Color
+                        </button>
+
+                    </div>
+
+                    <div class="color-row">
+
+                        <span>
+                            Background color
+                        </span>
+
+                        <input
+                            type="color"
+                            id="backgroundColor"
+                            value="#162033"
+                        >
+
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     TELEPROMPTER
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Teleprompter
+                        </span>
+
+                        <span>
+                            SCRIPT
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="openTeleprompterBtn"
+                        >
+                            📜 Open Teleprompter
+                        </button>
+
+                    </div>
+
+                    <div
+                        style="
+                            margin-top:8px;
+                            color:var(--muted);
+                            font-size:9px;
+                            line-height:1.5;
+                        "
+                    >
+                        Paste your script or upload
+                        a TXT file. The script is
+                        visible to you but is not
+                        included in the final video.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     AUDIO
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Recording Audio
+                        </span>
+
+                        <span>
+                            MIC
+                        </span>
+
+                    </div>
+
+                    <div
+                        style="
+                            color:var(--muted);
+                            font-size:9px;
+                            line-height:1.6;
+                        "
+                    >
+                        Your microphone voice is
+                        included in the final
+                        recording.
+                    </div>
+
+                    <label
+                        style="
+                            display:flex;
+                            align-items:center;
+                            gap:7px;
+                            margin-top:9px;
+                            font-size:10px;
+                            color:#dbeafe;
+                            cursor:pointer;
+                        "
+                    >
+
+                        <input
+                            type="checkbox"
+                            id="mainVideoAudioCheckbox"
+                            checked
+                        >
+
+                        Main video audio ON
+
+                    </label>
+
+                </section>
+
+
+                <!-- =========================================
+                     STUDENTS
+                     ========================================= -->
+
+                <section
+                    class="panel students-panel"
+                >
+
+                    <div class="panel-title">
+
+                        <span>
+                            Students
+                        </span>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="addStudentBtn"
+                            style="
+                                min-height:28px;
+                                padding:0 9px;
+                            "
+                        >
+                            + Add
+                        </button>
+
+                    </div>
+
+                    <div id="studentsList">
+                        <!-- JS -->
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     FILES
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Files
+                        </span>
+
+                        <span>
+                            LOCAL
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="uploadMainSideBtn"
+                        >
+                            🖼 Image
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="uploadVideoSideBtn"
+                        >
+                            🎬 Video
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="uploadMentorSideBtn"
+                        >
+                            👤 Mentor Video
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </aside>
+
+    </main>
+
+
+    <!-- =====================================================
+         STATUSBAR
+         ===================================================== -->
+
+    <footer class="statusbar">
+
+        <div class="status-left">
+
+            <div class="status-online">
+
+                <span class="live-dot"></span>
+
+                Studio Ready
+
+            </div>
+
+            <span>
+                Step 3.6
+            </span>
+
+        </div>
+
+        <div class="status-right">
+
+            <span>
+                Teleprompter
+            </span>
+
+            <span>
+                •
+            </span>
+
+            <span>
+                Mic Voice Track
+            </span>
+
+        </div>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================================
+     HIDDEN FILE INPUTS
+     ========================================================= -->
+
+<input
+    type="file"
+    id="mainFileInput"
+    class="hidden-input"
+    accept="image/*"
+>
+
+<input
+    type="file"
+    id="mainVideoInput"
+    class="hidden-input"
+    accept="video/*"
+>
+
+<input
+    type="file"
+    id="mentorFileInput"
+    class="hidden-input"
+    accept="video/*"
+>
+
+<input
+    type="file"
+    id="backgroundImageUpload"
+    class="hidden-input"
+    accept="image/*"
+>
+
+
+<!-- =========================================================
+     AI WORK CANVASES
+     ========================================================= -->
+
+<canvas
+    id="aiCanvas"
+    style="display:none;"
+></canvas>
+
+<canvas
+    id="aiSourceCanvas"
+    style="display:none;"
+></canvas>
+
+<canvas
+    id="aiMaskCanvas"
+    style="display:none;"
+></canvas>
+
+
+<!-- =========================================================
+     SETTINGS MODAL
+     ========================================================= -->
+
+<div id="settingsModal">
+
+    <div class="settings-card">
+
+        <div class="settings-header">
+
+            <strong>
+                Studio Settings
+            </strong>
+
+            <button
+                type="button"
+                class="settings-close"
+                id="closeSettingsBtn"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="settings-body">
+
+            <div class="field">
+
+                <label>
+                    Brand / Studio Name
+                </label>
+
+                <input
+                    type="text"
+                    id="brandNameInput"
+                    value="Personal Course Studio"
+                    placeholder="Enter studio name"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Workspace
+                </label>
+
+                <input
+                    type="text"
+                    value="Mentor Studio"
+                    disabled
+                >
+
+            </div>
+
+            <div
+                style="
+                    padding:11px;
+                    border-radius:11px;
+                    background:rgba(37,99,235,.08);
+                    border:1px solid rgba(96,165,250,.12);
+                    color:#bfdbfe;
+                    font-size:10px;
+                    line-height:1.6;
+                "
+            >
+                This is a private Personal Course
+                Studio workspace. Camera,
+                microphone and recording data
+                are handled locally by the browser.
+            </div>
+
+        </div>
+
+
+        <div class="settings-footer">
+
+            <button
+                type="button"
+                class="tool-btn"
+                id="closeSettingsFooterBtn"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="tool-btn primary"
+                id="saveSettingsBtn"
+            >
+                Save Settings
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     STEP 3.6 JAVASCRIPT
+     ========================================================= -->
+
+<script src="script.js"></script>
+
+
+<script>
+/* =========================================================
+   INDEX UI HELPERS
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------------------------------------------
+       SETTINGS FOOTER CLOSE
+       --------------------------------------------- */
+
+    const footerClose =
+        document.getElementById(
+            "closeSettingsFooterBtn"
+        );
+
+    const settingsModal =
+        document.getElementById(
+            "settingsModal"
+        );
+
+    if (footerClose && settingsModal) {
+
+        footerClose.addEventListener(
+            "click",
+            function () {
+
+                settingsModal.style.display =
+                    "none";
+
+                settingsModal.classList.remove(
+                    "open"
+                );
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       TELEPROMPTER OPEN BUTTONS
+       --------------------------------------------- */
+
+    const openButtons = [
+        document.getElementById(
+            "openTeleprompterTopBtn"
+        ),
+
+        document.getElementById(
+            "openTeleprompterBtn"
+        )
+    ];
+
+    openButtons.forEach(function (button) {
+
+        if (!button) return;
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .createTeleprompter ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .createTeleprompter();
+
+                    const panel =
+                        document.getElementById(
+                            "courseStudioTeleprompter"
+                        );
+
+                    if (panel) {
+
+                        panel.style.display =
+                            "flex";
+
+                    }
+
+                    const floatingButton =
+                        document.getElementById(
+                            "openTeleprompterBtn"
+                        );
+
+                    if (
+                        floatingButton &&
+                        floatingButton !== button
+                    ) {
+
+                        floatingButton.style.display =
+                            "none";
+
+                    }
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /* ---------------------------------------------
+       CAMERA SIDE BUTTONS
+       --------------------------------------------- */
+
+    const startCameraSide =
+        document.getElementById(
+            "startCameraSideBtn"
+        );
+
+    const stopCameraSide =
+        document.getElementById(
+            "stopCameraSideBtn"
+        );
+
+    const switchCameraSide =
+        document.getElementById(
+            "switchCameraSideBtn"
+        );
+
+
+    if (startCameraSide) {
+
+        startCameraSide.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .startCamera ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .startCamera();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (stopCameraSide) {
+
+        stopCameraSide.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .stopCamera ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .stopCamera();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (switchCameraSide) {
+
+        switchCameraSide.addEventListener(
+            "click",
+            function () {
+
+                const switchButton =
+                    document.getElementById(
+                        "switchCameraBtn"
+                    );
+
+                if (switchButton) {
+                    switchButton.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       FILE SIDE BUTTONS
+       --------------------------------------------- */
+
+    const uploadMainSide =
+        document.getElementById(
+            "uploadMainSideBtn"
+        );
+
+    const uploadVideoSide =
+        document.getElementById(
+            "uploadVideoSideBtn"
+        );
+
+    const uploadMentorSide =
+        document.getElementById(
+            "uploadMentorSideBtn"
+        );
+
+
+    if (uploadMainSide) {
+
+        uploadMainSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (uploadVideoSide) {
+
+        uploadVideoSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainVideoInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (uploadMentorSide) {
+
+        uploadMentorSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mentorFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       STAGE UPLOAD BUTTONS
+       --------------------------------------------- */
+
+    const stageImage =
+        document.getElementById(
+            "stageUploadImageBtn"
+        );
+
+    const stageVideo =
+        document.getElementById(
+            "stageUploadVideoBtn"
+        );
+
+
+    if (stageImage) {
+
+        stageImage.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (stageVideo) {
+
+        stageVideo.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainVideoInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       MAIN VIDEO AUDIO
+       --------------------------------------------- */
+
+    const audioCheckbox =
+        document.getElementById(
+            "mainVideoAudioCheckbox"
+        );
+
+    if (audioCheckbox) {
+
+        audioCheckbox.addEventListener(
+            "change",
+            function () {
+
+                /* The Step 3.6 JS reads
+                   this state when recording. */
+
+                window.courseStudioMainVideoAudioEnabled =
+                    audioCheckbox.checked;
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+
+<!-- =========================================================
+     MENTOR RESIZE
+     ========================================================= -->
+
+<script>
+(function () {
+
+    const mentorCard =
+        document.getElementById(
+            "mentorCard"
+        );
+
+    const resizeHandle =
+        document.getElementById(
+            "mentorResize"
+        );
+
+    const stage =
+        document.getElementById(
+            "stage"
+        );
+
+    if (
+        !mentorCard ||
+        !resizeHandle ||
+        !stage
+    ) {
+        return;
+    }
+
+    let resizing = false;
+
+    let startX = 0;
+    let startY = 0;
+
+    let startWidth = 0;
+    let startHeight = 0;
+
+
+    function startResize(event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        resizing = true;
+
+        const point =
+            event.touches?.[0] ||
+            event;
+
+        startX =
+            point.clientX;
+
+        startY =
+            point.clientY;
+
+        startWidth =
+            mentorCard.offsetWidth;
+
+        startHeight =
+            mentorCard.offsetHeight;
+
+        document.body.style.userSelect =
+            "none";
+
+    }
+
+
+    function moveResize(event) {
+
+        if (!resizing) {
+            return;
+        }
+
+        const point =
+            event.touches?.[0] ||
+            event;
+
+        const dx =
+            point.clientX -
+            startX;
+
+        const dy =
+            point.clientY -
+            startY;
+
+        let newWidth =
+            startWidth + dx;
+
+        let newHeight =
+            startHeight + dy;
+
+        const minWidth =
+            130;
+
+        const minHeight =
+            90;
+
+        const maxWidth =
+            stage.clientWidth *
+            .45;
+
+        const maxHeight =
+            stage.clientHeight *
+            .45;
+
+        newWidth =
+            Math.max(
+                minWidth,
+                Math.min(
+                    newWidth,
+                    maxWidth
+                )
+            );
+
+        newHeight =
+            Math.max(
+                minHeight,
+                Math.min(
+                    newHeight,
+                    maxHeight
+                )
+            );
+
+        mentorCard.style.width =
+            `${newWidth}px`;
+
+        mentorCard.style.height =
+            `${newHeight}px`;
+
+    }
+
+
+    function stopResize() {
+
+        if (!resizing) {
+            return;
+        }
+
+        resizing = false;
+
+        document.body.style.userSelect =
+            "";
+
+        localStorage.setItem(
+            "courseStudioMentorWidth",
+            String(
+                mentorCard.offsetWidth
+            )
+        );
+
+        localStorage.setItem(
+            "courseStudioMentorHeight",
+            String(
+                mentorCard.offsetHeight
+            )
+        );
+
+    }
+
+
+    resizeHandle.addEventListener(
+        "mousedown",
+        startResize
+    );
+
+    resizeHandle.addEventListener(
+        "touchstart",
+        startResize,
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "mousemove",
+        moveResize
+    );
+
+    document.addEventListener(
+        "touchmove",
+        moveResize,
+        {
+            passive: false
+        }
+    );
+
+    document.addEventListener(
+        "mouseup",
+        stopResize
+    );
+
+    document.addEventListener(
+        "touchend",
+        stopResize
+    );
+
+})();
+</script>
+
+</body>
+</html>
