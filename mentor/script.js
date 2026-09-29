@@ -1,5686 +1,6870 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
+/* =========================================================
+   PERSONAL COURSE STUDIO — MENTOR STUDIO
+   STEP 3.9 — PROFESSIONAL RECORDING & PREVIEW
+   File: mentor/script.js
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+   Includes:
+   - Main image / video
+   - Mentor video
+   - Webcam
+   - AI background removal
+   - AI blur background
+   - Custom background
+   - Solid background
+   - Drag / resize mentor
+   - Students
+   - Settings
+   - Teleprompter
+   - Screen capture
+   - Audio mixing
+   - Mic monitoring
+   - Audio meters
+   - Mic waveform
+   - Recording quality
+   - Recording FPS
+   - Camera quality
+   - Camera FPS
+   - Camera device selection
+   - Recording pause / resume / stop
+   - Professional preview
+   - Trim start / end
+   - Recording rename
+   - Recording history
+   - Delete recording
+   - Download recording
+   - Fullscreen
+   - Keyboard shortcuts
+   ========================================================= */
 
-  <meta
-    name="theme-color"
-    content="#07111d"
-  >
+"use strict";
 
-  <meta
-    name="description"
-    content="Personal Course Studio — Professional Mentor Recording Studio"
-  >
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
 
-  <title>Mentor Studio | Personal Course Studio</title>
+const state = {
+  mainImage: null,
+  mainVideoUrl: "",
+  mentorVideoUrl: "",
 
-  <style>
+  cameraStream: null,
+  screenStream: null,
 
-    /* =========================================================
-       STEP 3.9
-       PERSONAL COURSE STUDIO
-       PREMIUM MENTOR STUDIO UI
-       ========================================================= */
+  cameraFacingMode: "user",
 
-    :root {
-      --bg: #050a11;
-      --bg-2: #08111d;
-      --panel: #0b1522;
-      --panel-2: #0f1b2a;
-      --panel-3: #132236;
+  segmentation: null,
+  segmentationReady: false,
 
-      --line: rgba(255,255,255,.08);
-      --line-strong: rgba(255,255,255,.14);
+  backgroundMode: "original",
+  backgroundImage: null,
+  backgroundColor: "#111827",
 
-      --text: #f5f8fc;
-      --muted: #8ea0b6;
-      --muted-2: #65788f;
+  mentorSource: "placeholder",
 
-      --blue: #4da3ff;
-      --blue-2: #2388ef;
-      --blue-soft: rgba(77,163,255,.14);
+  compositionCanvas: null,
+  compositionCtx: null,
 
-      --green: #31d28c;
-      --green-soft: rgba(49,210,140,.13);
+  renderAnimationId: null,
 
-      --red: #ff5570;
-      --red-soft: rgba(255,85,112,.13);
+  recording: {
+    active: false,
+    paused: false,
+    mediaRecorder: null,
+    chunks: [],
+    blob: null,
+    url: "",
+    mimeType: "",
+    startedAt: 0,
+    pausedAt: 0,
+    accumulatedPause: 0,
+    elapsed: 0,
 
-      --yellow: #ffc857;
-      --yellow-soft: rgba(255,200,87,.13);
+    width: 1280,
+    height: 720,
+    fps: 30,
 
-      --shadow:
-        0 25px 80px rgba(0,0,0,.42);
+    format: "webm-vp9",
+    fileName: "course-recording",
 
-      --radius: 16px;
-      --radius-sm: 11px;
+    trimStart: 0,
+    trimEnd: 0,
+
+    historyId: null
+  },
+
+  recordings: [],
+
+  audio: {
+    context: null,
+
+    destination: null,
+
+    mainSource: null,
+    mainGain: null,
+
+    micSource: null,
+    micGain: null,
+
+    screenSource: null,
+    screenGain: null,
+
+    analyserMic: null,
+    analyserMain: null,
+
+    micData: null,
+    mainData: null,
+
+    micStream: null,
+
+    micEnabled: true,
+    micMonitor: false,
+    micVolume: 1,
+    mainVolume: 1
+  },
+
+  cameraSettings: {
+    width: 1280,
+    height: 720,
+    fps: 30,
+    deviceId: ""
+  },
+
+  teleprompter: {
+    text: "",
+    speed: 2,
+    fontSize: 34,
+    opacity: 0.9,
+    playing: false,
+    includeInRecording: false
+  },
+
+  students: [],
+
+  settings: {
+    brandName: "SNK Mentor Studio",
+    recordingQuality: "1080",
+    recordingFps: "30",
+    autoStartTeleprompter: false,
+    showTeleprompterRecording: false
+  },
+
+  preview: {
+    playing: false,
+    currentTime: 0,
+    duration: 0
+  }
+};
+
+
+/* =========================================================
+   DOM HELPERS
+   ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+const qs = (selector) => document.querySelector(selector);
+
+const qsa = (selector) => [...document.querySelectorAll(selector)];
+
+
+/* =========================================================
+   BASIC ELEMENTS
+   ========================================================= */
+
+const stage = $("stage");
+
+const mainImage = $("mainImage");
+const mainVideo = $("mainVideo");
+const screenCaptureVideo = $("screenCaptureVideo");
+
+const mentorCard = $("mentorCard");
+const mentorVideo = $("mentorVideo");
+const mentorCameraVideo = $("mentorCameraVideo");
+const mentorAICanvas = $("mentorAICanvas");
+const mentorPlaceholder = $("mentorPlaceholder");
+const mentorSourceLabel = $("mentorSourceLabel");
+
+const brandBadge = $("brandBadge");
+
+const aiCanvas = $("aiCanvas");
+const aiSourceCanvas = $("aiSourceCanvas");
+const aiMaskCanvas = $("aiMaskCanvas");
+
+const toastContainer = $("toastContainer");
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+function showToast(message, type = "info") {
+  if (!toastContainer) return;
+
+  const toast = document.createElement("div");
+
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  toastContainer.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 2800);
+}
+
+
+/* =========================================================
+   LOCAL STORAGE
+   ========================================================= */
+
+const RECORDINGS_KEY = "personalCourseStudioRecordingsV39";
+const STUDENTS_KEY = "personalCourseStudioStudentsV39";
+const SETTINGS_KEY = "personalCourseStudioSettingsV39";
+
+
+function saveStudents() {
+  try {
+    localStorage.setItem(
+      STUDENTS_KEY,
+      JSON.stringify(state.students)
+    );
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+
+function loadStudents() {
+  try {
+    const raw = localStorage.getItem(STUDENTS_KEY);
+
+    if (raw) {
+      state.students = JSON.parse(raw);
+    }
+  } catch (error) {
+    console.warn(error);
+    state.students = [];
+  }
+}
+
+
+function saveSettings() {
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify(state.settings)
+    );
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+
+    if (raw) {
+      state.settings = {
+        ...state.settings,
+        ...JSON.parse(raw)
+      };
+    }
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+
+/* =========================================================
+   RECORDING HISTORY
+   ========================================================= */
+
+/*
+   Browser localStorage cannot reliably store large video blobs.
+
+   Therefore history stores metadata and object URLs only
+   during the current browser session.
+
+   Metadata remains available across page reloads, but the
+   actual Blob must be regenerated if the page is closed.
+*/
+
+function saveRecordingHistoryMetadata() {
+  try {
+    const metadata = state.recordings.map(item => ({
+      id: item.id,
+      name: item.name,
+      createdAt: item.createdAt,
+      duration: item.duration,
+      size: item.size,
+      mimeType: item.mimeType
+    }));
+
+    localStorage.setItem(
+      RECORDINGS_KEY,
+      JSON.stringify(metadata)
+    );
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+
+function loadRecordingHistoryMetadata() {
+  try {
+    const raw = localStorage.getItem(RECORDINGS_KEY);
+
+    if (!raw) {
+      state.recordings = [];
+      return;
     }
 
-    * {
-      box-sizing: border-box;
+    const metadata = JSON.parse(raw);
+
+    state.recordings = metadata.map(item => ({
+      ...item,
+      blob: null,
+      url: ""
+    }));
+  } catch (error) {
+    console.warn(error);
+    state.recordings = [];
+  }
+}
+
+
+/* =========================================================
+   FILE INPUTS
+   ========================================================= */
+
+function bindFileInput(inputId, callback) {
+  const input = $(inputId);
+
+  if (!input) return;
+
+  input.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    callback(file);
+
+    input.value = "";
+  });
+}
+
+
+/* =========================================================
+   MAIN IMAGE
+   ========================================================= */
+
+function loadMainImage(file) {
+  const url = URL.createObjectURL(file);
+
+  state.mainImage = new Image();
+
+  state.mainImage.onload = () => {
+    mainImage.src = url;
+
+    mainImage.style.display = "block";
+    mainVideo.style.display = "none";
+    screenCaptureVideo.style.display = "none";
+
+    state.mainVideoUrl = "";
+
+    renderCompositionFrame();
+
+    showToast("Main image loaded.", "success");
+  };
+
+  state.mainImage.src = url;
+}
+
+
+/* =========================================================
+   MAIN VIDEO
+   ========================================================= */
+
+function loadMainVideo(file) {
+  const url = URL.createObjectURL(file);
+
+  if (state.mainVideoUrl) {
+    URL.revokeObjectURL(state.mainVideoUrl);
+  }
+
+  state.mainVideoUrl = url;
+
+  mainVideo.src = url;
+  mainVideo.style.display = "block";
+
+  mainImage.style.display = "none";
+  screenCaptureVideo.style.display = "none";
+
+  mainVideo.load();
+
+  setupMainVideoAudio();
+
+  mainVideo.addEventListener(
+    "loadedmetadata",
+    () => {
+      renderCompositionFrame();
+    },
+    { once: true }
+  );
+
+  showToast("Main video loaded.", "success");
+}
+
+
+/* =========================================================
+   MENTOR VIDEO
+   ========================================================= */
+
+function loadMentorVideo(file) {
+  const url = URL.createObjectURL(file);
+
+  if (state.mentorVideoUrl) {
+    URL.revokeObjectURL(state.mentorVideoUrl);
+  }
+
+  state.mentorVideoUrl = url;
+
+  mentorVideo.src = url;
+
+  mentorVideo.style.display = "block";
+  mentorCameraVideo.style.display = "none";
+  mentorAICanvas.style.display = "none";
+  mentorPlaceholder.style.display = "none";
+
+  state.mentorSource = "video";
+
+  mentorVideo.loop = true;
+  mentorVideo.muted = true;
+
+  mentorVideo.play().catch(() => {});
+
+  if (mentorSourceLabel) {
+    mentorSourceLabel.textContent = "MENTOR VIDEO";
+  }
+
+  renderCompositionFrame();
+
+  showToast("Mentor video loaded.", "success");
+}
+
+
+/* =========================================================
+   FILE INPUT BINDINGS
+   ========================================================= */
+
+bindFileInput("mainFileInput", loadMainImage);
+
+bindFileInput("mainVideoInput", loadMainVideo);
+
+bindFileInput("mentorFileInput", loadMentorVideo);
+
+bindFileInput("backgroundImageUpload", file => {
+  const url = URL.createObjectURL(file);
+
+  const img = new Image();
+
+  img.onload = () => {
+    state.backgroundImage = img;
+    state.backgroundMode = "image";
+
+    renderCompositionFrame();
+
+    showToast("Custom background loaded.", "success");
+  };
+
+  img.src = url;
+});
+
+
+bindFileInput("teleprompterFileInput", file => {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    state.teleprompter.text = String(reader.result || "");
+
+    const textarea = $("teleprompterText");
+
+    if (textarea) {
+      textarea.value = state.teleprompter.text;
     }
 
-    html,
-    body {
-      width: 100%;
-      min-height: 100%;
-      margin: 0;
-      padding: 0;
+    updateTeleprompterPreview();
+
+    showToast("Teleprompter text loaded.", "success");
+  };
+
+  reader.readAsText(file);
+});
+
+
+/* =========================================================
+   BUTTON HELPERS
+   ========================================================= */
+
+function bindClick(id, handler) {
+  const element = $(id);
+
+  if (!element) return;
+
+  element.addEventListener("click", handler);
+}
+
+
+/* =========================================================
+   MAIN BUTTONS
+   ========================================================= */
+
+bindClick("uploadMainBtn", () => {
+  $("mainFileInput")?.click();
+});
+
+bindClick("uploadVideoBtn", () => {
+  $("mainVideoInput")?.click();
+});
+
+bindClick("uploadMainSideBtn", () => {
+  $("mainFileInput")?.click();
+});
+
+bindClick("uploadVideoSideBtn", () => {
+  $("mainVideoInput")?.click();
+});
+
+
+bindClick("uploadMentorBtn", () => {
+  $("mentorFileInput")?.click();
+});
+
+bindClick("uploadMentorSideBtn", () => {
+  $("mentorFileInput")?.click();
+});
+
+bindClick("uploadMentorFileSideBtn", () => {
+  $("mentorFileInput")?.click();
+});
+
+
+bindClick("uploadBackgroundSideBtn", () => {
+  $("backgroundImageUpload")?.click();
+});
+
+
+bindClick("uploadBackgroundBtn", () => {
+  $("backgroundImageUpload")?.click();
+});
+
+
+/* =========================================================
+   MAIN VIDEO CONTROLS
+   ========================================================= */
+
+bindClick("mainPlayBtn", () => {
+  if (!mainVideo.src) {
+    showToast("Please upload a main video first.", "warning");
+    return;
+  }
+
+  mainVideo.play().catch(() => {});
+});
+
+
+bindClick("mainPauseBtn", () => {
+  mainVideo.pause();
+});
+
+
+mainVideo?.addEventListener("play", () => {
+  startRenderLoop();
+});
+
+
+mainVideo?.addEventListener("pause", () => {
+  renderCompositionFrame();
+});
+
+
+mainVideo?.addEventListener("timeupdate", () => {
+  renderCompositionFrame();
+});
+
+
+mainVideo?.addEventListener("ended", () => {
+  renderCompositionFrame();
+});
+
+
+/* =========================================================
+   CAMERA SETTINGS
+   ========================================================= */
+
+function getCameraConstraints() {
+  const settings = state.cameraSettings;
+
+  const video = {
+    width: {
+      ideal: settings.width
+    },
+
+    height: {
+      ideal: settings.height
+    },
+
+    frameRate: {
+      ideal: settings.fps,
+      max: settings.fps
+    },
+
+    facingMode: settings.deviceId
+      ? undefined
+      : settings.cameraFacingMode
+  };
+
+  if (settings.deviceId) {
+    video.deviceId = {
+      exact: settings.deviceId
+    };
+  }
+
+  return {
+    video,
+    audio: true
+  };
+}
+
+
+/* =========================================================
+   CAMERA DEVICE LIST
+   ========================================================= */
+
+async function populateCameraDevices() {
+  const select = $("cameraDeviceSelect");
+
+  if (!select) return;
+
+  try {
+    const devices =
+      await navigator.mediaDevices.enumerateDevices();
+
+    const cameras = devices.filter(
+      device => device.kind === "videoinput"
+    );
+
+    select.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+
+    defaultOption.value = "";
+
+    defaultOption.textContent = "Default Camera";
+
+    select.appendChild(defaultOption);
+
+    cameras.forEach((device, index) => {
+      const option = document.createElement("option");
+
+      option.value = device.deviceId;
+
+      option.textContent =
+        device.label ||
+        `Camera ${index + 1}`;
+
+      select.appendChild(option);
+    });
+
+    if (state.cameraSettings.deviceId) {
+      select.value = state.cameraSettings.deviceId;
+    }
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+
+navigator.mediaDevices?.addEventListener?.(
+  "devicechange",
+  populateCameraDevices
+);
+
+
+/* =========================================================
+   CAMERA QUALITY
+   ========================================================= */
+
+function setCameraQuality(value) {
+  const presets = {
+    "360": {
+      width: 640,
+      height: 360
+    },
+
+    "480": {
+      width: 854,
+      height: 480
+    },
+
+    "720": {
+      width: 1280,
+      height: 720
+    },
+
+    "1080": {
+      width: 1920,
+      height: 1080
+    }
+  };
+
+  const preset = presets[value];
+
+  if (!preset) return;
+
+  state.cameraSettings.width = preset.width;
+  state.cameraSettings.height = preset.height;
+
+  if (state.cameraStream) {
+    showToast(
+      "Camera quality will apply after restarting camera.",
+      "info"
+    );
+  }
+}
+
+
+const cameraQuality = $("cameraQuality");
+
+cameraQuality?.addEventListener("change", event => {
+  setCameraQuality(event.target.value);
+});
+
+
+const cameraQualitySide = $("cameraQualitySide");
+
+cameraQualitySide?.addEventListener("change", event => {
+  setCameraQuality(event.target.value);
+
+  if (cameraQuality) {
+    cameraQuality.value = event.target.value;
+  }
+});
+
+
+/* =========================================================
+   CAMERA FPS
+   ========================================================= */
+
+function setCameraFps(value) {
+  const fps = Number(value);
+
+  if (!fps) return;
+
+  state.cameraSettings.fps = fps;
+
+  if (state.cameraStream) {
+    showToast(
+      "Camera FPS will apply after restarting camera.",
+      "info"
+    );
+  }
+}
+
+
+$("cameraFps")?.addEventListener(
+  "change",
+  event => {
+    setCameraFps(event.target.value);
+  }
+);
+
+
+/* =========================================================
+   CAMERA DEVICE
+   ========================================================= */
+
+$("cameraDeviceSelect")?.addEventListener(
+  "change",
+  event => {
+    state.cameraSettings.deviceId =
+      event.target.value;
+
+    if (state.cameraStream) {
+      showToast(
+        "Camera device changed. Restart camera to apply.",
+        "info"
+      );
+    }
+  }
+);
+
+
+/* =========================================================
+   START CAMERA
+   ========================================================= */
+
+async function startCamera() {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error(
+        "Camera API is not supported."
+      );
     }
 
-    body {
-      background:
-        radial-gradient(
-          circle at 15% 10%,
-          rgba(43,128,220,.10),
-          transparent 28%
-        ),
-        radial-gradient(
-          circle at 85% 15%,
-          rgba(70,160,255,.07),
-          transparent 25%
-        ),
-        var(--bg);
+    stopCamera(false);
 
-      color: var(--text);
+    const stream =
+      await navigator.mediaDevices.getUserMedia(
+        getCameraConstraints()
+      );
 
-      font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+    state.cameraStream = stream;
 
-      overflow-x: hidden;
+    mentorCameraVideo.srcObject = stream;
+
+    mentorCameraVideo.muted = true;
+    mentorCameraVideo.playsInline = true;
+
+    mentorCameraVideo.style.display = "block";
+
+    mentorVideo.style.display = "none";
+    mentorPlaceholder.style.display = "none";
+
+    state.mentorSource = "camera";
+
+    await mentorCameraVideo.play();
+
+    await setupMicrophoneAudio(stream);
+
+    updateCameraStatus(
+      "Camera online",
+      true
+    );
+
+    if (mentorSourceLabel) {
+      mentorSourceLabel.textContent = "LIVE CAMERA";
     }
 
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
+    await populateCameraDevices();
+
+    startRenderLoop();
+
+    showToast("Camera started.", "success");
+  } catch (error) {
+    console.error(error);
+
+    updateCameraStatus(
+      "Camera unavailable",
+      false
+    );
+
+    showToast(
+      error.message ||
+      "Could not start camera.",
+      "error"
+    );
+  }
+}
+
+
+/* =========================================================
+   STOP CAMERA
+   ========================================================= */
+
+function stopCamera(showMessage = true) {
+  if (state.cameraStream) {
+    state.cameraStream
+      .getTracks()
+      .forEach(track => {
+        track.stop();
+      });
+
+    state.cameraStream = null;
+  }
+
+  if (mentorCameraVideo) {
+    mentorCameraVideo.srcObject = null;
+  }
+
+  if (state.audio.micStream) {
+    state.audio.micStream = null;
+  }
+
+  if (state.mentorSource === "camera") {
+    state.mentorSource = "placeholder";
+
+    mentorCameraVideo.style.display = "none";
+    mentorAICanvas.style.display = "none";
+
+    mentorPlaceholder.style.display = "flex";
+
+    if (mentorSourceLabel) {
+      mentorSourceLabel.textContent = "MENTOR";
+    }
+  }
+
+  updateCameraStatus(
+    "Camera offline",
+    false
+  );
+
+  updateRecordingIndicators();
+
+  if (showMessage) {
+    showToast("Camera stopped.", "info");
+  }
+
+  renderCompositionFrame();
+}
+
+
+bindClick(
+  "startCameraBtn",
+  startCamera
+);
+
+bindClick(
+  "startCameraSideBtn",
+  startCamera
+);
+
+bindClick(
+  "stopCameraBtn",
+  () => stopCamera(true)
+);
+
+bindClick(
+  "stopCameraSideBtn",
+  () => stopCamera(true)
+);
+
+
+/* =========================================================
+   SWITCH CAMERA
+   ========================================================= */
+
+bindClick(
+  "switchCameraSideBtn",
+  async () => {
+    if (!state.cameraStream) {
+      showToast(
+        "Start the camera first.",
+        "warning"
+      );
+
+      return;
     }
 
-    button {
-      border: 0;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    input,
-    select,
-    textarea {
-      outline: none;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    /* =========================================================
-       APP
-       ========================================================= */
-
-    #app {
-      width: 100%;
-      min-height: 100vh;
-
-      display: flex;
-      flex-direction: column;
-
-      background:
-        linear-gradient(
-          180deg,
-          rgba(255,255,255,.012),
-          transparent
-        );
-    }
-
-    /* =========================================================
-       TOP BAR
-       ========================================================= */
-
-    .topbar {
-      height: 68px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      padding:
-        0 18px;
-
-      background:
-        rgba(5,10,17,.90);
-
-      border-bottom:
-        1px solid var(--line);
-
-      backdrop-filter:
-        blur(20px);
-
-      position: relative;
-      z-index: 50;
-    }
-
-    .brand-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      min-width: 220px;
-    }
-
-    .brand-logo {
-      width: 38px;
-      height: 38px;
-
-      border-radius: 12px;
-
-      display: grid;
-      place-items: center;
-
-      background:
-        linear-gradient(
-          135deg,
-          #4da3ff,
-          #176dcc
-        );
-
-      color: #fff;
-
-      font-size: 17px;
-      font-weight: 900;
-
-      box-shadow:
-        0 8px 25px rgba(35,136,239,.25);
-    }
-
-    .brand-copy {
-      min-width: 0;
-    }
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -.2px;
-    }
-
-    .brand-subtitle {
-      margin-top: 2px;
-
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .top-actions::-webkit-scrollbar {
-      display: none;
-    }
-
-    .top-btn {
-      min-height: 38px;
-
-      padding:
-        0 12px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        var(--text);
-
-      display:
-        inline-flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      gap: 7px;
-
-      white-space: nowrap;
-
-      transition:
-        .2s ease;
-    }
-
-    .top-btn:hover {
-      background:
-        rgba(255,255,255,.07);
-
-      border-color:
-        var(--line-strong);
-
-      transform:
-        translateY(-1px);
-    }
-
-    .top-btn.primary {
-      background:
-        linear-gradient(
-          135deg,
-          #4da3ff,
-          #217fdc
-        );
-
-      border-color:
-        transparent;
-
-      color: white;
-
-      box-shadow:
-        0 8px 25px rgba(35,136,239,.20);
-    }
-
-    .top-btn.danger {
-      background:
-        rgba(255,85,112,.10);
-
-      border-color:
-        rgba(255,85,112,.25);
-
-      color:
-        #ff91a4;
-    }
-
-    .top-btn.record-active {
-      background:
-        rgba(255,85,112,.15);
-
-      border-color:
-        rgba(255,85,112,.45);
-
-      color:
-        #ff8197;
-    }
-
-    /* =========================================================
-       RECORDING STATUS BAR
-       ========================================================= */
-
-    .recording-status-bar {
-      min-height: 54px;
-
-      padding:
-        8px 18px;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        12px;
-
-      background:
-        rgba(8,17,29,.94);
-
-      border-bottom:
-        1px solid var(--line);
-
-      position:
-        relative;
-
-      z-index:
-        40;
-    }
-
-    .recording-status-left,
-    .recording-status-right {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        10px;
-
-      min-width:
-        0;
-    }
-
-    .recording-live-box {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        8px;
-
-      padding:
-        7px 10px;
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(255,255,255,.035);
-
-      border:
-        1px solid var(--line);
-    }
-
-    .recording-status-dot {
-      width: 9px;
-      height: 9px;
-
-      border-radius:
-        50%;
-
-      background:
-        #526579;
-
-      box-shadow:
-        none;
-    }
-
-    .recording-status-dot.live {
-      background:
-        var(--red);
-
-      box-shadow:
-        0 0 0 5px rgba(255,85,112,.10),
-        0 0 18px rgba(255,85,112,.70);
-
-      animation:
-        recordingPulse 1.15s infinite;
-    }
-
-    @keyframes recordingPulse {
-      0% {
-        opacity: 1;
+    state.cameraFacingMode =
+      state.cameraFacingMode === "user"
+        ? "environment"
+        : "user";
+
+    await startCamera();
+  }
+);
+
+
+/* =========================================================
+   CAMERA STATUS
+   ========================================================= */
+
+function updateCameraStatus(
+  text,
+  online
+) {
+  const status = $("cameraStatus");
+
+  if (!status) return;
+
+  status.textContent = text;
+
+  status.classList.toggle(
+    "online",
+    Boolean(online)
+  );
+
+  status.classList.toggle(
+    "offline",
+    !online
+  );
+}
+
+
+/* =========================================================
+   AI SEGMENTATION
+   ========================================================= */
+
+function initSegmentation() {
+  if (
+    typeof SelfieSegmentation ===
+    "undefined"
+  ) {
+    console.warn(
+      "MediaPipe SelfieSegmentation not available."
+    );
+
+    return;
+  }
+
+  try {
+    state.segmentation =
+      new SelfieSegmentation({
+        locateFile: file =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+      });
+
+    state.segmentation.setOptions({
+      modelSelection: 1
+    });
+
+    state.segmentation.onResults(
+      handleSegmentationResults
+    );
+
+    state.segmentationReady = true;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+/* =========================================================
+   AI CANVAS SETUP
+   ========================================================= */
+
+function ensureAICanvasSize(
+  width,
+  height
+) {
+  if (!aiCanvas || !aiSourceCanvas || !aiMaskCanvas) {
+    return;
+  }
+
+  if (
+    aiCanvas.width !== width ||
+    aiCanvas.height !== height
+  ) {
+    aiCanvas.width = width;
+    aiCanvas.height = height;
+  }
+
+  if (
+    aiSourceCanvas.width !== width ||
+    aiSourceCanvas.height !== height
+  ) {
+    aiSourceCanvas.width = width;
+    aiSourceCanvas.height = height;
+  }
+
+  if (
+    aiMaskCanvas.width !== width ||
+    aiMaskCanvas.height !== height
+  ) {
+    aiMaskCanvas.width = width;
+    aiMaskCanvas.height = height;
+  }
+}
+
+
+/* =========================================================
+   SEGMENTATION PROCESS
+   ========================================================= */
+
+let segmentationBusy = false;
+
+async function processCameraSegmentation() {
+  if (!state.segmentationReady) return;
+
+  if (!state.cameraStream) return;
+
+  if (
+    mentorCameraVideo.readyState <
+    HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
+    return;
+  }
+
+  if (segmentationBusy) return;
+
+  segmentationBusy = true;
+
+  try {
+    const width =
+      mentorCameraVideo.videoWidth || 1280;
+
+    const height =
+      mentorCameraVideo.videoHeight || 720;
+
+    ensureAICanvasSize(
+      width,
+      height
+    );
+
+    await state.segmentation.send({
+      image: mentorCameraVideo
+    });
+  } catch (error) {
+    console.warn(
+      "Segmentation error:",
+      error
+    );
+  } finally {
+    segmentationBusy = false;
+  }
+}
+
+
+/* =========================================================
+   SEGMENTATION RESULTS
+   ========================================================= */
+
+function handleSegmentationResults(results) {
+  if (!results?.image || !results?.segmentationMask) {
+    return;
+  }
+
+  const image = results.image;
+
+  const width =
+    image.videoWidth ||
+    image.width;
+
+  const height =
+    image.videoHeight ||
+    image.height;
+
+  if (!width || !height) return;
+
+  ensureAICanvasSize(
+    width,
+    height
+  );
+
+  const sourceCtx =
+    aiSourceCanvas.getContext(
+      "2d",
+      {
+        willReadFrequently: true
       }
+    );
 
-      50% {
-        opacity: .45;
+  const maskCtx =
+    aiMaskCanvas.getContext(
+      "2d",
+      {
+        willReadFrequently: true
       }
+    );
+
+  const outputCtx =
+    aiCanvas.getContext("2d");
+
+  sourceCtx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  maskCtx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  outputCtx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  sourceCtx.drawImage(
+    image,
+    0,
+    0,
+    width,
+    height
+  );
+
+  maskCtx.drawImage(
+    results.segmentationMask,
+    0,
+    0,
+    width,
+    height
+  );
+
+  const sourceData =
+    sourceCtx.getImageData(
+      0,
+      0,
+      width,
+      height
+    );
+
+  const maskData =
+    maskCtx.getImageData(
+      0,
+      0,
+      width,
+      height
+    );
+
+  const personData =
+    new ImageData(
+      width,
+      height
+    );
+
+  for (
+    let i = 0;
+    i < sourceData.data.length;
+    i += 4
+  ) {
+    const confidence =
+      maskData.data[i] / 255;
+
+    let alpha =
+      (confidence - 0.15) / 0.65;
+
+    alpha =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          alpha
+        )
+      );
+
+    personData.data[i] =
+      sourceData.data[i];
+
+    personData.data[i + 1] =
+      sourceData.data[i + 1];
+
+    personData.data[i + 2] =
+      sourceData.data[i + 2];
+
+    personData.data[i + 3] =
+      Math.round(
+        alpha * 255
+      );
+  }
+
+  outputCtx.putImageData(
+    personData,
+    0,
+    0
+  );
 
-      100% {
-        opacity: 1;
-      }
-    }
-
-    .recording-status-text {
-      font-size:
-        12px;
-
-      font-weight:
-        700;
-
-      color:
-        var(--muted);
-    }
-
-    .recording-timer {
-      font-variant-numeric:
-        tabular-nums;
-
-      font-size:
-        14px;
-
-      font-weight:
-        900;
-
-      letter-spacing:
-        .7px;
-
-      color:
-        white;
-
-      min-width:
-        75px;
-
-      text-align:
-        center;
-    }
-
-    .recording-select {
-      height:
-        34px;
-
-      padding:
-        0 10px;
-
-      background:
-        rgba(255,255,255,.035);
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      color:
-        var(--text);
-
-      font-size:
-        12px;
-    }
-
-    .recording-control-btn {
-      height:
-        34px;
-
-      padding:
-        0 11px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.035);
-
-      color:
-        var(--text);
-
-      font-size:
-        12px;
-
-      font-weight:
-        700;
-    }
-
-    .recording-control-btn:hover {
-      background:
-        rgba(255,255,255,.08);
-    }
-
-    .recording-control-btn.pause {
-      color:
-        #ffc857;
-
-      border-color:
-        rgba(255,200,87,.22);
-    }
-
-    .recording-control-btn.resume {
-      color:
-        #55e3a2;
-
-      border-color:
-        rgba(49,210,140,.22);
-    }
-
-    .recording-control-btn.stop {
-      color:
-        #ff8296;
-
-      border-color:
-        rgba(255,85,112,.24);
-    }
-
-    /* =========================================================
-       STATUS INDICATORS
-       ========================================================= */
-
-    .status-indicators {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        7px;
-    }
-
-    .status-chip {
-      display:
-        inline-flex;
-
-      align-items:
-        center;
-
-      gap:
-        6px;
-
-      min-height:
-        32px;
-
-      padding:
-        0 9px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      border:
-        1px solid var(--line);
-
-      color:
-        var(--muted);
-
-      font-size:
-        11px;
-
-      white-space:
-        nowrap;
-    }
-
-    .status-chip-dot {
-      width:
-        7px;
-
-      height:
-        7px;
-
-      border-radius:
-        50%;
-
-      background:
-        #526579;
-    }
-
-    .status-chip-dot.online {
-      background:
-        var(--green);
-
-      box-shadow:
-        0 0 10px rgba(49,210,140,.55);
-    }
-
-    /* =========================================================
-       MAIN WORKSPACE
-       ========================================================= */
-
-    .workspace {
-      flex:
-        1;
-
-      min-height:
-        0;
-
-      display:
-        grid;
-
-      grid-template-columns:
-        minmax(0, 1fr)
-        310px;
-
-      gap:
-        12px;
-
-      padding:
-        12px;
-
-      overflow:
-        hidden;
-    }
-
-    .main-workspace {
-      min-width:
-        0;
-
-      min-height:
-        0;
-
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      gap:
-        10px;
-    }
-
-    /* =========================================================
-       STAGE
-       ========================================================= */
-
-    .stage-shell {
-      position:
-        relative;
-
-      flex:
-        1;
-
-      min-height:
-        400px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        var(--radius);
-
-      background:
-        #03070c;
-
-      overflow:
-        hidden;
-
-      box-shadow:
-        var(--shadow);
-    }
-
-    .stage {
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      overflow:
-        hidden;
-
-      background:
-        #03070c;
-    }
-
-    .stage img,
-    .stage video,
-    .stage canvas {
-      max-width:
-        none;
-    }
-
-    #mainImage,
-    #mainVideo,
-    #screenCaptureVideo {
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      width:
-        100%;
-
-      height:
-        100%;
-
-      object-fit:
-        contain;
-
-      display:
-        none;
-
-      background:
-        #03070c;
-    }
-
-    #mainImage.active,
-    #mainVideo.active,
-    #screenCaptureVideo.active {
-      display:
-        block;
-    }
-
-    #screenCaptureVideo {
-      pointer-events:
-        none;
-    }
-
-    .welcome-content {
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      text-align:
-        center;
-
-      padding:
-        30px;
-    }
-
-    .welcome-inner {
-      max-width:
-        520px;
-    }
-
-    .welcome-icon {
-      width:
-        76px;
-
-      height:
-        76px;
-
-      margin:
-        0 auto 20px;
-
-      border-radius:
-        22px;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      background:
-        linear-gradient(
-          135deg,
-          rgba(77,163,255,.18),
-          rgba(35,136,239,.06)
-        );
-
-      border:
-        1px solid
-        rgba(77,163,255,.20);
-
-      color:
-        #6ab4ff;
-
-      font-size:
-        30px;
-    }
-
-    .welcome-title {
-      margin:
-        0;
-
-      font-size:
-        25px;
-
-      font-weight:
-        900;
-
-      letter-spacing:
-        -.8px;
-    }
-
-    .welcome-text {
-      margin:
-        10px 0 0;
-
-      color:
-        var(--muted);
-
-      font-size:
-        13px;
-
-      line-height:
-        1.7;
-    }
-
-    /* =========================================================
-       MENTOR CARD
-       ========================================================= */
-
-    .mentor-card {
-      position:
-        absolute;
-
-      top:
-        22px;
-
-      right:
-        22px;
-
-      width:
-        235px;
-
-      height:
-        155px;
-
-      min-width:
-        130px;
-
-      min-height:
-        90px;
-
-      max-width:
-        45%;
-
-      max-height:
-        65%;
-
-      border:
-        1px solid
-        rgba(255,255,255,.14);
-
-      border-radius:
-        15px;
-
-      overflow:
-        hidden;
-
-      background:
-        #07101b;
-
-      box-shadow:
-        0 18px 45px rgba(0,0,0,.45);
-
-      z-index:
-        12;
-
-      touch-action:
-        none;
-    }
-
-    .mentor-card::after {
-      content:
-        "";
-
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      pointer-events:
-        none;
-
-      border:
-        1px solid
-        rgba(255,255,255,.05);
-
-      border-radius:
-        inherit;
-    }
-
-    .mentor-source-label {
-      position:
-        absolute;
-
-      top:
-        9px;
-
-      left:
-        9px;
-
-      z-index:
-        20;
-
-      padding:
-        4px 7px;
-
-      border-radius:
-        7px;
-
-      background:
-        rgba(0,0,0,.55);
-
-      color:
-        #dce9f8;
-
-      font-size:
-        9px;
-
-      font-weight:
-        800;
-
-      text-transform:
-        uppercase;
-
-      letter-spacing:
-        .5px;
-    }
-
-    #mentorVideo,
-    #mentorCameraVideo,
-    #mentorAICanvas {
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      width:
-        100%;
-
-      height:
-        100%;
-
-      object-fit:
-        cover;
-
-      display:
-        none;
-    }
-
-    #mentorVideo.active,
-    #mentorCameraVideo.active,
-    #mentorAICanvas.active {
-      display:
-        block;
-    }
-
-    .mentor-placeholder {
-      position:
-        absolute;
-
-      inset:
-        0;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      background:
-        radial-gradient(
-          circle,
-          rgba(77,163,255,.08),
-          transparent 60%
-        );
-
-      color:
-        var(--muted);
-    }
-
-    .mentor-placeholder-inner {
-      text-align:
-        center;
-    }
-
-    .mentor-placeholder-icon {
-      font-size:
-        27px;
-
-      margin-bottom:
-        6px;
-    }
-
-    .mentor-placeholder-text {
-      font-size:
-        10px;
-
-      font-weight:
-        700;
-    }
-
-    .mentor-resize {
-      position:
-        absolute;
-
-      right:
-        5px;
-
-      bottom:
-        5px;
-
-      width:
-        18px;
-
-      height:
-        18px;
-
-      border-radius:
-        5px;
-
-      background:
-        rgba(0,0,0,.55);
-
-      border:
-        1px solid
-        rgba(255,255,255,.12);
-
-      cursor:
-        nwse-resize;
-
-      z-index:
-        30;
-    }
-
-    .mentor-resize::before {
-      content:
-        "";
-
-      position:
-        absolute;
-
-      right:
-        4px;
-
-      bottom:
-        4px;
-
-      width:
-        7px;
-
-      height:
-        7px;
-
-      border-right:
-        2px solid
-        rgba(255,255,255,.75);
-
-      border-bottom:
-        2px solid
-        rgba(255,255,255,.75);
-    }
-
-    /* =========================================================
-       BRAND BADGE
-       ========================================================= */
-
-    .brand-badge {
-      position:
-        absolute;
-
-      left:
-        18px;
-
-      bottom:
-        18px;
-
-      z-index:
-        20;
-
-      max-width:
-        45%;
-
-      padding:
-        7px 11px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(4,10,17,.76);
-
-      border:
-        1px solid
-        rgba(255,255,255,.10);
-
-      color:
-        #fff;
-
-      font-size:
-        11px;
-
-      font-weight:
-        800;
-
-      backdrop-filter:
-        blur(10px);
-    }
-
-    /* =========================================================
-       RECORDING OVERLAY
-       ========================================================= */
-
-    .recording-overlay {
-      position:
-        absolute;
-
-      top:
-        16px;
-
-      left:
-        50%;
-
-      transform:
-        translateX(-50%)
-        translateY(-8px);
-
-      opacity:
-        0;
-
-      pointer-events:
-        none;
-
-      z-index:
-        50;
-
-      padding:
-        7px 11px;
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(6,10,16,.82);
-
-      border:
-        1px solid
-        rgba(255,85,112,.28);
-
-      color:
-        #fff;
-
-      font-size:
-        11px;
-
-      font-weight:
-        800;
-
-      transition:
-        .2s ease;
-    }
-
-    .recording-overlay.active {
-      opacity:
-        1;
-
-      transform:
-        translateX(-50%)
-        translateY(0);
-    }
-
-    /* =========================================================
-       STAGE BADGES
-       ========================================================= */
-
-    .stage-meta {
-      position:
-        absolute;
-
-      left:
-        16px;
-
-      top:
-        16px;
-
-      z-index:
-        30;
-
-      display:
-        flex;
-
-      gap:
-        6px;
-    }
-
-    .stage-badge {
-      padding:
-        5px 8px;
-
-      border-radius:
-        7px;
-
-      background:
-        rgba(0,0,0,.48);
-
-      border:
-        1px solid
-        rgba(255,255,255,.09);
-
-      color:
-        #bdcce0;
-
-      font-size:
-        9px;
-
-      font-weight:
-        800;
-
-      backdrop-filter:
-        blur(10px);
-    }
-
-    /* =========================================================
-       STAGE TOOLBAR
-       ========================================================= */
-
-    .stage-toolbar {
-      min-height:
-        60px;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        7px;
-
-      padding:
-        8px;
-
-      overflow-x:
-        auto;
-
-      scrollbar-width:
-        none;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        13px;
-
-      background:
-        rgba(11,21,34,.88);
-    }
-
-    .stage-toolbar::-webkit-scrollbar {
-      display:
-        none;
-    }
-
-    .tool-btn {
-      flex:
-        0 0 auto;
-
-      height:
-        40px;
-
-      padding:
-        0 12px;
-
-      display:
-        inline-flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      gap:
-        7px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        var(--text);
-
-      font-size:
-        11px;
-
-      font-weight:
-        750;
-
-      white-space:
-        nowrap;
-
-      transition:
-        .2s ease;
-    }
-
-    .tool-btn:hover {
-      background:
-        rgba(255,255,255,.075);
-
-      transform:
-        translateY(-1px);
-    }
-
-    .tool-btn.primary {
-      background:
-        var(--blue-soft);
-
-      border-color:
-        rgba(77,163,255,.22);
-
-      color:
-        #79bcff;
-    }
-
-    .tool-btn.record {
-      background:
-        rgba(255,85,112,.11);
-
-      border-color:
-        rgba(255,85,112,.22);
-
-      color:
-        #ff8297;
-    }
-
-    /* =========================================================
-       RIGHT PANEL
-       ========================================================= */
-
-    .side-panel {
-      min-height:
-        0;
-
-      overflow-y:
-        auto;
-
-      padding:
-        2px 1px 2px 0;
-
-      scrollbar-width:
-        thin;
-    }
-
-    .side-panel::-webkit-scrollbar {
-      width:
-        5px;
-    }
-
-    .side-panel::-webkit-scrollbar-thumb {
-      background:
-        rgba(255,255,255,.10);
-
-      border-radius:
-        10px;
-    }
-
-    .panel-card {
-      margin-bottom:
-        10px;
-
-      padding:
-        12px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        14px;
-
-      background:
-        rgba(11,21,34,.90);
-
-      box-shadow:
-        0 10px 30px rgba(0,0,0,.12);
-    }
-
-    .panel-heading {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        10px;
-
-      margin-bottom:
-        10px;
-    }
-
-    .panel-title {
-      font-size:
-        12px;
-
-      font-weight:
-        850;
-    }
-
-    .panel-subtitle {
-      color:
-        var(--muted-2);
-
-      font-size:
-        9px;
-    }
-
-    .panel-grid {
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(2, minmax(0,1fr));
-
-      gap:
-        7px;
-    }
-
-    .side-btn {
-      min-height:
-        38px;
-
-      padding:
-        7px 8px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        #d9e5f2;
-
-      font-size:
-        10px;
-
-      font-weight:
-        700;
-    }
-
-    .side-btn:hover {
-      background:
-        rgba(255,255,255,.07);
-    }
-
-    .side-btn.active {
-      background:
-        var(--blue-soft);
-
-      border-color:
-        rgba(77,163,255,.25);
-
-      color:
-        #7ec2ff;
-    }
-
-    .side-btn.green {
-      color:
-        #63e5a8;
-    }
-
-    .side-btn.red {
-      color:
-        #ff8297;
-    }
-
-    /* =========================================================
-       CAMERA STATUS
-       ========================================================= */
-
-    .status-box {
-      margin-top:
-        9px;
-
-      padding:
-        9px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      border:
-        1px solid var(--line);
-
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-    }
-
-    /* =========================================================
-       BACKGROUND OPTIONS
-       ========================================================= */
-
-    .background-options {
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(5, minmax(0,1fr));
-
-      gap:
-        5px;
-    }
-
-    .bg-option {
-      min-height:
-        42px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        8px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        var(--muted);
-
-      font-size:
-        8px;
-
-      font-weight:
-        750;
-
-      padding:
-        4px;
-    }
-
-    .bg-option.active {
-      border-color:
-        rgba(77,163,255,.35);
-
-      color:
-        #78bcff;
-
-      background:
-        rgba(77,163,255,.09);
-    }
-
-    .color-row {
-      margin-top:
-        8px;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        8px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-    }
-
-    .color-row input[type="color"] {
-      width:
-        45px;
-
-      height:
-        30px;
-
-      padding:
-        2px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        7px;
-
-      background:
-        transparent;
-    }
-
-    /* =========================================================
-       SCREEN CAPTURE
-       ========================================================= */
-
-    .screen-status {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        8px;
-
-      padding:
-        9px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      border:
-        1px solid var(--line);
-
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-    }
-
-    .screen-status-light {
-      width:
-        7px;
-
-      height:
-        7px;
-
-      border-radius:
-        50%;
-
-      background:
-        #526579;
-    }
-
-    .screen-status-light.online {
-      background:
-        var(--green);
-
-      box-shadow:
-        0 0 9px rgba(49,210,140,.5);
-    }
-
-    /* =========================================================
-       AUDIO CONTROLS
-       ========================================================= */
-
-    .audio-row {
-      margin-bottom:
-        10px;
-
-      padding:
-        9px;
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(255,255,255,.022);
-
-      border:
-        1px solid var(--line);
-    }
-
-    .audio-row:last-child {
-      margin-bottom:
-        0;
-    }
-
-    .audio-label {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        8px;
-
-      margin-bottom:
-        7px;
-
-      color:
-        #dce7f4;
-
-      font-size:
-        10px;
-
-      font-weight:
-        750;
-    }
-
-    .audio-value {
-      color:
-        var(--blue);
-
-      font-size:
-        9px;
-    }
-
-    input[type="range"] {
-      width:
-        100%;
-
-      accent-color:
-        var(--blue);
-    }
-
-    .check-row {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        8px;
-
-      margin-top:
-        8px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-    }
-
-    .check-row input {
-      accent-color:
-        var(--blue);
-    }
-
-    /* =========================================================
-       AUDIO LEVEL METER
-       ========================================================= */
-
-    .audio-meter {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        8px;
-
-      margin-top:
-        10px;
-    }
-
-    .audio-meter-label {
-      width:
-        52px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        9px;
-    }
-
-    .audio-meter-track {
-      flex:
-        1;
-
-      height:
-        7px;
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(255,255,255,.07);
-
-      overflow:
-        hidden;
-
-      display:
-        flex;
-
-      gap:
-        2px;
-    }
-
-    .audio-meter-bar {
-      flex:
-        1;
-
-      height:
-        100%;
-
-      background:
-        rgba(255,255,255,.10);
-
-      transition:
-        background .08s linear;
-    }
-
-    .audio-meter-bar.active {
-      background:
-        var(--green);
-    }
-
-    .audio-meter-bar.hot {
-      background:
-        var(--yellow);
-    }
-
-    .audio-meter-bar.clip {
-      background:
-        var(--red);
-    }
-
-    /* =========================================================
-       MICROPHONE WAVEFORM
-       ========================================================= */
-
-    .waveform-box {
-      margin-top:
-        9px;
-
-      height:
-        48px;
-
-      padding:
-        5px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(0,0,0,.14);
-
-      overflow:
-        hidden;
-    }
-
-    #micWaveformCanvas {
-      width:
-        100%;
-
-      height:
-        100%;
-
-      display:
-        block;
-    }
-
-    /* =========================================================
-       TELEPROMPTER
-       ========================================================= */
-
-    .teleprompter-mini {
-      min-height:
-        76px;
-
-      max-height:
-        120px;
-
-      overflow:
-        hidden;
-
-      padding:
-        10px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(0,0,0,.14);
-
-      color:
-        #c9d9e9;
-
-      font-size:
-        10px;
-
-      line-height:
-        1.6;
-    }
-
-    .teleprompter-mini-empty {
-      color:
-        var(--muted-2);
-
-      text-align:
-        center;
-
-      padding:
-        20px 5px;
-    }
-
-    /* =========================================================
-       STUDENTS
-       ========================================================= */
-
-    .student-item {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        8px;
-
-      padding:
-        8px;
-
-      margin-bottom:
-        6px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.02);
-    }
-
-    .student-avatar {
-      width:
-        31px;
-
-      height:
-        31px;
-
-      flex:
-        0 0 31px;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      border-radius:
-        9px;
-
-      background:
-        var(--blue-soft);
-
-      color:
-        #79bdff;
-
-      font-size:
-        9px;
-
-      font-weight:
-        900;
-    }
-
-    .student-info {
-      min-width:
-        0;
-
-      flex:
-        1;
-    }
-
-    .student-name {
-      color:
-        #dce7f4;
-
-      font-size:
-        10px;
-
-      font-weight:
-        750;
-
-      overflow:
-        hidden;
-
-      text-overflow:
-        ellipsis;
-
-      white-space:
-        nowrap;
-    }
-
-    .student-status {
-      margin-top:
-        2px;
-
-      color:
-        var(--green);
-
-      font-size:
-        8px;
-    }
-
-    .student-remove {
-      width:
-        26px;
-
-      height:
-        26px;
-
-      border-radius:
-        7px;
-
-      background:
-        var(--red-soft);
-
-      color:
-        #ff8297;
-
-      font-size:
-        15px;
-    }
-
-    /* =========================================================
-       RECORDING SETTINGS
-       ========================================================= */
-
-    .setting-row {
-      display:
-        grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap:
-        7px;
-
-      margin-bottom:
-        8px;
-    }
-
-    .setting-group label {
-      display:
-        block;
-
-      margin-bottom:
-        5px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        9px;
-    }
-
-    .setting-group select,
-    .setting-group input[type="text"] {
-      width:
-        100%;
-
-      height:
-        36px;
-
-      padding:
-        0 9px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        8px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        var(--text);
-
-      font-size:
-        10px;
-    }
-
-    /* =========================================================
-       FILES
-       ========================================================= */
-
-    .file-grid {
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(2, minmax(0,1fr));
-
-      gap:
-        6px;
-    }
-
-    /* =========================================================
-       MODALS
-       ========================================================= */
-
-    .modal-backdrop {
-      position:
-        fixed;
-
-      inset:
-        0;
-
-      z-index:
-        100;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      padding:
-        20px;
-
-      background:
-        rgba(0,0,0,.72);
-
-      backdrop-filter:
-        blur(14px);
-
-      opacity:
-        0;
-
-      visibility:
-        hidden;
-
-      pointer-events:
-        none;
-
-      transition:
-        .2s ease;
-    }
-
-    .modal-backdrop.show {
-      opacity:
-        1;
-
-      visibility:
-        visible;
-
-      pointer-events:
-        auto;
-    }
-
-    .modal {
-      width:
-        min(720px, 100%);
-
-      max-height:
-        90vh;
-
-      overflow:
-        auto;
-
-      border:
-        1px solid var(--line-strong);
-
-      border-radius:
-        18px;
-
-      background:
-        #09131f;
-
-      box-shadow:
-        0 40px 100px rgba(0,0,0,.55);
-
-      transform:
-        translateY(10px)
-        scale(.98);
-
-      transition:
-        .2s ease;
-    }
-
-    .modal-backdrop.show .modal {
-      transform:
-        translateY(0)
-        scale(1);
-    }
-
-    .modal-header {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        12px;
-
-      padding:
-        15px 17px;
-
-      border-bottom:
-        1px solid var(--line);
-    }
-
-    .modal-title {
-      font-size:
-        14px;
-
-      font-weight:
-        850;
-    }
-
-    .modal-close {
-      width:
-        32px;
-
-      height:
-        32px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.05);
-
-      color:
-        #b7c5d5;
-
-      font-size:
-        18px;
-    }
-
-    .modal-body {
-      padding:
-        17px;
-    }
-
-    .modal-footer {
-      display:
-        flex;
-
-      justify-content:
-        flex-end;
-
-      gap:
-        8px;
-
-      padding:
-        12px 17px;
-
-      border-top:
-        1px solid var(--line);
-    }
-
-    .modal-field {
-      margin-bottom:
-        13px;
-    }
-
-    .modal-field label {
-      display:
-        block;
-
-      margin-bottom:
-        6px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-    }
-
-    .modal-field input,
-    .modal-field select,
-    .modal-field textarea {
-      width:
-        100%;
-
-      padding:
-        10px 11px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:
-        var(--text);
-
-      font-size:
-        11px;
-    }
-
-    .modal-field textarea {
-      min-height:
-        180px;
-
-      resize:
-        vertical;
-
-      line-height:
-        1.7;
-    }
-
-    .modal-button {
-      min-height:
-        38px;
-
-      padding:
-        0 13px;
-
-      border-radius:
-        9px;
-
-      border:
-        1px solid var(--line);
-
-      background:
-        rgba(255,255,255,.04);
-
-      color:
-        var(--text);
-
-      font-size:
-        11px;
-
-      font-weight:
-        750;
-    }
-
-    .modal-button.primary {
-      background:
-        linear-gradient(
-          135deg,
-          #4da3ff,
-          #217fdc
-        );
-
-      border-color:
-        transparent;
-    }
-
-    .modal-button.danger {
-      color:
-        #ff8297;
-
-      border-color:
-        rgba(255,85,112,.22);
-
-      background:
-        rgba(255,85,112,.08);
-    }
-
-    /* =========================================================
-       TELEPROMPTER MODAL
-       ========================================================= */
-
-    .teleprompter-preview {
-      height:
-        300px;
-
-      overflow:
-        auto;
-
-      padding:
-        35px;
-
-      margin-bottom:
-        12px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        12px;
-
-      background:
-        #02060a;
-
-      color:
-        #fff;
-
-      line-height:
-        1.65;
-
-      white-space:
-        pre-wrap;
-
-      text-align:
-        center;
-
-      scroll-behavior:
-        auto;
-    }
-
-    .teleprompter-controls {
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(3, minmax(0,1fr));
-
-      gap:
-        8px;
-    }
-
-    /* =========================================================
-       RECORDING PREVIEW
-       ========================================================= */
-
-    .recording-preview-modal {
-      width:
-        min(1050px, 100%);
-    }
-
-    .recording-preview-layout {
-      display:
-        grid;
-
-      grid-template-columns:
-        minmax(0, 1.55fr)
-        minmax(250px, .7fr);
-
-      gap:
-        14px;
-    }
-
-    .recording-preview-video-wrap {
-      position:
-        relative;
-
-      min-height:
-        340px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        13px;
-
-      overflow:
-        hidden;
-
-      background:
-        #000;
-    }
-
-    #recordingPreviewVideo {
-      width:
-        100%;
-
-      height:
-        100%;
-
-      min-height:
-        340px;
-
-      display:
-        block;
-
-      object-fit:
-        contain;
-
-      background:
-        #000;
-    }
-
-    .preview-info-panel {
-      padding:
-        13px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        13px;
-
-      background:
-        rgba(255,255,255,.02);
-    }
-
-    .preview-info-title {
-      font-size:
-        13px;
-
-      font-weight:
-        850;
-
-      margin-bottom:
-        12px;
-    }
-
-    .recording-file-info {
-      color:
-        var(--muted);
-
-      font-size:
-        10px;
-
-      line-height:
-        1.8;
-
-      padding:
-        10px;
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      border:
-        1px solid var(--line);
-    }
-
-    .preview-actions {
-      display:
-        grid;
-
-      grid-template-columns:
-        1fr;
-
-      gap:
-        7px;
-
-      margin-top:
-        12px;
-    }
-
-    .preview-action-btn {
-      min-height:
-        40px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.035);
-
-      color:
-        var(--text);
-
-      font-size:
-        10px;
-
-      font-weight:
-        800;
-    }
-
-    .preview-action-btn.primary {
-      background:
-        linear-gradient(
-          135deg,
-          #4da3ff,
-          #217fdc
-        );
-
-      border-color:
-        transparent;
-    }
-
-    .preview-action-btn.danger {
-      color:
-        #ff8297;
-
-      background:
-        rgba(255,85,112,.07);
-
-      border-color:
-        rgba(255,85,112,.20);
-    }
-
-    /* =========================================================
-       RECORDING HISTORY
-       ========================================================= */
-
-    .history-list {
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      gap:
-        7px;
-    }
-
-    .history-empty {
-      padding:
-        15px 8px;
-
-      color:
-        var(--muted-2);
-
-      text-align:
-        center;
-
-      font-size:
-        10px;
-    }
-
-    .history-item {
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      gap:
-        9px;
-
-      padding:
-        8px;
-
-      border:
-        1px solid var(--line);
-
-      border-radius:
-        9px;
-
-      background:
-        rgba(255,255,255,.02);
-    }
-
-    .history-icon {
-      width:
-        34px;
-
-      height:
-        34px;
-
-      flex:
-        0 0 34px;
-
-      display:
-        grid;
-
-      place-items:
-        center;
-
-      border-radius:
-        9px;
-
-      background:
-        var(--blue-soft);
-
-      color:
-        #76bbff;
-
-      font-size:
-        12px;
-    }
-
-    .history-info {
-      min-width:
-        0;
-
-      flex:
-        1;
-    }
-
-    .history-name {
-      font-size:
-        10px;
-
-      font-weight:
-        750;
-
-      overflow:
-        hidden;
-
-      white-space:
-        nowrap;
-
-      text-overflow:
-        ellipsis;
-    }
-
-    .history-meta {
-      margin-top:
-        3px;
-
-      color:
-        var(--muted-2);
-
-      font-size:
-        8px;
-    }
-
-    .history-actions {
-      display:
-        flex;
-
-      gap:
-        4px;
-    }
-
-    .history-action {
-      width:
-        27px;
-
-      height:
-        27px;
-
-      border-radius:
-        7px;
-
-      background:
-        rgba(255,255,255,.04);
-
-      color:
-        #aebdd0;
-
-      font-size:
-        10px;
-    }
-
-    /* =========================================================
-       TOAST
-       ========================================================= */
-
-    #toastContainer {
-      position:
-        fixed;
-
-      right:
-        18px;
-
-      bottom:
-        18px;
-
-      z-index:
-        300;
-
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      gap:
-        7px;
-
-      pointer-events:
-        none;
-    }
-
-    .toast {
-      min-width:
-        230px;
-
-      max-width:
-        360px;
-
-      padding:
-        11px 13px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.10);
-
-      border-radius:
-        10px;
-
-      background:
-        rgba(8,17,29,.94);
-
-      color:
-        #e9f2fb;
-
-      box-shadow:
-        0 16px 40px rgba(0,0,0,.35);
-
-      font-size:
-        10px;
-
-      font-weight:
-        700;
-
-      transition:
-        .2s ease;
-    }
-
-    /* =========================================================
-       FULLSCREEN
-       ========================================================= */
-
-    body.fullscreen-active {
-      background:
-        #000;
-    }
-
-    body.fullscreen-active #app {
-      background:
-        #000;
-    }
-
-    :fullscreen {
-      background:
-        #000;
-    }
-
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
-
-    @media (max-width: 1180px) {
-
-      .workspace {
-        grid-template-columns:
-          minmax(0, 1fr)
-          275px;
-      }
-
-      .mentor-card {
-        width:
-          210px;
-
-        height:
-          140px;
-      }
-
-      .status-chip {
-        padding:
-          0 7px;
-      }
-
-      .status-chip span:last-child {
-        display:
-          none;
-      }
-    }
-
-    @media (max-width: 900px) {
-
-      .workspace {
-        grid-template-columns:
-          1fr;
-
-        overflow:
-          visible;
-      }
-
-      .side-panel {
-        max-height:
-          none;
-
-        overflow:
-          visible;
-      }
-
-      .stage-shell {
-        min-height:
-          430px;
-      }
-
-      .recording-preview-layout {
-        grid-template-columns:
-          1fr;
-      }
-
-      .recording-preview-video-wrap {
-        min-height:
-          300px;
-      }
-    }
-
-    @media (max-width: 700px) {
-
-      .topbar {
-        height:
-          auto;
-
-        min-height:
-          62px;
-
-        align-items:
-          flex-start;
-
-        padding:
-          10px;
-
-        gap:
-          8px;
-      }
-
-      .brand-area {
-        min-width:
-          155px;
-      }
-
-      .brand-logo {
-        width:
-          34px;
-
-        height:
-          34px;
-      }
-
-      .top-actions {
-        justify-content:
-          flex-end;
-      }
-
-      .top-btn {
-        padding:
-          0 9px;
-
-        font-size:
-          10px;
-      }
-
-      .top-btn span.label {
-        display:
-          none;
-      }
-
-      .recording-status-bar {
-        flex-wrap:
-          wrap;
-
-        padding:
-          8px 10px;
-      }
-
-      .recording-status-left,
-      .recording-status-right {
-        width:
-          100%;
-
-        justify-content:
-          space-between;
-      }
-
-      .status-indicators {
-        width:
-          100%;
-
-        overflow-x:
-          auto;
-      }
-
-      .workspace {
-        padding:
-          8px;
-
-        gap:
-          8px;
-      }
-
-      .stage-shell {
-        min-height:
-          330px;
-
-        border-radius:
-          12px;
-      }
-
-      .mentor-card {
-        top:
-          12px;
-
-        right:
-          12px;
-
-        width:
-          165px;
-
-        height:
-          110px;
-      }
-
-      .brand-badge {
-        left:
-          10px;
-
-        bottom:
-          10px;
-
-        font-size:
-          9px;
-      }
-
-      .stage-meta {
-        left:
-          10px;
-
-        top:
-          10px;
-      }
-
-      .stage-toolbar {
-        min-height:
-          54px;
-      }
-
-      .tool-btn {
-        height:
-          36px;
-
-        padding:
-          0 9px;
-
-        font-size:
-          9px;
-      }
-
-      .background-options {
-        grid-template-columns:
-          repeat(5, minmax(42px,1fr));
-      }
-
-      .teleprompter-controls {
-        grid-template-columns:
-          1fr;
-      }
-
-      .modal-backdrop {
-        padding:
-          8px;
-      }
-
-      .modal {
-        border-radius:
-          14px;
-      }
-
-      .recording-preview-video-wrap,
-      #recordingPreviewVideo {
-        min-height:
-          220px;
-      }
-    }
-
-    @media (max-width: 480px) {
-
-      .brand-subtitle {
-        display:
-          none;
-      }
-
-      .brand-title {
-        font-size:
-          12px;
-      }
-
-      .top-actions .top-btn:nth-child(1),
-      .top-actions .top-btn:nth-child(2) {
-        display:
-          none;
-      }
-
-      .stage-shell {
-        min-height:
-          260px;
-      }
-
-      .mentor-card {
-        width:
-          140px;
-
-        height:
-          94px;
-      }
-
-      .recording-select {
-        max-width:
-          78px;
-      }
-
-      .recording-control-btn {
-        padding:
-          0 8px;
-      }
-
-      .setting-row {
-        grid-template-columns:
-          1fr;
-      }
-    }
-
-  </style>
-</head>
-
-<body>
-
-  <div id="app">
-
-    <!-- =======================================================
-         TOP BAR
-         ======================================================= -->
-
-    <header class="topbar">
-
-      <div class="brand-area">
-
-        <div class="brand-logo">
-          M
-        </div>
-
-        <div class="brand-copy">
-
-          <div
-            class="brand-title"
-            id="studioTitle"
-          >
-            Mentor Studio
-          </div>
-
-          <div class="brand-subtitle">
-            Personal Course Studio
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="top-actions">
-
-        <button
-          type="button"
-          class="top-btn"
-          id="openShortcutsBtn"
-          title="Keyboard shortcuts"
-        >
-          ⌨
-          <span class="label">
-            Shortcuts
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn"
-          id="startScreenCaptureBtn"
-          title="Start screen capture"
-        >
-          🖥
-          <span class="label">
-            Screen
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn"
-          id="fullscreenStageBtn"
-          title="Stage fullscreen"
-        >
-          ⛶
-          <span class="label">
-            Stage
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn"
-          id="fullscreenStudioBtn"
-          title="Full studio fullscreen"
-        >
-          ⛶
-          <span class="label">
-            Studio
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn"
-          id="settingsBtn"
-        >
-          ⚙
-          <span class="label">
-            Settings
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn"
-          id="openTeleprompterTopBtn"
-        >
-          📜
-          <span class="label">
-            Teleprompter
-          </span>
-        </button>
-
-
-        <button
-          type="button"
-          class="top-btn primary"
-          id="recordBtn"
-        >
-          ● Record
-        </button>
-
-      </div>
-
-    </header>
-
-
-    <!-- =======================================================
-         RECORDING STATUS BAR
-         ======================================================= -->
-
-    <section
-      class="recording-status-bar"
-      id="recordingStatusBar"
-    >
-
-      <div class="recording-status-left">
-
-        <div class="recording-live-box">
-
-          <span
-            class="recording-status-dot"
-            id="recordingStatusDot"
-          ></span>
-
-          <span
-            class="recording-status-text"
-            id="recordingStatusText"
-          >
-            Ready
-          </span>
-
-        </div>
-
-
-        <div
-          class="recording-timer"
-          id="recordingTimer"
-        >
-          00:00:00
-        </div>
-
-
-        <select
-          class="recording-select"
-          id="recordingQuality"
-          aria-label="Recording quality"
-        >
-          <option value="720">
-            720p
-          </option>
-
-          <option value="1080" selected>
-            1080p
-          </option>
-
-          <option value="1440">
-            1440p
-          </option>
-        </select>
-
-
-        <select
-          class="recording-select"
-          id="recordingFps"
-          aria-label="Recording FPS"
-        >
-          <option value="24">
-            24 FPS
-          </option>
-
-          <option value="30" selected>
-            30 FPS
-          </option>
-
-          <option value="60">
-            60 FPS
-          </option>
-        </select>
-
-      </div>
-
-
-      <div class="recording-status-right">
-
-        <div class="status-indicators">
-
-          <div class="status-chip">
-
-            <span
-              class="status-chip-dot"
-              id="cameraIndicator"
-            ></span>
-
-            <span>
-              Camera
-            </span>
-
-          </div>
-
-
-          <div class="status-chip">
-
-            <span
-              class="status-chip-dot"
-              id="micIndicator"
-            ></span>
-
-            <span>
-              Mic
-            </span>
-
-          </div>
-
-
-          <div class="status-chip">
-
-            <span
-              class="status-chip-dot"
-              id="audioIndicator"
-            ></span>
-
-            <span>
-              Audio
-            </span>
-
-          </div>
-
-
-          <div class="status-chip">
-
-            <span
-              class="status-chip-dot"
-              id="screenIndicator"
-            ></span>
-
-            <span>
-              Screen
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <button
-          type="button"
-          class="recording-control-btn pause"
-          id="pauseRecordingBtn"
-        >
-          ⏸ Pause
-        </button>
-
-
-        <button
-          type="button"
-          class="recording-control-btn resume hidden"
-          id="resumeRecordingBtn"
-        >
-          ▶ Resume
-        </button>
-
-
-        <button
-          type="button"
-          class="recording-control-btn stop"
-          id="stopRecordingBtn"
-        >
-          ■ Stop
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =======================================================
-         WORKSPACE
-         ======================================================= -->
-
-    <main class="workspace">
-
-      <!-- =====================================================
-           MAIN WORKSPACE
-           ===================================================== -->
-
-      <section class="main-workspace">
-
-
-        <!-- ===================================================
-             STAGE
-             =================================================== -->
-
-        <div
-          class="stage-shell"
-          id="stageShell"
-        >
-
-          <div
-            class="stage"
-            id="stage"
-          >
-
-            <!-- Main image -->
-
-            <img
-              id="mainImage"
-              alt="Main slide"
-              draggable="false"
-            >
-
-
-            <!-- Main video -->
-
-            <video
-              id="mainVideo"
-              playsinline
-              preload="metadata"
-            ></video>
-
-
-            <!-- Screen capture -->
-
-            <video
-              id="screenCaptureVideo"
-              playsinline
-              muted
-            ></video>
-
-
-            <!-- Welcome -->
-
-            <div
-              class="welcome-content"
-              id="welcomeContent"
-            >
-
-              <div class="welcome-inner">
-
-                <div class="welcome-icon">
-                  ▶
-                </div>
-
-                <h1 class="welcome-title">
-                  Personal Course Studio
-                </h1>
-
-                <p class="welcome-text">
-                  Upload your slide, course video,
-                  mentor video or start your camera
-                  to begin recording.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <!-- Stage meta -->
-
-            <div class="stage-meta">
-
-              <div
-                class="stage-badge"
-                id="stageResolutionBadge"
-              >
-                1920 × 1080
-              </div>
-
-              <div
-                class="stage-badge"
-                id="stageFpsBadge"
-              >
-                30 FPS
-              </div>
-
-              <div
-                class="stage-badge"
-                id="stageSourceBadge"
-              >
-                Ready
-              </div>
-
-            </div>
-
-
-            <!-- Mentor card -->
-
-            <div
-              class="mentor-card"
-              id="mentorCard"
-            >
-
-              <div
-                class="mentor-source-label"
-                id="mentorSourceLabel"
-              >
-                Mentor
-              </div>
-
-
-              <video
-                id="mentorVideo"
-                playsinline
-                muted
-                loop
-              ></video>
-
-
-              <video
-                id="mentorCameraVideo"
-                playsinline
-                muted
-              ></video>
-
-
-              <canvas
-                id="mentorAICanvas"
-              ></canvas>
-
-
-              <div
-                class="mentor-placeholder"
-                id="mentorPlaceholder"
-              >
-
-                <div
-                  class="mentor-placeholder-inner"
-                >
-
-                  <div class="mentor-placeholder-icon">
-                    👤
-                  </div>
-
-                  <div class="mentor-placeholder-text">
-                    Mentor Camera
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              <div
-                class="mentor-resize"
-                id="mentorResize"
-                title="Resize mentor video"
-              ></div>
-
-            </div>
-
-
-            <!-- Brand -->
-
-            <div
-              class="brand-badge"
-              id="brandBadge"
-            >
-              Personal Course Studio
-            </div>
-
-
-            <!-- Recording overlay -->
-
-            <div
-              class="recording-overlay"
-              id="recordingOverlay"
-            >
-              ● REC
-              <span id="recordingOverlayTimer">
-                00:00:00
-              </span>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ===================================================
-             STAGE TOOLBAR
-             =================================================== -->
-
-        <div class="stage-toolbar">
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="uploadMainBtn"
-          >
-            🖼 Upload Slide
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="uploadVideoBtn"
-          >
-            🎬 Upload Video
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="mainPlayBtn"
-          >
-            ▶ Play
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="mainPauseBtn"
-          >
-            ⏸ Pause
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="uploadMentorBtn"
-          >
-            👤 Mentor Video
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="startCameraBtn"
-          >
-            📷 Camera
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn"
-            id="stopCameraBtn"
-          >
-            ⛔ Stop Camera
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn primary"
-            id="openTeleprompterBtn"
-          >
-            📜 Teleprompter
-          </button>
-
-
-          <button
-            type="button"
-            class="tool-btn record"
-            id="recordToolbarBtn"
-          >
-            ● Record
-          </button>
-
-        </div>
-
-      </section>
-
-
-      <!-- =====================================================
-           SIDE PANEL
-           ===================================================== -->
-
-      <aside class="side-panel">
-
-
-        <!-- ===================================================
-             CAMERA
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Camera
-              </div>
-
-              <div class="panel-subtitle">
-                Mentor camera controls
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="panel-grid">
-
-            <button
-              type="button"
-              class="side-btn green"
-              id="startCameraSideBtn"
-            >
-              ▶ Start
-            </button>
-
-            <button
-              type="button"
-              class="side-btn red"
-              id="stopCameraSideBtn"
-            >
-              ■ Stop
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="switchCameraSideBtn"
-            >
-              ⇄ Switch
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadMentorSideBtn"
-            >
-              🎬 Video
-            </button>
-
-          </div>
-
-
-          <div
-            class="status-box"
-            id="cameraStatus"
-          >
-            Camera Off
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             AI BACKGROUND
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                AI Background
-              </div>
-
-              <div class="panel-subtitle">
-                Keep person visible
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="background-options">
-
-            <button
-              type="button"
-              class="bg-option active"
-              id="bgOriginalBtn"
-            >
-              Original
-            </button>
-
-            <button
-              type="button"
-              class="bg-option"
-              id="bgRemoveBtn"
-            >
-              Remove
-            </button>
-
-            <button
-              type="button"
-              class="bg-option"
-              id="bgBlurBtn"
-            >
-              Blur
-            </button>
-
-            <button
-              type="button"
-              class="bg-option"
-              id="bgImageBtn"
-            >
-              Image
-            </button>
-
-            <button
-              type="button"
-              class="bg-option"
-              id="bgColorBtn"
-            >
-              Color
-            </button>
-
-          </div>
-
-
-          <div class="color-row">
-
-            <span>
-              Background color
-            </span>
-
-            <input
-              type="color"
-              id="backgroundColor"
-              value="#142238"
-            >
-
-          </div>
-
-
-          <button
-            type="button"
-            class="side-btn"
-            id="uploadBackgroundSideBtn"
-            style="width:100%;margin-top:8px;"
-          >
-            🖼 Upload Custom Background
-          </button>
-
-
-          <div
-            class="status-box"
-            id="backgroundUploadBox"
-          >
-            No custom background selected.
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             SCREEN CAPTURE
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Screen Capture
-              </div>
-
-              <div class="panel-subtitle">
-                Screen / window / tab
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="panel-grid">
-
-            <button
-              type="button"
-              class="side-btn green"
-              id="startScreenCaptureSideBtn"
-            >
-              🖥 Start
-            </button>
-
-            <button
-              type="button"
-              class="side-btn red"
-              id="stopScreenCaptureBtn"
-            >
-              ■ Stop
-            </button>
-
-          </div>
-
-
-          <div
-            class="screen-status"
-            id="screenCaptureStatus"
-            style="margin-top:8px;"
-          >
-
-            <span
-              class="screen-status-light"
-              id="screenCaptureStatusLight"
-            ></span>
-
-            <span>
-              Screen capture is off
-            </span>
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             AUDIO
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Recording Audio
-              </div>
-
-              <div class="panel-subtitle">
-                Main video + microphone
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- Main video -->
-
-          <div class="audio-row">
-
-            <div class="audio-label">
-
-              <span>
-                Main Video Audio
-              </span>
-
-              <span
-                class="audio-value"
-                id="mainVolumeValue"
-              >
-                100%
-              </span>
-
-            </div>
-
-
-            <input
-              type="range"
-              id="mainVideoVolume"
-              min="0"
-              max="100"
-              value="100"
-            >
-
-
-            <label class="check-row">
-
-              <input
-                type="checkbox"
-                id="mainVideoAudioCheckbox"
-                checked
-              >
-
-              Include video audio
-
-            </label>
-
-          </div>
-
-
-          <!-- Mic -->
-
-          <div class="audio-row">
-
-            <div class="audio-label">
-
-              <span>
-                Microphone
-              </span>
-
-              <span
-                class="audio-value"
-                id="micVolumeValue"
-              >
-                100%
-              </span>
-
-            </div>
-
-
-            <input
-              type="range"
-              id="micVolume"
-              min="0"
-              max="100"
-              value="100"
-            >
-
-
-            <label class="check-row">
-
-              <input
-                type="checkbox"
-                id="micEnabled"
-                checked
-              >
-
-              Record microphone
-
-            </label>
-
-
-            <label class="check-row">
-
-              <input
-                type="checkbox"
-                id="micMonitor"
-              >
-
-              Monitor microphone
-
-            </label>
-
-
-            <div
-              class="status-box"
-              data-mic-status
-            >
-              Microphone not connected
-            </div>
-
-
-            <!-- Waveform -->
-
-            <div class="waveform-box">
-
-              <canvas
-                id="micWaveformCanvas"
-              ></canvas>
-
-            </div>
-
-
-            <!-- Level meter -->
-
-            <div class="audio-meter">
-
-              <span class="audio-meter-label">
-                Level
-              </span>
-
-              <div
-                class="audio-meter-track"
-                id="audioMeterTrack"
-              >
-
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-                <span class="audio-meter-bar"></span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             TELEPROMPTER
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Teleprompter
-              </div>
-
-              <div class="panel-subtitle">
-                Read while recording
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            class="teleprompter-mini"
-            id="teleprompterMiniPreview"
-          >
-            <div class="teleprompter-mini-empty">
-              No script loaded.
-            </div>
-          </div>
-
-
-          <div class="panel-grid" style="margin-top:8px;">
-
-            <button
-              type="button"
-              class="side-btn active"
-              id="openTeleprompterSide"
-            >
-              📜 Open
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadTeleprompterBtn"
-            >
-              TXT Upload
-            </button>
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             STUDENTS
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Students
-              </div>
-
-              <div class="panel-subtitle">
-                Live class participants
-              </div>
-
-            </div>
-
-
-            <button
-              type="button"
-              class="side-btn"
-              id="addStudentBtn"
-              style="min-height:30px;padding:5px 8px;"
-            >
-              + Add
-            </button>
-
-          </div>
-
-
-          <div id="studentsList"></div>
-
-        </section>
-
-
-        <!-- ===================================================
-             RECORDING SETTINGS
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Recording Settings
-              </div>
-
-              <div class="panel-subtitle">
-                Quality and FPS
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="setting-row">
-
-            <div class="setting-group">
-
-              <label>
-                Quality
-              </label>
-
-              <select
-                id="recordingQualitySide"
-              >
-
-                <option value="720">
-                  720p
-                </option>
-
-                <option value="1080" selected>
-                  1080p
-                </option>
-
-                <option value="1440">
-                  1440p
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <div class="setting-group">
-
-              <label>
-                FPS
-              </label>
-
-              <select
-                id="recordingFpsSide"
-              >
-
-                <option value="24">
-                  24
-                </option>
-
-                <option value="30" selected>
-                  30
-                </option>
-
-                <option value="60">
-                  60
-                </option>
-
-              </select>
-
-            </div>
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             FILES
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Files
-              </div>
-
-              <div class="panel-subtitle">
-                Quick upload
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="file-grid">
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadMainSideBtn"
-            >
-              🖼 Slide
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadVideoSideBtn"
-            >
-              🎬 Video
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadMentorFileSideBtn"
-            >
-              👤 Mentor
-            </button>
-
-            <button
-              type="button"
-              class="side-btn"
-              id="uploadBackgroundSideBtn"
-            >
-              🌄 Background
-            </button>
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
-             RECORDING HISTORY
-             =================================================== -->
-
-        <section class="panel-card">
-
-          <div class="panel-heading">
-
-            <div>
-
-              <div class="panel-title">
-                Recording History
-              </div>
-
-              <div class="panel-subtitle">
-                Saved recordings
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            class="history-list"
-            id="recordingHistoryList"
-          >
-
-            <div class="history-empty">
-              No recordings yet.
-            </div>
-
-          </div>
-
-        </section>
-
-      </aside>
-
-    </main>
-
-  </div>
-
-
-  <!-- =========================================================
-       HIDDEN FILE INPUTS
-       ========================================================= -->
-
-  <input
-    type="file"
-    id="mainFileInput"
-    accept="image/*"
-    hidden
-  >
-
-  <input
-    type="file"
-    id="mainVideoInput"
-    accept="video/*"
-    hidden
-  >
-
-  <input
-    type="file"
-    id="mentorFileInput"
-    accept="video/*"
-    hidden
-  >
-
-  <input
-    type="file"
-    id="backgroundImageUpload"
-    accept="image/*"
-    hidden
-  >
-
-  <input
-    type="file"
-    id="teleprompterFileInput"
-    accept=".txt,text/plain"
-    hidden
-  >
-
-
-  <!-- =========================================================
-       AI CANVASES
-       ========================================================= -->
-
-  <canvas
-    id="aiCanvas"
-    width="640"
-    height="480"
-    hidden
-  ></canvas>
-
-  <canvas
-    id="aiSourceCanvas"
-    width="640"
-    height="480"
-    hidden
-  ></canvas>
-
-  <canvas
-    id="aiMaskCanvas"
-    width="640"
-    height="480"
-    hidden
-  ></canvas>
-
-
-  <!-- =========================================================
-       SETTINGS MODAL
-       ========================================================= -->
-
-  <div
-    class="modal-backdrop"
-    id="settingsModal"
-  >
-
-    <div class="modal">
-
-      <div class="modal-header">
-
-        <div class="modal-title">
-          Studio Settings
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          id="closeSettingsBtn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="modal-body">
-
-        <div class="modal-field">
-
-          <label>
-            Brand / Studio Name
-          </label>
-
-          <input
-            type="text"
-            id="brandNameInput"
-            value="Personal Course Studio"
-            placeholder="Your studio name"
-          >
-
-        </div>
-
-
-        <div class="setting-row">
-
-          <div class="modal-field">
-
-            <label>
-              Recording Quality
-            </label>
-
-            <select
-              id="settingsRecordingQuality"
-            >
-
-              <option value="720">
-                720p
-              </option>
-
-              <option value="1080">
-                1080p
-              </option>
-
-              <option value="1440">
-                1440p
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="modal-field">
-
-            <label>
-              Recording FPS
-            </label>
-
-            <select
-              id="settingsRecordingFps"
-            >
-
-              <option value="24">
-                24 FPS
-              </option>
-
-              <option value="30">
-                30 FPS
-              </option>
-
-              <option value="60">
-                60 FPS
-              </option>
-
-            </select>
-
-          </div>
-
-        </div>
-
-
-        <label class="check-row">
-
-          <input
-            type="checkbox"
-            id="settingsAutoStartTeleprompter"
-          >
-
-          Automatically start teleprompter with recording
-
-        </label>
-
-
-        <label class="check-row">
-
-          <input
-            type="checkbox"
-            id="settingsShowTeleprompterRecording"
-            checked
-          >
-
-          Show teleprompter while recording
-
-        </label>
-
-      </div>
-
-
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="modal-button"
-          id="closeSettingsFooterBtn"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="modal-button primary"
-          id="saveSettingsBtn"
-        >
-          Save Settings
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       SHORTCUTS MODAL
-       ========================================================= -->
-
-  <div
-    class="modal-backdrop"
-    id="shortcutsModal"
-  >
-
-    <div class="modal">
-
-      <div class="modal-header">
-
-        <div class="modal-title">
-          Keyboard Shortcuts
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          id="closeShortcutsBtn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="modal-body">
-
-        <div class="setting-row">
-
-          <div class="status-box">
-            <strong>Space</strong><br>
-            Play / Pause main video
-            <br>
-            During recording:
-            Pause / Resume
-          </div>
-
-          <div class="status-box">
-            <strong>Ctrl + Enter</strong><br>
-            Start / Stop recording
-          </div>
-
-        </div>
-
-
-        <div class="setting-row">
-
-          <div class="status-box">
-            <strong>Ctrl + Shift + S</strong><br>
-            Start / Stop screen capture
-          </div>
-
-          <div class="status-box">
-            <strong>Ctrl + Shift + F</strong><br>
-            Stage fullscreen
-          </div>
-
-        </div>
-
-
-        <div class="setting-row">
-
-          <div class="status-box">
-            <strong>Ctrl + Shift + G</strong><br>
-            Studio fullscreen
-          </div>
-
-          <div class="status-box">
-            <strong>Esc</strong><br>
-            Close modal / exit fullscreen
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       TELEPROMPTER MODAL
-       ========================================================= -->
-
-  <div
-    class="modal-backdrop"
-    id="teleprompterModal"
-  >
-
-    <div class="modal">
-
-      <div class="modal-header">
-
-        <div class="modal-title">
-          Teleprompter
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          id="closeTeleprompterBtn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="modal-body">
-
-        <div
-          class="teleprompter-preview"
-          id="teleprompterPreview"
-        >
-          Your teleprompter text will appear here.
-        </div>
-
-
-        <div class="modal-field">
-
-          <label>
-            Script
-          </label>
-
-          <textarea
-            id="teleprompterText"
-            placeholder="Write or paste your class script here..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="teleprompter-controls">
-
-          <div class="modal-field">
-
-            <label>
-              Scroll Speed
-            </label>
-
-            <input
-              type="range"
-              id="teleprompterSpeed"
-              min="10"
-              max="200"
-              value="60"
-            >
-
-          </div>
-
-
-          <div class="modal-field">
-
-            <label>
-              Font Size
-            </label>
-
-            <input
-              type="range"
-              id="teleprompterFontSize"
-              min="18"
-              max="70"
-              value="30"
-            >
-
-          </div>
-
-
-          <div class="modal-field">
-
-            <label>
-              Opacity
-            </label>
-
-            <input
-              type="range"
-              id="teleprompterOpacity"
-              min="20"
-              max="100"
-              value="92"
-            >
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="modal-button"
-          id="teleprompterResetBtn"
-        >
-          Reset
-        </button>
-
-        <button
-          type="button"
-          class="modal-button"
-          id="teleprompterPauseBtn"
-        >
-          ⏸ Pause
-        </button>
-
-        <button
-          type="button"
-          class="modal-button"
-          id="teleprompterPlayBtn"
-        >
-          ▶ Play
-        </button>
-
-        <button
-          type="button"
-          class="modal-button primary"
-          id="teleprompterSaveBtn"
-        >
-          Save
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       RECORDING PREVIEW MODAL
-       ========================================================= -->
-
-  <div
-    class="modal-backdrop"
-    id="recordingPreviewModal"
-  >
-
-    <div class="modal recording-preview-modal">
-
-      <div class="modal-header">
-
-        <div class="modal-title">
-          🎬 Recording Preview
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          id="closeRecordingPreviewBtn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="modal-body">
-
-        <div class="recording-preview-layout">
-
-          <!-- Video -->
-
-          <div
-            class="recording-preview-video-wrap"
-          >
-
-            <video
-              id="recordingPreviewVideo"
-              controls
-              playsinline
-            ></video>
-
-          </div>
-
-
-          <!-- Info -->
-
-          <div class="preview-info-panel">
-
-            <div class="preview-info-title">
-              Recording Details
-            </div>
-
-
-            <div
-              class="recording-file-info"
-              id="recordingFileInfo"
-            >
-              Recording information will appear here.
-            </div>
-
-
-            <div class="preview-actions">
-
-              <a
-                class="preview-action-btn primary"
-                id="downloadRecordingBtn"
-                href="#"
-                download
-                style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  text-decoration:none;
-                "
-              >
-                ⬇ Download Recording
-              </a>
-
-
-              <button
-                type="button"
-                class="preview-action-btn"
-                id="recordAgainBtn"
-              >
-                ● Record Again
-              </button>
-
-
-              <button
-                type="button"
-                class="preview-action-btn danger"
-                id="deleteRecordingBtn"
-              >
-                🗑 Delete Recording
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       ADD STUDENT MODAL
-       ========================================================= -->
-
-  <div
-    class="modal-backdrop"
-    id="studentModal"
-  >
-
-    <div class="modal">
-
-      <div class="modal-header">
-
-        <div class="modal-title">
-          Add Student
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          id="closeStudentModalBtn"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="modal-body">
-
-        <div class="modal-field">
-
-          <label>
-            Student Name
-          </label>
-
-          <input
-            type="text"
-            id="studentNameInput"
-            placeholder="Enter student name"
-          >
-
-        </div>
-
-      </div>
-
-
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="modal-button"
-          id="cancelStudentBtn"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          class="modal-button primary"
-          id="saveStudentBtn"
-        >
-          Add Student
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       TOAST
-       ========================================================= -->
-
-  <div
-    id="toastContainer"
-  ></div>
-
-
-  <!-- =========================================================
-       INLINE BRIDGE
-       ========================================================= -->
-
-  <script>
-
-    /*
-     * Microphone bridge
-     * Used by Mentor Studio JavaScript.
-     */
-
-    window.CourseStudioMicVolume =
-      1;
-
-    window.CourseStudioMicEnabled =
+  mentorAICanvas.style.display =
+    "block";
+
+  mentorCameraVideo.style.display =
+    "none";
+
+  mentorPlaceholder.style.display =
+    "none";
+
+  renderCompositionFrame();
+}
+
+
+/* =========================================================
+   AI BACKGROUND MODE
+   ========================================================= */
+
+function setBackgroundMode(mode) {
+  state.backgroundMode = mode;
+
+  qsa(
+    "[data-bg-mode]"
+  ).forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.bgMode === mode
+    );
+  });
+
+  renderCompositionFrame();
+
+  showToast(
+    `Background: ${mode}`,
+    "success"
+  );
+}
+
+
+bindClick(
+  "bgOriginalBtn",
+  () => setBackgroundMode("original")
+);
+
+bindClick(
+  "bgRemoveBtn",
+  () => setBackgroundMode("remove")
+);
+
+bindClick(
+  "bgBlurBtn",
+  () => setBackgroundMode("blur")
+);
+
+bindClick(
+  "bgImageBtn",
+  () => {
+    if (!state.backgroundImage) {
+      $("backgroundImageUpload")?.click();
+      return;
+    }
+
+    setBackgroundMode("image");
+  }
+);
+
+bindClick(
+  "bgColorBtn",
+  () => setBackgroundMode("color")
+);
+
+
+$("backgroundColor")?.addEventListener(
+  "input",
+  event => {
+    state.backgroundColor =
+      event.target.value;
+
+    if (
+      state.backgroundMode ===
+      "color"
+    ) {
+      renderCompositionFrame();
+    }
+  }
+);
+
+
+/* =========================================================
+   DRAW BACKGROUND
+   ========================================================= */
+
+function drawBackground(
+  ctx,
+  width,
+  height
+) {
+  const mode =
+    state.backgroundMode;
+
+  if (
+    mode === "color"
+  ) {
+    ctx.fillStyle =
+      state.backgroundColor;
+
+    ctx.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  if (
+    mode === "image" &&
+    state.backgroundImage
+  ) {
+    drawCoverImage(
+      ctx,
+      state.backgroundImage,
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  if (
+    mode === "blur"
+  ) {
+    ctx.save();
+
+    ctx.filter =
+      "blur(22px)";
+
+    drawMediaCover(
+      ctx,
+      mentorCameraVideo,
+      0,
+      0,
+      width,
+      height
+    );
+
+    ctx.restore();
+
+    return;
+  }
+
+  if (
+    mode === "remove"
+  ) {
+    ctx.fillStyle =
+      "#111827";
+
+    ctx.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  drawMediaCover(
+    ctx,
+    mentorCameraVideo,
+    0,
+    0,
+    width,
+    height
+  );
+}
+
+
+/* =========================================================
+   MEDIA DRAW HELPERS
+   ========================================================= */
+
+function drawMediaCover(
+  ctx,
+  media,
+  x,
+  y,
+  width,
+  height
+) {
+  if (!media) return;
+
+  const mediaWidth =
+    media.videoWidth ||
+    media.width;
+
+  const mediaHeight =
+    media.videoHeight ||
+    media.height;
+
+  if (!mediaWidth || !mediaHeight) {
+    return;
+  }
+
+  const scale =
+    Math.max(
+      width / mediaWidth,
+      height / mediaHeight
+    );
+
+  const drawWidth =
+    mediaWidth * scale;
+
+  const drawHeight =
+    mediaHeight * scale;
+
+  const drawX =
+    x +
+    (width - drawWidth) / 2;
+
+  const drawY =
+    y +
+    (height - drawHeight) / 2;
+
+  ctx.drawImage(
+    media,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+}
+
+
+function drawCoverImage(
+  ctx,
+  image,
+  x,
+  y,
+  width,
+  height
+) {
+  if (!image) return;
+
+  const imageWidth =
+    image.naturalWidth ||
+    image.width;
+
+  const imageHeight =
+    image.naturalHeight ||
+    image.height;
+
+  const scale =
+    Math.max(
+      width / imageWidth,
+      height / imageHeight
+    );
+
+  const drawWidth =
+    imageWidth * scale;
+
+  const drawHeight =
+    imageHeight * scale;
+
+  const drawX =
+    x +
+    (width - drawWidth) / 2;
+
+  const drawY =
+    y +
+    (height - drawHeight) / 2;
+
+  ctx.drawImage(
+    image,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+}
+
+
+/* =========================================================
+   MENTOR SOURCE
+   ========================================================= */
+
+function getMentorSource() {
+  if (
+    state.mentorSource ===
+    "video" &&
+    mentorVideo.readyState >=
+      HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
+    return mentorVideo;
+  }
+
+  if (
+    state.mentorSource ===
+    "camera"
+  ) {
+    if (
+      state.backgroundMode ===
+      "original"
+    ) {
+      return mentorCameraVideo;
+    }
+
+    if (
+      state.backgroundMode ===
+        "remove" ||
+      state.backgroundMode ===
+        "blur" ||
+      state.backgroundMode ===
+        "image" ||
+      state.backgroundMode ===
+        "color"
+    ) {
+      return aiCanvas;
+    }
+  }
+
+  return null;
+}
+
+
+/* =========================================================
+   COMPOSITION CANVAS
+   ========================================================= */
+
+function ensureCompositionCanvas() {
+  let width = 1280;
+  let height = 720;
+
+  const quality =
+    String(
+      state.recording.width
+    );
+
+  if (
+    quality === "1920"
+  ) {
+    width = 1920;
+    height = 1080;
+  }
+
+  if (
+    quality === "2560"
+  ) {
+    width = 2560;
+    height = 1440;
+  }
+
+  if (
+    !state.compositionCanvas
+  ) {
+    state.compositionCanvas =
+      document.createElement(
+        "canvas"
+      );
+
+    state.compositionCtx =
+      state.compositionCanvas.getContext(
+        "2d"
+      );
+  }
+
+  if (
+    state.compositionCanvas.width !==
+      width ||
+    state.compositionCanvas.height !==
+      height
+  ) {
+    state.compositionCanvas.width =
+      width;
+
+    state.compositionCanvas.height =
+      height;
+  }
+
+  return state.compositionCanvas;
+}
+
+
+/* =========================================================
+   DRAW MAIN SOURCE
+   ========================================================= */
+
+function drawMainSource(
+  ctx,
+  width,
+  height
+) {
+  if (
+    mainVideo &&
+    mainVideo.style.display !==
+      "none" &&
+    mainVideo.readyState >=
+      HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
+    drawMediaContain(
+      ctx,
+      mainVideo,
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  if (
+    screenCaptureVideo &&
+    screenCaptureVideo.style.display !==
+      "none" &&
+    screenCaptureVideo.readyState >=
+      HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
+    drawMediaContain(
+      ctx,
+      screenCaptureVideo,
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  if (
+    state.mainImage
+  ) {
+    drawCoverImage(
+      ctx,
+      state.mainImage,
+      0,
+      0,
+      width,
+      height
+    );
+
+    return;
+  }
+
+  ctx.fillStyle =
+    "#0b0f17";
+
+  ctx.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
+}
+
+
+function drawMediaContain(
+  ctx,
+  media,
+  x,
+  y,
+  width,
+  height
+) {
+  const mediaWidth =
+    media.videoWidth ||
+    media.width;
+
+  const mediaHeight =
+    media.videoHeight ||
+    media.height;
+
+  if (
+    !mediaWidth ||
+    !mediaHeight
+  ) {
+    return;
+  }
+
+  const scale =
+    Math.min(
+      width / mediaWidth,
+      height / mediaHeight
+    );
+
+  const drawWidth =
+    mediaWidth * scale;
+
+  const drawHeight =
+    mediaHeight * scale;
+
+  const drawX =
+    x +
+    (width - drawWidth) / 2;
+
+  const drawY =
+    y +
+    (height - drawHeight) / 2;
+
+  ctx.drawImage(
+    media,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight
+  );
+}
+
+
+/* =========================================================
+   MENTOR OVERLAY
+   ========================================================= */
+
+function drawMentorOverlay(
+  ctx,
+  width,
+  height
+) {
+  if (!mentorCard) return;
+
+  const source =
+    getMentorSource();
+
+  if (!source) return;
+
+  const stageRect =
+    stage?.getBoundingClientRect();
+
+  const cardRect =
+    mentorCard.getBoundingClientRect();
+
+  if (
+    !stageRect ||
+    !cardRect
+  ) {
+    return;
+  }
+
+  const scaleX =
+    width /
+    stageRect.width;
+
+  const scaleY =
+    height /
+    stageRect.height;
+
+  let x =
+    (cardRect.left -
+      stageRect.left) *
+    scaleX;
+
+  let y =
+    (cardRect.top -
+      stageRect.top) *
+    scaleY;
+
+  let w =
+    cardRect.width *
+    scaleX;
+
+  let h =
+    cardRect.height *
+    scaleY;
+
+  x =
+    Math.max(
+      0,
+      Math.min(
+        width - w,
+        x
+      )
+    );
+
+  y =
+    Math.max(
+      0,
+      Math.min(
+        height - h,
+        y
+      )
+    );
+
+  w =
+    Math.max(
+      80,
+      Math.min(
+        width,
+        w
+      )
+    );
+
+  h =
+    Math.max(
+      60,
+      Math.min(
+        height,
+        h
+      )
+    );
+
+  ctx.save();
+
+  const radius =
+    Math.min(
+      26,
+      w * 0.08
+    );
+
+  roundedRectPath(
+    ctx,
+    x,
+    y,
+    w,
+    h,
+    radius
+  );
+
+  ctx.clip();
+
+  if (
+    source === aiCanvas &&
+    state.mentorSource ===
+      "camera"
+  ) {
+    ctx.drawImage(
+      aiCanvas,
+      x,
+      y,
+      w,
+      h
+    );
+  } else {
+    drawMediaCover(
+      ctx,
+      source,
+      x,
+      y,
+      w,
+      h
+    );
+  }
+
+  ctx.restore();
+
+  ctx.save();
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,.16)";
+
+  ctx.lineWidth =
+    Math.max(
+      1,
+      width / 1000
+    );
+
+  roundedRectPath(
+    ctx,
+    x,
+    y,
+    w,
+    h,
+    radius
+  );
+
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+
+function roundedRectPath(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  radius
+) {
+  ctx.beginPath();
+
+  ctx.moveTo(
+    x + radius,
+    y
+  );
+
+  ctx.arcTo(
+    x + width,
+    y,
+    x + width,
+    y + height,
+    radius
+  );
+
+  ctx.arcTo(
+    x + width,
+    y + height,
+    x,
+    y + height,
+    radius
+  );
+
+  ctx.arcTo(
+    x,
+    y + height,
+    x,
+    y,
+    radius
+  );
+
+  ctx.arcTo(
+    x,
+    y,
+    x + width,
+    y,
+    radius
+  );
+
+  ctx.closePath();
+}
+
+
+/* =========================================================
+   BRAND BADGE
+   ========================================================= */
+
+function drawBrandBadge(
+  ctx,
+  width,
+  height
+) {
+  const brand =
+    state.settings.brandName ||
+    "SNK Mentor Studio";
+
+  const padding =
+    Math.max(
+      12,
+      width * 0.012
+    );
+
+  const fontSize =
+    Math.max(
+      14,
+      width * 0.014
+    );
+
+  ctx.save();
+
+  ctx.font =
+    `600 ${fontSize}px Inter, Arial, sans-serif`;
+
+  const textWidth =
+    ctx.measureText(brand).width;
+
+  const boxWidth =
+    textWidth +
+    padding * 2;
+
+  const boxHeight =
+    fontSize +
+    padding;
+
+  const x =
+    padding;
+
+  const y =
+    height -
+    boxHeight -
+    padding;
+
+  ctx.fillStyle =
+    "rgba(5,10,18,.78)";
+
+  roundedRectPath(
+    ctx,
+    x,
+    y,
+    boxWidth,
+    boxHeight,
+    12
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.fillText(
+    brand,
+    x + padding,
+    y +
+      boxHeight / 2 +
+      fontSize * 0.35
+  );
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   TELEPROMPTER IN RECORDING
+   ========================================================= */
+
+function drawTeleprompterRecording(
+  ctx,
+  width,
+  height
+) {
+  if (
+    !state.teleprompter.includeInRecording
+  ) {
+    return;
+  }
+
+  if (
+    !state.teleprompter.text.trim()
+  ) {
+    return;
+  }
+
+  const fontSize =
+    Math.max(
+      20,
+      Number(
+        state.teleprompter.fontSize
+      )
+    );
+
+  ctx.save();
+
+  ctx.fillStyle =
+    `rgba(0,0,0,${
+      Math.max(
+        0.15,
+        1 -
+          Number(
+            state.teleprompter.opacity
+          )
+      )
+    })`;
+
+  ctx.fillRect(
+    0,
+    height * 0.72,
+    width,
+    height * 0.28
+  );
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.font =
+    `600 ${fontSize}px Inter, Arial, sans-serif`;
+
+  ctx.textAlign =
+    "center";
+
+  const lines =
+    state.teleprompter.text
+      .split(/\r?\n/)
+      .slice(0, 4);
+
+  lines.forEach(
+    (line, index) => {
+      ctx.fillText(
+        line,
+        width / 2,
+        height *
+            0.79 +
+          index *
+            (fontSize + 10)
+      );
+    }
+  );
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   RECORDING OVERLAY IN CANVAS
+   ========================================================= */
+
+function drawRecordingIndicator(
+  ctx,
+  width,
+  height
+) {
+  if (
+    !state.recording.active
+  ) {
+    return;
+  }
+
+  const elapsed =
+    getRecordingElapsed();
+
+  const text =
+    formatTime(elapsed);
+
+  ctx.save();
+
+  ctx.fillStyle =
+    "rgba(10,10,10,.7)";
+
+  roundedRectPath(
+    ctx,
+    20,
+    20,
+    140,
+    48,
+    12
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle =
+    "#ff4d5f";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    44,
+    44,
+    7,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.font =
+    "700 18px Inter, Arial, sans-serif";
+
+  ctx.fillText(
+    state.recording.paused
+      ? "PAUSED"
+      : text,
+    62,
+    50
+  );
+
+  ctx.restore();
+}
+
+
+/* =========================================================
+   COMPOSITION RENDER
+   ========================================================= */
+
+function renderCompositionFrame() {
+  const canvas =
+    ensureCompositionCanvas();
+
+  const ctx =
+    state.compositionCtx;
+
+  const width =
+    canvas.width;
+
+  const height =
+    canvas.height;
+
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  drawMainSource(
+    ctx,
+    width,
+    height
+  );
+
+  drawMentorOverlay(
+    ctx,
+    width,
+    height
+  );
+
+  drawTeleprompterRecording(
+    ctx,
+    width,
+    height
+  );
+
+  drawBrandBadge(
+    ctx,
+    width,
+    height
+  );
+
+  drawRecordingIndicator(
+    ctx,
+    width,
+    height
+  );
+
+  return canvas;
+}
+
+
+/* =========================================================
+   CONTINUOUS RENDER LOOP
+   ========================================================= */
+
+function renderLoop() {
+  renderCompositionFrame();
+
+  processCameraSegmentation();
+
+  state.renderAnimationId =
+    requestAnimationFrame(
+      renderLoop
+    );
+}
+
+
+function startRenderLoop() {
+  if (
+    state.renderAnimationId
+  ) {
+    return;
+  }
+
+  state.renderAnimationId =
+    requestAnimationFrame(
+      renderLoop
+    );
+}
+
+
+function stopRenderLoop() {
+  if (
+    state.renderAnimationId
+  ) {
+    cancelAnimationFrame(
+      state.renderAnimationId
+    );
+
+    state.renderAnimationId =
+      null;
+  }
+}
+
+
+/* =========================================================
+   AUDIO ENGINE
+   ========================================================= */
+
+function ensureAudioContext() {
+  if (
+    state.audio.context
+  ) {
+    return state.audio.context;
+  }
+
+  const AudioContextClass =
+    window.AudioContext ||
+    window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error(
+      "Web Audio API is not supported."
+    );
+  }
+
+  const context =
+    new AudioContextClass();
+
+  state.audio.context =
+    context;
+
+  state.audio.destination =
+    context.createMediaStreamDestination();
+
+  return context;
+}
+
+
+/* =========================================================
+   MAIN VIDEO AUDIO
+   ========================================================= */
+
+function setupMainVideoAudio() {
+  if (!mainVideo) return;
+
+  try {
+    const context =
+      ensureAudioContext();
+
+    if (
+      state.audio.mainSource
+    ) {
+      try {
+        state.audio.mainSource.disconnect();
+      } catch (_) {}
+    }
+
+    state.audio.mainSource =
+      context.createMediaElementSource(
+        mainVideo
+      );
+
+    state.audio.mainGain =
+      context.createGain();
+
+    state.audio.mainGain.gain.value =
+      state.audio.mainVolume;
+
+    state.audio.analyserMain =
+      context.createAnalyser();
+
+    state.audio.analyserMain.fftSize =
+      256;
+
+    state.audio.mainSource.connect(
+      state.audio.mainGain
+    );
+
+    state.audio.mainGain.connect(
+      state.audio.analyserMain
+    );
+
+    state.audio.analyserMain.connect(
+      context.destination
+    );
+
+    state.audio.mainGain.connect(
+      state.audio.destination
+    );
+  } catch (error) {
+    console.warn(
+      "Main audio setup:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   MICROPHONE AUDIO
+   ========================================================= */
+
+async function setupMicrophoneAudio(
+  cameraStream
+) {
+  if (!cameraStream) return;
+
+  try {
+    const context =
+      ensureAudioContext();
+
+    state.audio.micStream =
+      cameraStream;
+
+    if (
+      state.audio.micSource
+    ) {
+      try {
+        state.audio.micSource.disconnect();
+      } catch (_) {}
+    }
+
+    state.audio.micSource =
+      context.createMediaStreamSource(
+        cameraStream
+      );
+
+    state.audio.micGain =
+      context.createGain();
+
+    state.audio.micGain.gain.value =
+      state.audio.micEnabled
+        ? state.audio.micVolume
+        : 0;
+
+    state.audio.analyserMic =
+      context.createAnalyser();
+
+    state.audio.analyserMic.fftSize =
+      256;
+
+    state.audio.micSource.connect(
+      state.audio.micGain
+    );
+
+    state.audio.micGain.connect(
+      state.audio.analyserMic
+    );
+
+    state.audio.analyserMic.connect(
+      state.audio.destination
+    );
+
+    if (
+      state.audio.micMonitor
+    ) {
+      state.audio.micGain.connect(
+        context.destination
+      );
+    }
+
+    if (
+      context.state === "suspended"
+    ) {
+      await context.resume();
+    }
+
+    updateMicStatus();
+  } catch (error) {
+    console.error(error);
+
+    showToast(
+      "Microphone audio could not be initialized.",
+      "error"
+    );
+  }
+}
+
+
+/* =========================================================
+   AUDIO SETTINGS
+   ========================================================= */
+
+function updateMainVolume(value) {
+  const volume =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        Number(value)
+      )
+    );
+
+  state.audio.mainVolume =
+    volume;
+
+  if (
+    state.audio.mainGain
+  ) {
+    state.audio.mainGain.gain.value =
+      volume;
+  }
+
+  const label =
+    $("mainVolumeValue");
+
+  if (label) {
+    label.textContent =
+      `${Math.round(
+        volume * 100
+      )}%`;
+  }
+}
+
+
+$("mainVideoVolume")?.addEventListener(
+  "input",
+  event => {
+    updateMainVolume(
+      event.target.value
+    );
+  }
+);
+
+
+$("mainVideoAudioCheckbox")?.addEventListener(
+  "change",
+  event => {
+    updateMainVolume(
+      event.target.checked
+        ? $("mainVideoVolume")?.value ||
+            1
+        : 0
+    );
+  }
+);
+
+
+function updateMicVolume(value) {
+  const volume =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        Number(value)
+      )
+    );
+
+  state.audio.micVolume =
+    volume;
+
+  if (
+    state.audio.micGain
+  ) {
+    state.audio.micGain.gain.value =
+      state.audio.micEnabled
+        ? volume
+        : 0;
+  }
+
+  const label =
+    $("micVolumeValue");
+
+  if (label) {
+    label.textContent =
+      `${Math.round(
+        volume * 100
+      )}%`;
+  }
+}
+
+
+$("micVolume")?.addEventListener(
+  "input",
+  event => {
+    updateMicVolume(
+      event.target.value
+    );
+  }
+);
+
+
+$("micEnabled")?.addEventListener(
+  "change",
+  event => {
+    state.audio.micEnabled =
+      event.target.checked;
+
+    if (
+      state.audio.micGain
+    ) {
+      state.audio.micGain.gain.value =
+        state.audio.micEnabled
+          ? state.audio.micVolume
+          : 0;
+    }
+
+    updateMicStatus();
+  }
+);
+
+
+$("micMonitor")?.addEventListener(
+  "change",
+  event => {
+    state.audio.micMonitor =
+      event.target.checked;
+
+    updateMicMonitorRouting();
+  }
+);
+
+
+function updateMicMonitorRouting() {
+  const context =
+    state.audio.context;
+
+  const gain =
+    state.audio.micGain;
+
+  if (
+    !context ||
+    !gain
+  ) {
+    return;
+  }
+
+  try {
+    gain.disconnect();
+  } catch (_) {}
+
+  if (
+    state.audio.analyserMic
+  ) {
+    gain.connect(
+      state.audio.analyserMic
+    );
+  }
+
+  if (
+    state.audio.analyserMic
+  ) {
+    try {
+      state.audio.analyserMic.disconnect();
+    } catch (_) {}
+
+    state.audio.analyserMic.connect(
+      state.audio.destination
+    );
+
+    if (
+      state.audio.micMonitor
+    ) {
+      state.audio.analyserMic.connect(
+        context.destination
+      );
+    }
+  }
+}
+
+
+function updateMicStatus() {
+  const status =
+    qs("[data-mic-status]");
+
+  if (!status) return;
+
+  if (
+    !state.audio.micEnabled
+  ) {
+    status.textContent =
+      "Microphone muted";
+    return;
+  }
+
+  if (
+    state.cameraStream
+  ) {
+    status.textContent =
+      "Microphone ready";
+  } else {
+    status.textContent =
+      "Microphone unavailable";
+  }
+}
+
+
+/* =========================================================
+   AUDIO METERS
+   ========================================================= */
+
+function getAnalyserLevel(
+  analyser
+) {
+  if (!analyser) return 0;
+
+  const buffer =
+    new Uint8Array(
+      analyser.fftSize
+    );
+
+  analyser.getByteTimeDomainData(
+    buffer
+  );
+
+  let sum = 0;
+
+  for (
+    let i = 0;
+    i < buffer.length;
+    i++
+  ) {
+    const value =
+      (buffer[i] - 128) /
+      128;
+
+    sum +=
+      value * value;
+  }
+
+  const rms =
+    Math.sqrt(
+      sum / buffer.length
+    );
+
+  return Math.min(
+    1,
+    rms * 3
+  );
+}
+
+
+function updateAudioMeters() {
+  const micLevel =
+    getAnalyserLevel(
+      state.audio.analyserMic
+    );
+
+  const mainLevel =
+    getAnalyserLevel(
+      state.audio.analyserMain
+    );
+
+  const micBar =
+    $("micLevelBar");
+
+  const mainBar =
+    $("mainAudioLevelBar");
+
+  if (micBar) {
+    micBar.style.width =
+      `${Math.round(
+        micLevel * 100
+      )}%`;
+  }
+
+  if (mainBar) {
+    mainBar.style.width =
+      `${Math.round(
+        mainLevel * 100
+      )}%`;
+  }
+
+  drawMicWaveform();
+
+  requestAnimationFrame(
+    updateAudioMeters
+  );
+}
+
+
+/* =========================================================
+   MIC WAVEFORM
+   ========================================================= */
+
+function drawMicWaveform() {
+  const canvas =
+    $("micWaveformCanvas");
+
+  const analyser =
+    state.audio.analyserMic;
+
+  if (
+    !canvas ||
+    !analyser
+  ) {
+    return;
+  }
+
+  const ctx =
+    canvas.getContext("2d");
+
+  const width =
+    canvas.width =
+      canvas.clientWidth ||
+      500;
+
+  const height =
+    canvas.height =
+      canvas.clientHeight ||
+      90;
+
+  const data =
+    new Uint8Array(
+      analyser.fftSize
+    );
+
+  analyser.getByteTimeDomainData(
+    data
+  );
+
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  ctx.beginPath();
+
+  const sliceWidth =
+    width /
+    data.length;
+
+  let x = 0;
+
+  for (
+    let i = 0;
+    i < data.length;
+    i++
+  ) {
+    const value =
+      data[i] / 128;
+
+    const y =
+      value *
+      height /
+      2;
+
+    if (i === 0) {
+      ctx.moveTo(
+        x,
+        y
+      );
+    } else {
+      ctx.lineTo(
+        x,
+        y
+      );
+    }
+
+    x += sliceWidth;
+  }
+
+  ctx.strokeStyle =
+    "rgba(92,170,255,.95)";
+
+  ctx.lineWidth = 2;
+
+  ctx.stroke();
+}
+
+
+/* =========================================================
+   SCREEN CAPTURE
+   ========================================================= */
+
+async function startScreenCapture() {
+  try {
+    if (
+      !navigator.mediaDevices?.getDisplayMedia
+    ) {
+      throw new Error(
+        "Screen capture is not supported."
+      );
+    }
+
+    stopScreenCapture(false);
+
+    const stream =
+      await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          frameRate: 30
+        },
+
+        audio: true
+      });
+
+    state.screenStream =
+      stream;
+
+    screenCaptureVideo.srcObject =
+      stream;
+
+    screenCaptureVideo.muted =
       true;
 
-    window.CourseStudioMicMonitor =
+    screenCaptureVideo.style.display =
+      "block";
+
+    mainVideo.style.display =
+      "none";
+
+    mainImage.style.display =
+      "none";
+
+    await screenCaptureVideo.play();
+
+    setupScreenAudio(stream);
+
+    const videoTrack =
+      stream.getVideoTracks()[0];
+
+    if (videoTrack) {
+      videoTrack.addEventListener(
+        "ended",
+        () => {
+          stopScreenCapture(true);
+        }
+      );
+    }
+
+    updateScreenCaptureStatus(
+      "Screen sharing active",
+      true
+    );
+
+    startRenderLoop();
+
+    showToast(
+      "Screen capture started.",
+      "success"
+    );
+  } catch (error) {
+    console.error(error);
+
+    showToast(
+      error.message ||
+        "Screen capture cancelled.",
+      "warning"
+    );
+  }
+}
+
+
+function stopScreenCapture(
+  showMessage = true
+) {
+  if (
+    state.screenStream
+  ) {
+    state.screenStream
+      .getTracks()
+      .forEach(track => {
+        track.stop();
+      });
+
+    state.screenStream =
+      null;
+  }
+
+  if (
+    screenCaptureVideo
+  ) {
+    screenCaptureVideo.srcObject =
+      null;
+
+    screenCaptureVideo.style.display =
+      "none";
+  }
+
+  updateScreenCaptureStatus(
+    "Screen capture inactive",
+    false
+  );
+
+  if (showMessage) {
+    showToast(
+      "Screen capture stopped.",
+      "info"
+    );
+  }
+
+  renderCompositionFrame();
+}
+
+
+/* =========================================================
+   SCREEN AUDIO
+   ========================================================= */
+
+function setupScreenAudio(stream) {
+  if (
+    !stream.getAudioTracks().length
+  ) {
+    return;
+  }
+
+  try {
+    const context =
+      ensureAudioContext();
+
+    state.audio.screenSource =
+      context.createMediaStreamSource(
+        stream
+      );
+
+    state.audio.screenGain =
+      context.createGain();
+
+    state.audio.screenGain.gain.value =
+      1;
+
+    state.audio.screenSource.connect(
+      state.audio.screenGain
+    );
+
+    state.audio.screenGain.connect(
+      state.audio.destination
+    );
+  } catch (error) {
+    console.warn(
+      "Screen audio:",
+      error
+    );
+  }
+}
+
+
+function updateScreenCaptureStatus(
+  text,
+  active
+) {
+  const status =
+    $("screenCaptureStatus");
+
+  const light =
+    $("screenCaptureStatusLight");
+
+  if (status) {
+    status.textContent =
+      text;
+  }
+
+  if (light) {
+    light.classList.toggle(
+      "active",
+      active
+    );
+  }
+}
+
+
+bindClick(
+  "startScreenCaptureBtn",
+  startScreenCapture
+);
+
+bindClick(
+  "startScreenCaptureSideBtn",
+  startScreenCapture
+);
+
+bindClick(
+  "stopScreenCaptureBtn",
+  () => stopScreenCapture(true)
+);
+
+
+/* =========================================================
+   RECORDING QUALITY
+   ========================================================= */
+
+function applyRecordingQuality(
+  value
+) {
+  const presets = {
+    "720": {
+      width: 1280,
+      height: 720
+    },
+
+    "1080": {
+      width: 1920,
+      height: 1080
+    },
+
+    "1440": {
+      width: 2560,
+      height: 1440
+    }
+  };
+
+  const preset =
+    presets[value] ||
+    presets["1080"];
+
+  state.recording.width =
+    preset.width;
+
+  state.recording.height =
+    preset.height;
+
+  state.settings.recordingQuality =
+    value;
+
+  saveSettings();
+}
+
+
+$("recordingQuality")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingQuality(
+      event.target.value
+    );
+
+    renderCompositionFrame();
+  }
+);
+
+
+$("recordingQualitySide")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingQuality(
+      event.target.value
+    );
+
+    if (
+      $("recordingQuality")
+    ) {
+      $("recordingQuality").value =
+        event.target.value;
+    }
+
+    renderCompositionFrame();
+  }
+);
+
+
+$("settingsRecordingQuality")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingQuality(
+      event.target.value
+    );
+  }
+);
+
+
+/* =========================================================
+   RECORDING FPS
+   ========================================================= */
+
+function applyRecordingFps(value) {
+  state.recording.fps =
+    Number(value) || 30;
+
+  state.settings.recordingFps =
+    String(
+      state.recording.fps
+    );
+
+  saveSettings();
+}
+
+
+$("recordingFps")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingFps(
+      event.target.value
+    );
+  }
+);
+
+
+$("recordingFpsSide")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingFps(
+      event.target.value
+    );
+
+    if (
+      $("recordingFps")
+    ) {
+      $("recordingFps").value =
+        event.target.value;
+    }
+  }
+);
+
+
+$("settingsRecordingFps")?.addEventListener(
+  "change",
+  event => {
+    applyRecordingFps(
+      event.target.value
+    );
+  }
+);
+
+
+/* =========================================================
+   RECORDING FORMAT
+   ========================================================= */
+
+function getSupportedMimeType(
+  requested
+) {
+  const types = [];
+
+  if (
+    requested ===
+    "webm-vp9"
+  ) {
+    types.push(
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    );
+  }
+
+  if (
+    requested ===
+    "webm-vp8"
+  ) {
+    types.push(
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    );
+  }
+
+  if (
+    requested ===
+    "mp4"
+  ) {
+    types.push(
+      "video/mp4;codecs=h264,aac",
+      "video/mp4"
+    );
+  }
+
+  types.push(
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm"
+  );
+
+  if (
+    typeof MediaRecorder !==
+    "undefined" &&
+    MediaRecorder.isTypeSupported
+  ) {
+    for (
+      const type of types
+    ) {
+      if (
+        MediaRecorder.isTypeSupported(
+          type
+        )
+      ) {
+        return type;
+      }
+    }
+  }
+
+  return "";
+}
+
+
+function updateFormatSupportUI() {
+  const select =
+    $("recordingFormat");
+
+  if (!select) return;
+
+  const mp4Option =
+    [...select.options].find(
+      option =>
+        option.value ===
+        "mp4"
+    );
+
+  if (mp4Option) {
+    mp4Option.disabled =
+      !getSupportedMimeType(
+        "mp4"
+      );
+  }
+}
+
+
+$("recordingFormat")?.addEventListener(
+  "change",
+  event => {
+    state.recording.format =
+      event.target.value;
+  }
+);
+
+
+$("recordingFormatSide")?.addEventListener(
+  "change",
+  event => {
+    state.recording.format =
+      event.target.value;
+
+    if (
+      $("recordingFormat")
+    ) {
+      $("recordingFormat").value =
+        event.target.value;
+    }
+  }
+);
+
+
+/* =========================================================
+   FILE NAME
+   ========================================================= */
+
+function sanitizeFileName(
+  name
+) {
+  return String(name)
+    .trim()
+    .replace(
+      /[<>:"/\\|?*\x00-\x1F]/g,
+      "-"
+    )
+    .replace(
+      /\s+/g,
+      "-"
+    )
+    .slice(
+      0,
+      100
+    );
+}
+
+
+function getRecordingFileName() {
+  const input =
+    $("recordingFileName");
+
+  const sideInput =
+    $("recordingFileNameSide");
+
+  const name =
+    input?.value ||
+    sideInput?.value ||
+    state.recording.fileName ||
+    "course-recording";
+
+  return (
+    sanitizeFileName(name) ||
+    "course-recording"
+  );
+}
+
+
+/* =========================================================
+   RECORDING ELAPSED TIME
+   ========================================================= */
+
+function getRecordingElapsed() {
+  if (
+    !state.recording.startedAt
+  ) {
+    return 0;
+  }
+
+  if (
+    state.recording.paused
+  ) {
+    return (
+      state.recording.pausedAt -
+      state.recording.startedAt -
+      state.recording.accumulatedPause
+    );
+  }
+
+  return (
+    performance.now() -
+    state.recording.startedAt -
+    state.recording.accumulatedPause
+  );
+}
+
+
+function formatTime(
+  milliseconds
+) {
+  const totalSeconds =
+    Math.max(
+      0,
+      Math.floor(
+        milliseconds / 1000
+      )
+    );
+
+  const hours =
+    Math.floor(
+      totalSeconds / 3600
+    );
+
+  const minutes =
+    Math.floor(
+      (totalSeconds % 3600) /
+        60
+    );
+
+  const seconds =
+    totalSeconds % 60;
+
+  if (hours > 0) {
+    return [
+      String(hours).padStart(
+        2,
+        "0"
+      ),
+      String(minutes).padStart(
+        2,
+        "0"
+      ),
+      String(seconds).padStart(
+        2,
+        "0"
+      )
+    ].join(":");
+  }
+
+  return [
+    String(minutes).padStart(
+      2,
+      "0"
+    ),
+    String(seconds).padStart(
+      2,
+      "0"
+    )
+  ].join(":");
+}
+
+
+/* =========================================================
+   RECORDING UI TIMER
+   ========================================================= */
+
+let recordingTimerAnimation = null;
+
+function updateRecordingTimerUI() {
+  const elapsed =
+    getRecordingElapsed();
+
+  const text =
+    formatTime(elapsed);
+
+  const timer =
+    $("recordingTimer");
+
+  const overlayTimer =
+    $("recordingOverlayTimer");
+
+  if (timer) {
+    timer.textContent =
+      text;
+  }
+
+  if (overlayTimer) {
+    overlayTimer.textContent =
+      text;
+  }
+
+  renderCompositionFrame();
+
+  recordingTimerAnimation =
+    requestAnimationFrame(
+      updateRecordingTimerUI
+    );
+}
+
+
+function stopRecordingTimerUI() {
+  if (
+    recordingTimerAnimation
+  ) {
+    cancelAnimationFrame(
+      recordingTimerAnimation
+    );
+
+    recordingTimerAnimation =
+      null;
+  }
+}
+
+
+/* =========================================================
+   RECORDING STATUS
+   ========================================================= */
+
+function updateRecordingIndicators() {
+  const cameraIndicator =
+    $("cameraIndicator");
+
+  const micIndicator =
+    $("micIndicator");
+
+  const audioIndicator =
+    $("audioIndicator");
+
+  const screenIndicator =
+    $("screenIndicator");
+
+  const dot =
+    $("recordingStatusDot");
+
+  const text =
+    $("recordingStatusText");
+
+  const bar =
+    $("recordingStatusBar");
+
+  if (cameraIndicator) {
+    cameraIndicator.classList.toggle(
+      "active",
+      Boolean(
+        state.cameraStream
+      )
+    );
+  }
+
+  if (micIndicator) {
+    micIndicator.classList.toggle(
+      "active",
+      Boolean(
+        state.audio.micEnabled &&
+        state.cameraStream
+      )
+    );
+  }
+
+  if (audioIndicator) {
+    audioIndicator.classList.toggle(
+      "active",
+      Boolean(
+        state.audio.destination
+      )
+    );
+  }
+
+  if (screenIndicator) {
+    screenIndicator.classList.toggle(
+      "active",
+      Boolean(
+        state.screenStream
+      )
+    );
+  }
+
+  if (dot) {
+    dot.classList.toggle(
+      "active",
+      state.recording.active
+    );
+  }
+
+  if (text) {
+    if (
+      state.recording.active &&
+      state.recording.paused
+    ) {
+      text.textContent =
+        "Recording paused";
+    } else if (
+      state.recording.active
+    ) {
+      text.textContent =
+        "Recording";
+    } else {
+      text.textContent =
+        "Ready";
+    }
+  }
+
+  if (bar) {
+    bar.classList.toggle(
+      "recording",
+      state.recording.active
+    );
+  }
+}
+
+
+/* =========================================================
+   BUILD RECORDING STREAM
+   ========================================================= */
+
+function buildRecordingStream() {
+  const canvas =
+    ensureCompositionCanvas();
+
+  const fps =
+    state.recording.fps ||
+    30;
+
+  const canvasStream =
+    canvas.captureStream(
+      fps
+    );
+
+  const stream =
+    new MediaStream();
+
+  canvasStream
+    .getVideoTracks()
+    .forEach(track => {
+      stream.addTrack(track);
+    });
+
+  const audioDestination =
+    state.audio.destination;
+
+  if (
+    audioDestination
+  ) {
+    audioDestination.stream
+      .getAudioTracks()
+      .forEach(track => {
+        stream.addTrack(track);
+      });
+  }
+
+  return stream;
+}
+
+
+/* =========================================================
+   START RECORDING
+   ========================================================= */
+
+async function startRecording() {
+  if (
+    state.recording.active
+  ) {
+    return;
+  }
+
+  try {
+    ensureCompositionCanvas();
+
+    const context =
+      state.audio.context;
+
+    if (
+      context &&
+      context.state ===
+        "suspended"
+    ) {
+      await context.resume();
+    }
+
+    const mimeType =
+      getSupportedMimeType(
+        state.recording.format
+      );
+
+    if (!mimeType) {
+      throw new Error(
+        "No supported recording format was found."
+      );
+    }
+
+    const stream =
+      buildRecordingStream();
+
+    const recorder =
+      new MediaRecorder(
+        stream,
+        {
+          mimeType,
+          videoBitsPerSecond:
+            getVideoBitrate()
+        }
+      );
+
+    state.recording.mediaRecorder =
+      recorder;
+
+    state.recording.mimeType =
+      mimeType;
+
+    state.recording.chunks =
+      [];
+
+    state.recording.startedAt =
+      performance.now();
+
+    state.recording.pausedAt =
+      0;
+
+    state.recording.accumulatedPause =
+      0;
+
+    state.recording.elapsed =
+      0;
+
+    state.recording.paused =
       false;
 
+    state.recording.active =
+      true;
 
-    /*
-     * Mentor resize bridge
-     */
+    state.recording.fileName =
+      getRecordingFileName();
 
-    (() => {
+    state.recording.trimStart =
+      0;
 
-      const mentor =
-        document.getElementById(
-          "mentorCard"
+    state.recording.trimEnd =
+      0;
+
+    recorder.ondataavailable =
+      event => {
+        if (
+          event.data &&
+          event.data.size > 0
+        ) {
+          state.recording.chunks.push(
+            event.data
+          );
+        }
+      };
+
+    recorder.onerror =
+      event => {
+        console.error(
+          "MediaRecorder error:",
+          event.error
         );
 
-      const handle =
-        document.getElementById(
-          "mentorResize"
+        showToast(
+          "Recording error occurred.",
+          "error"
+        );
+      };
+
+    recorder.onstop =
+      finalizeRecording;
+
+    recorder.start(1000);
+
+    updateRecordingIndicators();
+
+    showRecordingOverlay(true);
+
+    updateRecordingTimerUI();
+
+    startRenderLoop();
+
+    if (
+      state.settings
+        .autoStartTeleprompter
+    ) {
+      playTeleprompter();
+    }
+
+    showToast(
+      "Recording started.",
+      "success"
+    );
+  } catch (error) {
+    console.error(error);
+
+    state.recording.active =
+      false;
+
+    updateRecordingIndicators();
+
+    showToast(
+      error.message ||
+        "Could not start recording.",
+      "error"
+    );
+  }
+}
+
+
+/* =========================================================
+   BITRATE
+   ========================================================= */
+
+function getVideoBitrate() {
+  const width =
+    state.recording.width;
+
+  if (width >= 2560) {
+    return 18000000;
+  }
+
+  if (width >= 1920) {
+    return 12000000;
+  }
+
+  return 7000000;
+}
+
+
+/* =========================================================
+   PAUSE RECORDING
+   ========================================================= */
+
+function pauseRecording() {
+  const recorder =
+    state.recording.mediaRecorder;
+
+  if (
+    !state.recording.active ||
+    state.recording.paused ||
+    !recorder
+  ) {
+    return;
+  }
+
+  if (
+    recorder.state ===
+    "recording"
+  ) {
+    recorder.pause();
+
+    state.recording.paused =
+      true;
+
+    state.recording.pausedAt =
+      performance.now();
+
+    updateRecordingIndicators();
+
+    showToast(
+      "Recording paused.",
+      "info"
+    );
+  }
+}
+
+
+/* =========================================================
+   RESUME RECORDING
+   ========================================================= */
+
+function resumeRecording() {
+  const recorder =
+    state.recording.mediaRecorder;
+
+  if (
+    !state.recording.active ||
+    !state.recording.paused ||
+    !recorder
+  ) {
+    return;
+  }
+
+  if (
+    recorder.state ===
+    "paused"
+  ) {
+    recorder.resume();
+
+    state.recording.accumulatedPause +=
+      performance.now() -
+      state.recording.pausedAt;
+
+    state.recording.pausedAt =
+      0;
+
+    state.recording.paused =
+      false;
+
+    updateRecordingIndicators();
+
+    showToast(
+      "Recording resumed.",
+      "success"
+    );
+  }
+}
+
+
+/* =========================================================
+   STOP RECORDING
+   ========================================================= */
+
+function stopRecording() {
+  const recorder =
+    state.recording.mediaRecorder;
+
+  if (
+    !state.recording.active ||
+    !recorder
+  ) {
+    return;
+  }
+
+  try {
+    if (
+      recorder.state ===
+      "paused"
+    ) {
+      recorder.resume();
+    }
+
+    if (
+      recorder.state !==
+      "inactive"
+    ) {
+      recorder.stop();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+bindClick(
+  "recordBtn",
+  () => {
+    if (
+      state.recording.active
+    ) {
+      if (
+        state.recording.paused
+      ) {
+        resumeRecording();
+      } else {
+        pauseRecording();
+      }
+
+      return;
+    }
+
+    startRecording();
+  }
+);
+
+
+bindClick(
+  "recordToolbarBtn",
+  () => {
+    if (
+      state.recording.active
+    ) {
+      if (
+        state.recording.paused
+      ) {
+        resumeRecording();
+      } else {
+        pauseRecording();
+      }
+
+      return;
+    }
+
+    startRecording();
+  }
+);
+
+
+bindClick(
+  "pauseRecordingBtn",
+  pauseRecording
+);
+
+bindClick(
+  "resumeRecordingBtn",
+  resumeRecording
+);
+
+bindClick(
+  "stopRecordingBtn",
+  stopRecording
+);
+
+
+/* =========================================================
+   SHOW / HIDE RECORDING OVERLAY
+   ========================================================= */
+
+function showRecordingOverlay(
+  visible
+) {
+  const overlay =
+    $("recordingOverlay");
+
+  if (!overlay) return;
+
+  overlay.style.display =
+    visible
+      ? "flex"
+      : "none";
+}
+
+
+/* =========================================================
+   FINALIZE RECORDING
+   ========================================================= */
+
+function finalizeRecording() {
+  stopRecordingTimerUI();
+
+  state.recording.active =
+    false;
+
+  state.recording.paused =
+    false;
+
+  showRecordingOverlay(false);
+
+  updateRecordingIndicators();
+
+  if (
+    !state.recording.chunks.length
+  ) {
+    showToast(
+      "No recording data was captured.",
+      "error"
+    );
+
+    return;
+  }
+
+  const blob =
+    new Blob(
+      state.recording.chunks,
+      {
+        type:
+          state.recording.mimeType ||
+          "video/webm"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  state.recording.blob =
+    blob;
+
+  state.recording.url =
+    url;
+
+  const duration =
+    Math.max(
+      0.1,
+      getBlobDurationEstimate()
+    );
+
+  const recordingItem = {
+    id:
+      `rec-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`,
+
+    name:
+      state.recording.fileName ||
+      "course-recording",
+
+    createdAt:
+      new Date().toISOString(),
+
+    duration,
+
+    size:
+      blob.size,
+
+    mimeType:
+      blob.type,
+
+    blob,
+
+    url
+  };
+
+  state.recording.historyId =
+    recordingItem.id;
+
+  state.recordings.unshift(
+    recordingItem
+  );
+
+  saveRecordingHistoryMetadata();
+
+  renderRecordingHistory();
+
+  openRecordingPreview(
+    recordingItem
+  );
+
+  showToast(
+    "Recording completed.",
+    "success"
+  );
+}
+
+
+/* =========================================================
+   DURATION ESTIMATE
+   ========================================================= */
+
+function getBlobDurationEstimate() {
+  const elapsed =
+    state.recording.pausedAt
+      ? state.recording.pausedAt -
+        state.recording.startedAt -
+        state.recording.accumulatedPause
+      : performance.now() -
+        state.recording.startedAt -
+        state.recording.accumulatedPause;
+
+  return Math.max(
+    0.1,
+    elapsed / 1000
+  );
+}
+
+
+/* =========================================================
+   RECORDING PREVIEW
+   ========================================================= */
+
+let activePreviewItem = null;
+
+function openRecordingPreview(
+  item
+) {
+  activePreviewItem =
+    item;
+
+  const modal =
+    $("recordingPreviewModal");
+
+  const video =
+    $("recordingPreviewVideo");
+
+  if (!modal || !video) {
+    return;
+  }
+
+  if (
+    item.url
+  ) {
+    video.src =
+      item.url;
+  } else if (
+    item.blob
+  ) {
+    item.url =
+      URL.createObjectURL(
+        item.blob
+      );
+
+    video.src =
+      item.url;
+  } else {
+    showToast(
+      "This recording is no longer available in this session.",
+      "warning"
+    );
+
+    return;
+  }
+
+  video.load();
+
+  modal.classList.add(
+    "open"
+  );
+
+  updatePreviewMetadata(
+    item
+  );
+
+  setupPreviewTimeControls();
+
+  setTrimFields(
+    0,
+    item.duration || 0
+  );
+}
+
+
+function closeRecordingPreview() {
+  const modal =
+    $("recordingPreviewModal");
+
+  const video =
+    $("recordingPreviewVideo");
+
+  if (video) {
+    video.pause();
+  }
+
+  if (modal) {
+    modal.classList.remove(
+      "open"
+    );
+  }
+
+  activePreviewItem =
+    null;
+}
+
+
+bindClick(
+  "closeRecordingPreviewBtn",
+  closeRecordingPreview
+);
+
+
+/* =========================================================
+   PREVIEW METADATA
+   ========================================================= */
+
+function updatePreviewMetadata(
+  item
+) {
+  const info =
+    $("recordingFileInfo");
+
+  if (!info) return;
+
+  info.innerHTML = `
+    <div>
+      <strong>${escapeHtml(
+        item.name
+      )}</strong>
+    </div>
+
+    <div>
+      Duration:
+      ${formatSeconds(
+        item.duration || 0
+      )}
+    </div>
+
+    <div>
+      Size:
+      ${formatBytes(
+        item.size || 0
+      )}
+    </div>
+
+    <div>
+      Format:
+      ${escapeHtml(
+        item.mimeType || "video/webm"
+      )}
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   PREVIEW VIDEO CONTROLS
+   ========================================================= */
+
+function setupPreviewTimeControls() {
+  const video =
+    $("recordingPreviewVideo");
+
+  if (!video) return;
+
+  video.ontimeupdate =
+    () => {
+      const current =
+        video.currentTime || 0;
+
+      const duration =
+        video.duration || 0;
+
+      state.preview.currentTime =
+        current;
+
+      state.preview.duration =
+        duration;
+
+      const currentTime =
+        $("recordingCurrentTime");
+
+      const durationElement =
+        $("recordingDuration");
+
+      if (currentTime) {
+        currentTime.textContent =
+          formatSeconds(
+            current
+          );
+      }
+
+      if (durationElement) {
+        durationElement.textContent =
+          formatSeconds(
+            duration
+          );
+      }
+    };
+
+  video.onloadedmetadata =
+    () => {
+      const duration =
+        video.duration || 0;
+
+      state.preview.duration =
+        duration;
+
+      setTrimFields(
+        0,
+        duration
+      );
+    };
+}
+
+
+bindClick(
+  "recordingPreviewPlayBtn",
+  () => {
+    $("recordingPreviewVideo")
+      ?.play()
+      .catch(() => {});
+  }
+);
+
+
+bindClick(
+  "recordingPreviewPauseBtn",
+  () => {
+    $("recordingPreviewVideo")
+      ?.pause();
+  }
+);
+
+
+/* =========================================================
+   TRIM CONTROLS
+   ========================================================= */
+
+function setTrimFields(
+  start,
+  end
+) {
+  const startInput =
+    $("recordingTrimStart");
+
+  const endInput =
+    $("recordingTrimEnd");
+
+  const startTime =
+    $("recordingTrimStartTime");
+
+  const endTime =
+    $("recordingTrimEndTime");
+
+  const duration =
+    state.preview.duration ||
+    activePreviewItem?.duration ||
+    0;
+
+  start =
+    Math.max(
+      0,
+      Math.min(
+        start,
+        duration
+      )
+    );
+
+  end =
+    Math.max(
+      start,
+      Math.min(
+        end,
+        duration
+      )
+    );
+
+  if (startInput) {
+    startInput.value =
+      start;
+  }
+
+  if (endInput) {
+    endInput.value =
+      end;
+  }
+
+  if (startTime) {
+    startTime.textContent =
+      formatSeconds(
+        start
+      );
+  }
+
+  if (endTime) {
+    endTime.textContent =
+      formatSeconds(
+        end
+      );
+  }
+
+  if (
+    activePreviewItem
+  ) {
+    state.recording.trimStart =
+      start;
+
+    state.recording.trimEnd =
+      end;
+  }
+}
+
+
+$("recordingTrimStart")?.addEventListener(
+  "input",
+  event => {
+    const start =
+      Number(
+        event.target.value
+      );
+
+    const end =
+      Number(
+        $("recordingTrimEnd")
+          ?.value || 0
+      );
+
+    setTrimFields(
+      start,
+      Math.max(
+        start,
+        end
+      )
+    );
+  }
+);
+
+
+$("recordingTrimEnd")?.addEventListener(
+  "input",
+  event => {
+    const end =
+      Number(
+        event.target.value
+      );
+
+    const start =
+      Number(
+        $("recordingTrimStart")
+          ?.value || 0
+      );
+
+    setTrimFields(
+      start,
+      Math.max(
+        start,
+        end
+      )
+    );
+  }
+);
+
+
+bindClick(
+  "resetTrimBtn",
+  () => {
+    const duration =
+      activePreviewItem?.duration ||
+      state.preview.duration ||
+      0;
+
+    setTrimFields(
+      0,
+      duration
+    );
+  }
+);
+
+
+/* =========================================================
+   APPLY TRIM
+   ========================================================= */
+
+async function applyTrim() {
+  if (
+    !activePreviewItem
+  ) {
+    return;
+  }
+
+  if (
+    !activePreviewItem.blob
+  ) {
+    showToast(
+      "This recording is not available for trimming.",
+      "warning"
+    );
+
+    return;
+  }
+
+  const start =
+    Number(
+      $("recordingTrimStart")
+        ?.value || 0
+    );
+
+  const end =
+    Number(
+      $("recordingTrimEnd")
+        ?.value ||
+      activePreviewItem.duration ||
+      0
+    );
+
+  if (
+    end <= start
+  ) {
+    showToast(
+      "Trim end must be after trim start.",
+      "warning"
+    );
+
+    return;
+  }
+
+  showToast(
+    "Applying trim...",
+    "info"
+  );
+
+  try {
+    const trimmedBlob =
+      await trimVideoBlob(
+        activePreviewItem.blob,
+        start,
+        end
+      );
+
+    if (!trimmedBlob) {
+      throw new Error(
+        "Trim operation failed."
+      );
+    }
+
+    if (
+      activePreviewItem.url
+    ) {
+      try {
+        URL.revokeObjectURL(
+          activePreviewItem.url
+        );
+      } catch (_) {}
+    }
+
+    activePreviewItem.blob =
+      trimmedBlob;
+
+    activePreviewItem.url =
+      URL.createObjectURL(
+        trimmedBlob
+      );
+
+    activePreviewItem.duration =
+      end - start;
+
+    activePreviewItem.size =
+      trimmedBlob.size;
+
+    activePreviewItem.mimeType =
+      trimmedBlob.type;
+
+    state.recording.trimStart =
+      0;
+
+    state.recording.trimEnd =
+      end - start;
+
+    const video =
+      $("recordingPreviewVideo");
+
+    if (video) {
+      video.src =
+        activePreviewItem.url;
+
+      video.load();
+    }
+
+    updatePreviewMetadata(
+      activePreviewItem
+    );
+
+    setTrimFields(
+      0,
+      activePreviewItem.duration
+    );
+
+    updateRecordingHistoryItem(
+      activePreviewItem
+    );
+
+    showToast(
+      "Trim applied.",
+      "success"
+    );
+  } catch (error) {
+    console.error(error);
+
+    showToast(
+      "Trim is not supported in this browser version. Original recording kept.",
+      "warning"
+    );
+  }
+}
+
+
+bindClick(
+  "applyTrimBtn",
+  applyTrim
+);
+
+
+/* =========================================================
+   CLIENT-SIDE VIDEO TRIM
+   ========================================================= */
+
+async function trimVideoBlob(
+  blob,
+  start,
+  end
+) {
+  /*
+     MediaRecorder cannot directly cut an existing WebM
+     file frame-perfectly.
+
+     This implementation uses the browser video element
+     and MediaRecorder to create a new trimmed recording.
+  */
+
+  const sourceUrl =
+    URL.createObjectURL(
+      blob
+    );
+
+  const video =
+    document.createElement(
+      "video"
+    );
+
+  video.src =
+    sourceUrl;
+
+  video.muted =
+    true;
+
+  video.playsInline =
+    true;
+
+  await new Promise(
+    (resolve, reject) => {
+      video.onloadedmetadata =
+        resolve;
+
+      video.onerror =
+        reject;
+    }
+  );
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width =
+    state.recording.width ||
+    1280;
+
+  canvas.height =
+    state.recording.height ||
+    720;
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+  const stream =
+    canvas.captureStream(
+      state.recording.fps || 30
+    );
+
+  const mimeType =
+    getSupportedMimeType(
+      state.recording.format
+    ) ||
+    "video/webm";
+
+  const recorder =
+    new MediaRecorder(
+      stream,
+      {
+        mimeType
+      }
+    );
+
+  const chunks = [];
+
+  recorder.ondataavailable =
+    event => {
+      if (
+        event.data.size
+      ) {
+        chunks.push(
+          event.data
+        );
+      }
+    };
+
+  const stopped =
+    new Promise(
+      resolve => {
+        recorder.onstop =
+          resolve;
+      }
+    );
+
+  recorder.start();
+
+  video.currentTime =
+    start;
+
+  await new Promise(
+    resolve => {
+      video.onseeked =
+        resolve;
+    }
+  );
+
+  video.play().catch(() => {});
+
+  let animationId;
+
+  const draw =
+    () => {
+      if (
+        video.currentTime >=
+        end
+      ) {
+        cancelAnimationFrame(
+          animationId
         );
 
-      const stage =
-        document.getElementById(
-          "stage"
+        video.pause();
+
+        recorder.stop();
+
+        return;
+      }
+
+      ctx.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      animationId =
+        requestAnimationFrame(
+          draw
         );
+    };
+
+  draw();
+
+  await stopped;
+
+  URL.revokeObjectURL(
+    sourceUrl
+  );
+
+  return new Blob(
+    chunks,
+    {
+      type: mimeType
+    }
+  );
+}
+
+
+/* =========================================================
+   RENAME RECORDING
+   ========================================================= */
+
+bindClick(
+  "renameRecordingBtn",
+  () => {
+    if (
+      !activePreviewItem
+    ) {
+      return;
+    }
+
+    const input =
+      $("recordingNameInput");
+
+    const newName =
+      input?.value?.trim();
+
+    if (!newName) {
+      showToast(
+        "Enter a recording name.",
+        "warning"
+      );
+
+      return;
+    }
+
+    activePreviewItem.name =
+      sanitizeFileName(
+        newName
+      );
+
+    updateRecordingHistoryItem(
+      activePreviewItem
+    );
+
+    updatePreviewMetadata(
+      activePreviewItem
+    );
+
+    showToast(
+      "Recording renamed.",
+      "success"
+    );
+  }
+);
+
+
+/* =========================================================
+   UPDATE HISTORY ITEM
+   ========================================================= */
+
+function updateRecordingHistoryItem(
+  item
+) {
+  const index =
+    state.recordings.findIndex(
+      record =>
+        record.id ===
+        item.id
+    );
+
+  if (
+    index !== -1
+  ) {
+    state.recordings[index] =
+      item;
+  }
+
+  saveRecordingHistoryMetadata();
+
+  renderRecordingHistory();
+}
+
+
+/* =========================================================
+   DELETE RECORDING
+   ========================================================= */
+
+async function deleteActiveRecording() {
+  if (
+    !activePreviewItem
+  ) {
+    return;
+  }
+
+  const item =
+    activePreviewItem;
+
+  if (
+    item.url
+  ) {
+    try {
+      URL.revokeObjectURL(
+        item.url
+      );
+    } catch (_) {}
+  }
+
+  state.recordings =
+    state.recordings.filter(
+      record =>
+        record.id !==
+        item.id
+    );
+
+  saveRecordingHistoryMetadata();
+
+  renderRecordingHistory();
+
+  closeRecordingPreview();
+
+  showToast(
+    "Recording deleted.",
+    "success"
+  );
+}
+
+
+bindClick(
+  "deleteRecordingBtn",
+  deleteActiveRecording
+);
+
+
+/* =========================================================
+   RECORD AGAIN
+   ========================================================= */
+
+bindClick(
+  "recordAgainBtn",
+  () => {
+    closeRecordingPreview();
+
+    state.recording.trimStart =
+      0;
+
+    state.recording.trimEnd =
+      0;
+
+    startRecording();
+  }
+);
+
+
+/* =========================================================
+   DOWNLOAD RECORDING
+   ========================================================= */
+
+function downloadRecording(
+  item
+) {
+  if (
+    !item
+  ) {
+    return;
+  }
+
+  if (
+    !item.blob
+  ) {
+    showToast(
+      "This recording is no longer available in this browser session.",
+      "warning"
+    );
+
+    return;
+  }
+
+  const extension =
+    item.mimeType?.includes(
+      "mp4"
+    )
+      ? "mp4"
+      : "webm";
+
+  const filename =
+    `${sanitizeFileName(
+      item.name
+    )}.${extension}`;
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  link.href =
+    item.url ||
+    URL.createObjectURL(
+      item.blob
+    );
+
+  link.download =
+    filename;
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  link.remove();
+
+  showToast(
+    "Download started.",
+    "success"
+  );
+}
+
+
+bindClick(
+  "downloadRecordingBtn",
+  () => {
+    downloadRecording(
+      activePreviewItem
+    );
+  }
+);
+
+
+/* =========================================================
+   RECORDING HISTORY UI
+   ========================================================= */
+
+function renderRecordingHistory() {
+  const list =
+    $("recordingHistoryList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (
+    !state.recordings.length
+  ) {
+    list.innerHTML = `
+      <div class="empty-history">
+        <div class="empty-history-icon">🎬</div>
+        <div>No recordings yet</div>
+        <small>Your recordings will appear here.</small>
+      </div>
+    `;
+
+    return;
+  }
+
+  state.recordings.forEach(
+    item => {
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "recording-history-item";
+
+      card.innerHTML = `
+        <div class="recording-history-main">
+
+          <div class="recording-history-icon">
+            ▶
+          </div>
+
+          <div class="recording-history-info">
+
+            <strong>
+              ${escapeHtml(
+                item.name
+              )}
+            </strong>
+
+            <span>
+              ${formatSeconds(
+                item.duration || 0
+              )}
+              ·
+              ${formatBytes(
+                item.size || 0
+              )}
+            </span>
+
+            <small>
+              ${formatDate(
+                item.createdAt
+              )}
+            </small>
+
+          </div>
+
+        </div>
+
+        <div class="recording-history-actions">
+
+          <button
+            type="button"
+            class="history-open-btn"
+          >
+            Open
+          </button>
+
+          <button
+            type="button"
+            class="history-download-btn"
+          >
+            Download
+          </button>
+
+          <button
+            type="button"
+            class="history-delete-btn danger"
+          >
+            Delete
+          </button>
+
+        </div>
+      `;
+
+      card
+        .querySelector(
+          ".history-open-btn"
+        )
+        ?.addEventListener(
+          "click",
+          () => {
+            if (!item.blob) {
+              showToast(
+                "This recording is not available after page reload.",
+                "warning"
+              );
+
+              return;
+            }
+
+            openRecordingPreview(
+              item
+            );
+          }
+        );
+
+      card
+        .querySelector(
+          ".history-download-btn"
+        )
+        ?.addEventListener(
+          "click",
+          () => {
+            downloadRecording(
+              item
+            );
+          }
+        );
+
+      card
+        .querySelector(
+          ".history-delete-btn"
+        )
+        ?.addEventListener(
+          "click",
+          () => {
+            deleteHistoryItem(
+              item.id
+            );
+          }
+        );
+
+      list.appendChild(
+        card
+      );
+    }
+  );
+}
+
+
+/* =========================================================
+   DELETE HISTORY ITEM
+   ========================================================= */
+
+function deleteHistoryItem(
+  id
+) {
+  const item =
+    state.recordings.find(
+      record =>
+        record.id === id
+    );
+
+  if (!item) return;
+
+  if (
+    item.url
+  ) {
+    try {
+      URL.revokeObjectURL(
+        item.url
+      );
+    } catch (_) {}
+  }
+
+  state.recordings =
+    state.recordings.filter(
+      record =>
+        record.id !== id
+    );
+
+  saveRecordingHistoryMetadata();
+
+  renderRecordingHistory();
+
+  showToast(
+    "Recording removed from history.",
+    "success"
+  );
+}
+
+
+/* =========================================================
+   CLEAR HISTORY
+   ========================================================= */
+
+bindClick(
+  "clearRecordingHistoryBtn",
+  () => {
+    if (
+      !state.recordings.length
+    ) {
+      return;
+    }
+
+    state.recordings.forEach(
+      item => {
+        if (item.url) {
+          try {
+            URL.revokeObjectURL(
+              item.url
+            );
+          } catch (_) {}
+        }
+      }
+    );
+
+    state.recordings = [];
+
+    localStorage.removeItem(
+      RECORDINGS_KEY
+    );
+
+    renderRecordingHistory();
+
+    showToast(
+      "Recording history cleared.",
+      "success"
+    );
+  }
+);
+
+
+/* =========================================================
+   FORMAT HELPERS
+   ========================================================= */
+
+function formatSeconds(
+  seconds
+) {
+  if (
+    !Number.isFinite(
+      Number(seconds)
+    )
+  ) {
+    return "00:00";
+  }
+
+  const total =
+    Math.max(
+      0,
+      Math.floor(
+        Number(seconds)
+      )
+    );
+
+  const hours =
+    Math.floor(
+      total / 3600
+    );
+
+  const minutes =
+    Math.floor(
+      (total % 3600) /
+        60
+    );
+
+  const secs =
+    total % 60;
+
+  if (hours > 0) {
+    return [
+      String(hours).padStart(
+        2,
+        "0"
+      ),
+      String(minutes).padStart(
+        2,
+        "0"
+      ),
+      String(secs).padStart(
+        2,
+        "0"
+      )
+    ].join(":");
+  }
+
+  return [
+    String(minutes).padStart(
+      2,
+      "0"
+    ),
+    String(secs).padStart(
+      2,
+      "0"
+    )
+  ].join(":");
+}
+
+
+function formatBytes(
+  bytes
+) {
+  if (
+    !bytes
+  ) {
+    return "0 B";
+  }
+
+  const units =
+    [
+      "B",
+      "KB",
+      "MB",
+      "GB"
+    ];
+
+  const index =
+    Math.floor(
+      Math.log(bytes) /
+        Math.log(1024)
+    );
+
+  return (
+    (
+      bytes /
+      Math.pow(
+        1024,
+        index
+      )
+    ).toFixed(
+      index === 0
+        ? 0
+        : 1
+    ) +
+    " " +
+    units[
+      Math.min(
+        index,
+        units.length - 1
+      )
+    ]
+  );
+}
+
+
+function formatDate(
+  value
+) {
+  try {
+    return new Date(
+      value
+    ).toLocaleString();
+  } catch (_) {
+    return "";
+  }
+}
+
+
+function escapeHtml(
+  value
+) {
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
+
+
+/* =========================================================
+   TELEPROMPTER
+   ========================================================= */
+
+let teleprompterAnimation =
+  null;
+
+
+function openTeleprompter() {
+  const modal =
+    $("teleprompterModal");
+
+  if (!modal) return;
+
+  modal.classList.add(
+    "open"
+  );
+
+  updateTeleprompterPreview();
+}
+
+
+function closeTeleprompter() {
+  const modal =
+    $("teleprompterModal");
+
+  if (!modal) return;
+
+  modal.classList.remove(
+    "open"
+  );
+}
+
+
+bindClick(
+  "openTeleprompterTopBtn",
+  openTeleprompter
+);
+
+bindClick(
+  "openTeleprompterBtn",
+  openTeleprompter
+);
+
+bindClick(
+  "openTeleprompterSide",
+  openTeleprompter
+);
+
+
+bindClick(
+  "closeTeleprompterBtn",
+  closeTeleprompter
+);
+
+
+$("teleprompterText")?.addEventListener(
+  "input",
+  event => {
+    state.teleprompter.text =
+      event.target.value;
+
+    updateTeleprompterPreview();
+  }
+);
+
+
+$("teleprompterSpeed")?.addEventListener(
+  "input",
+  event => {
+    state.teleprompter.speed =
+      Number(
+        event.target.value
+      );
+  }
+);
+
+
+$("teleprompterFontSize")?.addEventListener(
+  "input",
+  event => {
+    state.teleprompter.fontSize =
+      Number(
+        event.target.value
+      );
+
+    updateTeleprompterPreview();
+  }
+);
+
+
+$("teleprompterOpacity")?.addEventListener(
+  "input",
+  event => {
+    state.teleprompter.opacity =
+      Number(
+        event.target.value
+      );
+
+    updateTeleprompterPreview();
+  }
+);
+
+
+$("includeTeleprompterInRecording")
+  ?.addEventListener(
+    "change",
+    event => {
+      state.teleprompter
+        .includeInRecording =
+        event.target.checked;
+
+      state.settings
+        .showTeleprompterRecording =
+        event.target.checked;
+
+      saveSettings();
+
+      renderCompositionFrame();
+    }
+  );
+
+
+function updateTeleprompterPreview() {
+  const preview =
+    $("teleprompterPreview");
+
+  if (!preview) return;
+
+  preview.textContent =
+    state.teleprompter.text ||
+    "Teleprompter preview";
+
+  preview.style.fontSize =
+    `${state.teleprompter.fontSize}px`;
+
+  preview.style.opacity =
+    state.teleprompter.opacity;
+}
+
+
+function playTeleprompter() {
+  state.teleprompter.playing =
+    true;
+
+  runTeleprompterLoop();
+}
+
+
+function pauseTeleprompter() {
+  state.teleprompter.playing =
+    false;
+
+  if (
+    teleprompterAnimation
+  ) {
+    cancelAnimationFrame(
+      teleprompterAnimation
+    );
+
+    teleprompterAnimation =
+      null;
+  }
+}
+
+
+function runTeleprompterLoop() {
+  if (
+    !state.teleprompter.playing
+  ) {
+    return;
+  }
+
+  const preview =
+    $("teleprompterPreview");
+
+  if (preview) {
+    preview.scrollTop +=
+      Math.max(
+        0.2,
+        state.teleprompter.speed /
+          10
+      );
+  }
+
+  teleprompterAnimation =
+    requestAnimationFrame(
+      runTeleprompterLoop
+    );
+}
+
+
+bindClick(
+  "teleprompterPlayBtn",
+  playTeleprompter
+);
+
+bindClick(
+  "teleprompterPauseBtn",
+  pauseTeleprompter
+);
+
+
+bindClick(
+  "teleprompterResetBtn",
+  () => {
+    const preview =
+      $("teleprompterPreview");
+
+    if (preview) {
+      preview.scrollTop = 0;
+    }
+  }
+);
+
+
+bindClick(
+  "teleprompterSaveBtn",
+  () => {
+    localStorage.setItem(
+      "personalCourseStudioTeleprompterV39",
+      JSON.stringify(
+        state.teleprompter
+      )
+    );
+
+    showToast(
+      "Teleprompter saved.",
+      "success"
+    );
+  }
+);
+
+
+/* =========================================================
+   STUDENTS
+   ========================================================= */
+
+function renderStudents() {
+  const list =
+    $("studentsList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (
+    !state.students.length
+  ) {
+    list.innerHTML = `
+      <div class="empty-students">
+        No students added.
+      </div>
+    `;
+
+    return;
+  }
+
+  state.students.forEach(
+    (student, index) => {
+      const item =
+        document.createElement(
+          "div"
+        );
+
+      item.className =
+        "student-item";
+
+      item.innerHTML = `
+        <div class="student-avatar">
+          ${escapeHtml(
+            student.name
+              .charAt(0)
+              .toUpperCase()
+          )}
+        </div>
+
+        <div class="student-info">
+          <strong>
+            ${escapeHtml(
+              student.name
+            )}
+          </strong>
+
+          <span>
+            Online
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="student-remove"
+          aria-label="Remove student"
+        >
+          ×
+        </button>
+      `;
+
+      item
+        .querySelector(
+          ".student-remove"
+        )
+        ?.addEventListener(
+          "click",
+          () => {
+            state.students.splice(
+              index,
+              1
+            );
+
+            saveStudents();
+
+            renderStudents();
+          }
+        );
+
+      list.appendChild(
+        item
+      );
+    }
+  );
+}
+
+
+bindClick(
+  "addStudentBtn",
+  () => {
+    const modal =
+      $("studentModal");
+
+    if (!modal) return;
+
+    modal.classList.add(
+      "open"
+    );
+  }
+);
+
+
+bindClick(
+  "closeStudentModalBtn",
+  () => {
+    $("studentModal")
+      ?.classList.remove(
+        "open"
+      );
+  }
+);
+
+
+bindClick(
+  "cancelStudentBtn",
+  () => {
+    $("studentModal")
+      ?.classList.remove(
+        "open"
+      );
+  }
+);
+
+
+bindClick(
+  "saveStudentBtn",
+  () => {
+    const input =
+      $("studentNameInput");
+
+    const name =
+      input?.value?.trim();
+
+    if (!name) {
+      showToast(
+        "Enter student name.",
+        "warning"
+      );
+
+      return;
+    }
+
+    state.students.push({
+      id:
+        `student-${Date.now()}`,
+
+      name,
+
+      online: true
+    });
+
+    saveStudents();
+
+    renderStudents();
+
+    if (input) {
+      input.value = "";
+    }
+
+    $("studentModal")
+      ?.classList.remove(
+        "open"
+      );
+
+    showToast(
+      "Student added.",
+      "success"
+    );
+  }
+);
+
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+function openSettings() {
+  const modal =
+    $("settingsModal");
+
+  if (!modal) return;
+
+  const brandInput =
+    $("brandNameInput");
+
+  if (brandInput) {
+    brandInput.value =
+      state.settings.brandName;
+  }
+
+  if (
+    $("settingsRecordingQuality")
+  ) {
+    $("settingsRecordingQuality")
+      .value =
+      state.settings.recordingQuality;
+  }
+
+  if (
+    $("settingsRecordingFps")
+  ) {
+    $("settingsRecordingFps")
+      .value =
+      state.settings.recordingFps;
+  }
+
+  if (
+    $("settingsAutoStartTeleprompter")
+  ) {
+    $("settingsAutoStartTeleprompter")
+      .checked =
+      Boolean(
+        state.settings
+          .autoStartTeleprompter
+      );
+  }
+
+  if (
+    $("settingsShowTeleprompterRecording")
+  ) {
+    $("settingsShowTeleprompterRecording")
+      .checked =
+      Boolean(
+        state.settings
+          .showTeleprompterRecording
+      );
+  }
+
+  modal.classList.add(
+    "open"
+  );
+}
+
+
+function closeSettings() {
+  $("settingsModal")
+    ?.classList.remove(
+      "open"
+    );
+}
+
+
+bindClick(
+  "settingsBtn",
+  openSettings
+);
+
+bindClick(
+  "closeSettingsBtn",
+  closeSettings
+);
+
+bindClick(
+  "closeSettingsFooterBtn",
+  closeSettings
+);
+
+
+bindClick(
+  "saveSettingsBtn",
+  () => {
+    const brandInput =
+      $("brandNameInput");
+
+    if (brandInput) {
+      state.settings.brandName =
+        brandInput.value.trim() ||
+        "SNK Mentor Studio";
+    }
+
+    state.settings
+      .autoStartTeleprompter =
+      Boolean(
+        $("settingsAutoStartTeleprompter")
+          ?.checked
+      );
+
+    state.settings
+      .showTeleprompterRecording =
+      Boolean(
+        $("settingsShowTeleprompterRecording")
+          ?.checked
+      );
+
+    state.teleprompter
+      .includeInRecording =
+      state.settings
+        .showTeleprompterRecording;
+
+    if (
+      $("includeTeleprompterInRecording")
+    ) {
+      $("includeTeleprompterInRecording")
+        .checked =
+        state.teleprompter
+          .includeInRecording;
+    }
+
+    saveSettings();
+
+    updateBrandUI();
+
+    closeSettings();
+
+    showToast(
+      "Settings saved.",
+      "success"
+    );
+  }
+);
+
+
+function updateBrandUI() {
+  if (!brandBadge) return;
+
+  const name =
+    state.settings.brandName ||
+    "SNK Mentor Studio";
+
+  brandBadge.textContent =
+    name;
+}
+
+
+/* =========================================================
+   FULLSCREEN
+   ========================================================= */
+
+async function requestFullscreen(
+  element
+) {
+  if (!element) return;
+
+  try {
+    if (
+      document.fullscreenElement
+    ) {
+      await document.exitFullscreen();
+
+      return;
+    }
+
+    await element.requestFullscreen();
+  } catch (error) {
+    console.warn(error);
+
+    showToast(
+      "Fullscreen is not available.",
+      "warning"
+    );
+  }
+}
+
+
+bindClick(
+  "fullscreenStageBtn",
+  () => {
+    requestFullscreen(
+      $("stageShell") ||
+        stage
+    );
+  }
+);
+
+
+bindClick(
+  "fullscreenStudioBtn",
+  () => {
+    requestFullscreen(
+      document.documentElement
+    );
+  }
+);
+
+
+/* =========================================================
+   SHORTCUTS
+   ========================================================= */
+
+function openShortcuts() {
+  $("shortcutsModal")
+    ?.classList.add(
+      "open"
+    );
+}
+
+
+function closeShortcuts() {
+  $("shortcutsModal")
+    ?.classList.remove(
+      "open"
+    );
+}
+
+
+bindClick(
+  "openShortcutsBtn",
+  openShortcuts
+);
+
+bindClick(
+  "closeShortcutsBtn",
+  closeShortcuts
+);
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+    if (
+      event.target.matches(
+        "input, textarea, select"
+      )
+    ) {
+      return;
+    }
+
+    if (
+      event.code ===
+      "Space"
+    ) {
+      event.preventDefault();
 
       if (
-        !mentor ||
-        !handle ||
-        !stage
+        state.recording.active
+      ) {
+        if (
+          state.recording.paused
+        ) {
+          resumeRecording();
+        } else {
+          pauseRecording();
+        }
+      } else {
+        mainVideo?.paused
+          ? mainVideo.play()
+          : mainVideo.pause();
+      }
+    }
+
+    if (
+      event.key.toLowerCase() ===
+      "r"
+    ) {
+      if (
+        state.recording.active
+      ) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    if (
+      event.key.toLowerCase() ===
+      "f"
+    ) {
+      requestFullscreen(
+        stage
+      );
+    }
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+      closeSettings();
+      closeShortcuts();
+      closeTeleprompter();
+      closeRecordingPreview();
+    }
+  }
+);
+
+
+/* =========================================================
+   MENTOR CARD DRAG
+   ========================================================= */
+
+(function setupMentorDrag() {
+  if (
+    !mentorCard ||
+    !stage
+  ) {
+    return;
+  }
+
+  let dragging = false;
+
+  let offsetX = 0;
+  let offsetY = 0;
+
+  mentorCard.addEventListener(
+    "pointerdown",
+    event => {
+      if (
+        event.target.closest(
+          "#mentorResize"
+        )
       ) {
         return;
       }
 
+      dragging = true;
 
-      let resizing =
-        false;
-
-      let startX =
-        0;
-
-      let startY =
-        0;
-
-      let startWidth =
-        0;
-
-      let startHeight =
-        0;
-
-
-      function getPoint(event) {
-
-        if (
-          event.touches &&
-          event.touches.length
-        ) {
-
-          return event.touches[0];
-        }
-
-        return event;
-      }
-
-
-      function startResize(event) {
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-        const point =
-          getPoint(event);
-
-        const rect =
-          mentor.getBoundingClientRect();
-
-        resizing =
-          true;
-
-        startX =
-          point.clientX;
-
-        startY =
-          point.clientY;
-
-        startWidth =
-          rect.width;
-
-        startHeight =
-          rect.height;
-
-        document.body.style.userSelect =
-          "none";
-      }
-
-
-      function resize(event) {
-
-        if (!resizing) {
-          return;
-        }
-
-        event.preventDefault();
-
-        const point =
-          getPoint(event);
-
-        const stageRect =
-          stage.getBoundingClientRect();
-
-        const dx =
-          point.clientX -
-          startX;
-
-        const dy =
-          point.clientY -
-          startY;
-
-        const aspect =
-          startWidth /
-          startHeight;
-
-        let width =
-          startWidth +
-          dx;
-
-        let height =
-          startHeight +
-          dy;
-
-        /*
-         * Keep reasonable aspect ratio.
-         */
-
-        if (
-          Math.abs(dx) >
-          Math.abs(dy)
-        ) {
-
-          height =
-            width /
-            aspect;
-
-        } else {
-
-          width =
-            height *
-            aspect;
-        }
-
-
-        const minWidth =
-          130;
-
-        const minHeight =
-          90;
-
-        const maxWidth =
-          stageRect.width *
-          .45;
-
-        const maxHeight =
-          stageRect.height *
-          .65;
-
-
-        width =
-          Math.max(
-            minWidth,
-            Math.min(
-              width,
-              maxWidth
-            )
-          );
-
-        height =
-          Math.max(
-            minHeight,
-            Math.min(
-              height,
-              maxHeight
-            )
-          );
-
-
-        mentor.style.width =
-          `${width}px`;
-
-        mentor.style.height =
-          `${height}px`;
-      }
-
-
-      function stopResize() {
-
-        resizing =
-          false;
-
-        document.body.style.userSelect =
-          "";
-      }
-
-
-      handle.addEventListener(
-        "mousedown",
-        startResize
+      mentorCard.setPointerCapture(
+        event.pointerId
       );
 
-      handle.addEventListener(
-        "touchstart",
-        startResize,
-        {
-          passive: false
-        }
-      );
+      const rect =
+        mentorCard.getBoundingClientRect();
 
-      window.addEventListener(
-        "mousemove",
-        resize
-      );
+      offsetX =
+        event.clientX -
+        rect.left;
 
-      window.addEventListener(
-        "touchmove",
-        resize,
-        {
-          passive: false
-        }
-      );
-
-      window.addEventListener(
-        "mouseup",
-        stopResize
-      );
-
-      window.addEventListener(
-        "touchend",
-        stopResize
-      );
-
-    })();
-
-  </script>
+      offsetY =
+        event.clientY -
+        rect.top;
+    }
+  );
 
 
-  <!-- =========================================================
-       MEDIAPIPE
-       ========================================================= -->
+  mentorCard.addEventListener(
+    "pointermove",
+    event => {
+      if (!dragging) return;
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
-  ></script>
+      const stageRect =
+        stage.getBoundingClientRect();
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
-  ></script>
+      let left =
+        event.clientX -
+        stageRect.left -
+        offsetX;
 
+      let top =
+        event.clientY -
+        stageRect.top -
+        offsetY;
 
-  <!-- =========================================================
-       MAIN JAVASCRIPT
-       ========================================================= -->
-
-  <script src="script.js"></script>
-
-
-  <!-- =========================================================
-       STEP 3.9 AUDIO VISUALIZER
-       ========================================================= -->
-
-  <script>
-
-    /*
-     * This visualizer is intentionally independent from
-     * the main recording engine.
-     *
-     * It becomes active when an analyser is exposed by
-     * script.js.
-     */
-
-    (() => {
-
-      const canvas =
-        document.getElementById(
-          "micWaveformCanvas"
-        );
-
-      if (!canvas) {
-        return;
-      }
-
-      const ctx =
-        canvas.getContext("2d");
-
-      const bars =
-        Array.from(
-          document.querySelectorAll(
-            ".audio-meter-bar"
+      left =
+        Math.max(
+          0,
+          Math.min(
+            stageRect.width -
+              mentorCard.offsetWidth,
+            left
           )
         );
 
-      function resize() {
-
-        const rect =
-          canvas.getBoundingClientRect();
-
-        const ratio =
-          window.devicePixelRatio ||
-          1;
-
-        canvas.width =
-          Math.max(
-            1,
-            Math.round(
-              rect.width *
-              ratio
-            )
-          );
-
-        canvas.height =
-          Math.max(
-            1,
-            Math.round(
-              rect.height *
-              ratio
-            )
-          );
-
-        ctx.setTransform(
-          ratio,
+      top =
+        Math.max(
           0,
-          0,
-          ratio,
-          0,
-          0
-        );
-      }
-
-
-      function draw() {
-
-        const rect =
-          canvas.getBoundingClientRect();
-
-        const width =
-          rect.width;
-
-        const height =
-          rect.height;
-
-        ctx.clearRect(
-          0,
-          0,
-          width,
-          height
-        );
-
-
-        /*
-         * Waiting state
-         */
-
-        const analyser =
-          window.CourseStudio &&
-          window.CourseStudio.getAnalyser
-            ? window.CourseStudio.getAnalyser()
-            : null;
-
-
-        if (!analyser) {
-
-          ctx.strokeStyle =
-            "rgba(77,163,255,.18)";
-
-          ctx.lineWidth =
-            1;
-
-          ctx.beginPath();
-
-          ctx.moveTo(
-            0,
-            height / 2
-          );
-
-          ctx.lineTo(
-            width,
-            height / 2
-          );
-
-          ctx.stroke();
-
-
-          bars.forEach(bar => {
-
-            bar.classList.remove(
-              "active",
-              "hot",
-              "clip"
-            );
-
-          });
-
-
-          requestAnimationFrame(
-            draw
-          );
-
-          return;
-        }
-
-
-        const data =
-          new Uint8Array(
-            analyser.fftSize
-          );
-
-        analyser.getByteTimeDomainData(
-          data
-        );
-
-
-        ctx.beginPath();
-
-        const slice =
-          width /
-          data.length;
-
-        let x =
-          0;
-
-
-        for (
-          let i = 0;
-          i < data.length;
-          i++
-        ) {
-
-          const value =
-            data[i] /
-            128;
-
-          const y =
-            value *
-            height /
-            2;
-
-          if (i === 0) {
-
-            ctx.moveTo(
-              x,
-              y
-            );
-
-          } else {
-
-            ctx.lineTo(
-              x,
-              y
-            );
-          }
-
-          x += slice;
-        }
-
-
-        ctx.strokeStyle =
-          "#4da3ff";
-
-        ctx.lineWidth =
-          1.5;
-
-        ctx.stroke();
-
-
-        /*
-         * Meter
-         */
-
-        let sum =
-          0;
-
-        for (
-          let i = 0;
-          i < data.length;
-          i++
-        ) {
-
-          const normalized =
-            (
-              data[i] -
-              128
-            ) / 128;
-
-          sum +=
-            normalized *
-            normalized;
-        }
-
-        const rms =
-          Math.sqrt(
-            sum /
-            data.length
-          );
-
-        const level =
           Math.min(
-            1,
-            rms * 4
-          );
-
-        const activeBars =
-          Math.round(
-            level *
-            bars.length
-          );
-
-
-        bars.forEach(
-          (bar, index) => {
-
-            bar.classList.remove(
-              "active",
-              "hot",
-              "clip"
-            );
-
-            if (
-              index <
-              activeBars
-            ) {
-
-              if (
-                index >=
-                bars.length * .9
-              ) {
-
-                bar.classList.add(
-                  "clip"
-                );
-
-              } else if (
-                index >=
-                bars.length * .72
-              ) {
-
-                bar.classList.add(
-                  "hot"
-                );
-
-              } else {
-
-                bar.classList.add(
-                  "active"
-                );
-              }
-            }
-
-          }
+            stageRect.height -
+              mentorCard.offsetHeight,
+            top
+          )
         );
 
+      mentorCard.style.left =
+        `${left}px`;
 
-        requestAnimationFrame(
-          draw
+      mentorCard.style.top =
+        `${top}px`;
+
+      mentorCard.style.right =
+        "auto";
+
+      mentorCard.style.bottom =
+        "auto";
+    }
+  );
+
+
+  const stopDrag =
+    event => {
+      dragging = false;
+
+      try {
+        mentorCard.releasePointerCapture(
+          event.pointerId
         );
-      }
+      } catch (_) {}
+
+      renderCompositionFrame();
+    };
+
+  mentorCard.addEventListener(
+    "pointerup",
+    stopDrag
+  );
+
+  mentorCard.addEventListener(
+    "pointercancel",
+    stopDrag
+  );
+})();
 
 
-      window.addEventListener(
-        "resize",
-        resize
+/* =========================================================
+   TELEPROMPTER MINI PREVIEW
+   ========================================================= */
+
+function updateTeleprompterMiniPreview() {
+  const preview =
+    $("teleprompterMiniPreview");
+
+  if (!preview) return;
+
+  const text =
+    state.teleprompter.text ||
+    "No teleprompter text yet.";
+
+  preview.textContent =
+    text.slice(
+      0,
+      180
+    );
+}
+
+
+/* =========================================================
+   RECORDING SOURCE BADGES
+   ========================================================= */
+
+function updateStageBadges() {
+  const resolution =
+    $("stageResolutionBadge");
+
+  const fps =
+    $("stageFpsBadge");
+
+  const source =
+    $("stageSourceBadge");
+
+  if (resolution) {
+    resolution.textContent =
+      `${Math.round(
+        state.recording.width
+      )}×${Math.round(
+        state.recording.height
+      )}`;
+  }
+
+  if (fps) {
+    fps.textContent =
+      `${state.recording.fps} FPS`;
+  }
+
+  if (source) {
+    if (
+      state.screenStream
+    ) {
+      source.textContent =
+        "SCREEN";
+    } else if (
+      mainVideo?.style.display !==
+      "none" &&
+      mainVideo?.src
+    ) {
+      source.textContent =
+        "VIDEO";
+    } else if (
+      state.mainImage
+    ) {
+      source.textContent =
+        "IMAGE";
+    } else {
+      source.textContent =
+        "STUDIO";
+    }
+  }
+}
+
+
+/* =========================================================
+   INIT RECORDING SETTINGS
+   ========================================================= */
+
+function initializeRecordingSettings() {
+  applyRecordingQuality(
+    state.settings.recordingQuality ||
+      "1080"
+  );
+
+  applyRecordingFps(
+    state.settings.recordingFps ||
+      "30"
+  );
+
+  state.recording.format =
+    $("recordingFormat")
+      ?.value ||
+    "webm-vp9";
+
+  if (
+    $("recordingQuality")
+  ) {
+    $("recordingQuality").value =
+      state.settings.recordingQuality;
+  }
+
+  if (
+    $("recordingQualitySide")
+  ) {
+    $("recordingQualitySide").value =
+      state.settings.recordingQuality;
+  }
+
+  if (
+    $("recordingFps")
+  ) {
+    $("recordingFps").value =
+      state.settings.recordingFps;
+  }
+
+  if (
+    $("recordingFpsSide")
+  ) {
+    $("recordingFpsSide").value =
+      state.settings.recordingFps;
+  }
+}
+
+
+/* =========================================================
+   LOAD TELEPROMPTER
+   ========================================================= */
+
+function loadTeleprompterState() {
+  try {
+    const raw =
+      localStorage.getItem(
+        "personalCourseStudioTeleprompterV39"
       );
 
-      resize();
-      draw();
+    if (raw) {
+      state.teleprompter =
+        {
+          ...state.teleprompter,
+          ...JSON.parse(raw)
+        };
+    }
+  } catch (error) {
+    console.warn(error);
+  }
 
-    })();
+  const textarea =
+    $("teleprompterText");
 
-  </script>
+  if (textarea) {
+    textarea.value =
+      state.teleprompter.text;
+  }
 
-</body>
-</html>
+  if (
+    $("teleprompterSpeed")
+  ) {
+    $("teleprompterSpeed").value =
+      state.teleprompter.speed;
+  }
+
+  if (
+    $("teleprompterFontSize")
+  ) {
+    $("teleprompterFontSize").value =
+      state.teleprompter.fontSize;
+  }
+
+  if (
+    $("teleprompterOpacity")
+  ) {
+    $("teleprompterOpacity").value =
+      state.teleprompter.opacity;
+  }
+
+  if (
+    $("includeTeleprompterInRecording")
+  ) {
+    $("includeTeleprompterInRecording")
+      .checked =
+      Boolean(
+        state.teleprompter
+          .includeInRecording
+      );
+  }
+
+  updateTeleprompterPreview();
+  updateTeleprompterMiniPreview();
+}
+
+
+/* =========================================================
+   MAIN AUDIO CHECKBOX INITIALIZATION
+   ========================================================= */
+
+function initializeAudioControls() {
+  const mainVolume =
+    $("mainVideoVolume");
+
+  const micVolume =
+    $("micVolume");
+
+  if (mainVolume) {
+    updateMainVolume(
+      mainVolume.value
+    );
+  }
+
+  if (micVolume) {
+    updateMicVolume(
+      micVolume.value
+    );
+  }
+
+  state.audio.micEnabled =
+    $("micEnabled")
+      ? $("micEnabled").checked
+      : true;
+
+  state.audio.micMonitor =
+    $("micMonitor")
+      ? $("micMonitor").checked
+      : false;
+}
+
+
+/* =========================================================
+   WINDOW RESIZE
+   ========================================================= */
+
+window.addEventListener(
+  "resize",
+  () => {
+    renderCompositionFrame();
+  }
+);
+
+
+/* =========================================================
+   PAGE VISIBILITY
+   ========================================================= */
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (
+      document.hidden
+    ) {
+      return;
+    }
+
+    renderCompositionFrame();
+  }
+);
+
+
+/* =========================================================
+   RECORDING PREVIEW MODAL CLICK OUTSIDE
+   ========================================================= */
+
+$("recordingPreviewModal")
+  ?.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        closeRecordingPreview();
+      }
+    }
+  );
+
+
+$("settingsModal")
+  ?.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        closeSettings();
+      }
+    }
+  );
+
+
+$("teleprompterModal")
+  ?.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        closeTeleprompter();
+      }
+    }
+  );
+
+
+$("studentModal")
+  ?.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        event.currentTarget.classList.remove(
+          "open"
+        );
+      }
+    }
+  );
+
+
+/* =========================================================
+   RECORDING PREVIEW NAME INPUT
+   ========================================================= */
+
+$("recordingNameInput")
+  ?.addEventListener(
+    "keydown",
+    event => {
+      if (
+        event.key ===
+        "Enter"
+      ) {
+        event.preventDefault();
+
+        $("renameRecordingBtn")
+          ?.click();
+      }
+    }
+  );
+
+
+/* =========================================================
+   UPDATE RECORDING PREVIEW FILENAME
+   ========================================================= */
+
+function syncRecordingNameInputs() {
+  const main =
+    $("recordingFileName");
+
+  const side =
+    $("recordingFileNameSide");
+
+  if (main && side) {
+    main.addEventListener(
+      "input",
+      () => {
+        side.value =
+          main.value;
+      }
+    );
+
+    side.addEventListener(
+      "input",
+      () => {
+        main.value =
+          side.value;
+      }
+    );
+  }
+}
+
+
+/* =========================================================
+   RECORDING FORMAT SYNC
+   ========================================================= */
+
+function syncRecordingFormatInputs() {
+  const main =
+    $("recordingFormat");
+
+  const side =
+    $("recordingFormatSide");
+
+  if (!main || !side) return;
+
+  main.addEventListener(
+    "change",
+    () => {
+      side.value =
+        main.value;
+    }
+  );
+
+  side.addEventListener(
+    "change",
+    () => {
+      main.value =
+        side.value;
+    }
+  );
+}
+
+
+/* =========================================================
+   RECORDING QUALITY/FPS SYNC
+   ========================================================= */
+
+function syncRecordingControls() {
+  const quality =
+    $("recordingQuality");
+
+  const qualitySide =
+    $("recordingQualitySide");
+
+  const fps =
+    $("recordingFps");
+
+  const fpsSide =
+    $("recordingFpsSide");
+
+  quality?.addEventListener(
+    "change",
+    () => {
+      if (qualitySide) {
+        qualitySide.value =
+          quality.value;
+      }
+    }
+  );
+
+  qualitySide?.addEventListener(
+    "change",
+    () => {
+      if (quality) {
+        quality.value =
+          qualitySide.value;
+      }
+    }
+  );
+
+  fps?.addEventListener(
+    "change",
+    () => {
+      if (fpsSide) {
+        fpsSide.value =
+          fps.value;
+      }
+    }
+  );
+
+  fpsSide?.addEventListener(
+    "change",
+    () => {
+      if (fps) {
+        fps.value =
+          fpsSide.value;
+      }
+    }
+  );
+}
+
+
+/* =========================================================
+   STAGE SOURCE EVENTS
+   ========================================================= */
+
+mainVideo?.addEventListener(
+  "loadeddata",
+  () => {
+    updateStageBadges();
+    renderCompositionFrame();
+  }
+);
+
+
+screenCaptureVideo?.addEventListener(
+  "loadeddata",
+  () => {
+    updateStageBadges();
+    renderCompositionFrame();
+  }
+);
+
+
+/* =========================================================
+   GLOBAL API
+   ========================================================= */
+
+window.CourseStudio = {
+  state,
+
+  startCamera,
+  stopCamera,
+
+  startScreenCapture,
+  stopScreenCapture,
+
+  startRecording,
+  pauseRecording,
+  resumeRecording,
+  stopRecording,
+
+  openTeleprompter,
+  closeTeleprompter,
+
+  openSettings,
+  closeSettings,
+
+  renderCompositionFrame,
+
+  setBackgroundMode,
+
+  openRecordingPreview,
+
+  closeRecordingPreview,
+
+  downloadRecording,
+
+  renderRecordingHistory
+};
+
+
+/* =========================================================
+   INIT
+   ========================================================= */
+
+function initializeStudio() {
+  loadSettings();
+
+  loadStudents();
+
+  loadRecordingHistoryMetadata();
+
+  loadTeleprompterState();
+
+  initializeRecordingSettings();
+
+  initializeAudioControls();
+
+  syncRecordingNameInputs();
+
+  syncRecordingFormatInputs();
+
+  syncRecordingControls();
+
+  updateFormatSupportUI();
+
+  updateBrandUI();
+
+  renderStudents();
+
+  renderRecordingHistory();
+
+  updateCameraStatus(
+    "Camera offline",
+    false
+  );
+
+  updateScreenCaptureStatus(
+    "Screen capture inactive",
+    false
+  );
+
+  updateMicStatus();
+
+  updateStageBadges();
+
+  initSegmentation();
+
+  populateCameraDevices();
+
+  startRenderLoop();
+
+  updateAudioMeters();
+
+  showToast(
+    "Mentor Studio Step 3.9 ready.",
+    "success"
+  );
+}
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+if (
+  document.readyState ===
+  "loading"
+) {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeStudio
+  );
+} else {
+  initializeStudio();
+}
