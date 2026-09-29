@@ -1,0 +1,4075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Personal Course Studio — Professional Mentor Recording Studio"
+  >
+
+  <meta
+    name="theme-color"
+    content="#070b12"
+  >
+
+  <title>
+    Mentor Studio | Personal Course Studio
+  </title>
+
+  <style>
+    /* =====================================================
+       PERSONAL COURSE STUDIO
+       STEP 3.8 — PROFESSIONAL RECORDING STUDIO
+       ===================================================== */
+
+    :root {
+      --bg: #070b12;
+      --bg-soft: #0b111b;
+      --panel: #0e1622;
+      --panel-2: #111c2a;
+
+      --border: rgba(255,255,255,.08);
+      --border-strong: rgba(255,255,255,.14);
+
+      --text: #f5f8fc;
+      --muted: #8c9aad;
+      --muted-2: #647286;
+
+      --blue: #3da4ff;
+      --blue-2: #177bd4;
+      --green: #35d58a;
+      --red: #ff4f64;
+      --orange: #ffb454;
+
+      --shadow:
+        0 24px 80px rgba(0,0,0,.35);
+
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background:
+        radial-gradient(
+          circle at 20% 0%,
+          rgba(61,164,255,.08),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 90% 100%,
+          rgba(53,213,138,.04),
+          transparent 30%
+        ),
+        var(--bg);
+
+      color: var(--text);
+
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    /* =====================================================
+       APP
+       ===================================================== */
+
+    .studio-app {
+      width: 100%;
+      height: 100vh;
+
+      display: grid;
+
+      grid-template-rows:
+        64px
+        minmax(0, 1fr)
+        54px;
+    }
+
+    /* =====================================================
+       TOP BAR
+       ===================================================== */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding:
+        0 18px;
+
+      background:
+        rgba(7,11,18,.92);
+
+      border-bottom:
+        1px solid var(--border);
+
+      backdrop-filter:
+        blur(18px);
+
+      position: relative;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+
+      border-radius: 11px;
+
+      display: grid;
+      place-items: center;
+
+      background:
+        linear-gradient(
+          145deg,
+          #299cff,
+          #1263ad
+        );
+
+      color: white;
+
+      font-weight: 800;
+
+      box-shadow:
+        0 8px 30px
+        rgba(30,140,230,.25);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text strong {
+      display: block;
+
+      font-size: 14px;
+      line-height: 1.1;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-text span {
+      display: block;
+
+      margin-top: 4px;
+
+      font-size: 10px;
+
+      color:
+        var(--muted);
+
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .top-btn {
+      min-height: 38px;
+
+      padding:
+        0 12px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(255,255,255,.055);
+
+      color:
+        #dce6f2;
+
+      border:
+        1px solid var(--border);
+
+      cursor: pointer;
+
+      transition:
+        .18s ease;
+    }
+
+    .top-btn:hover {
+      background:
+        rgba(255,255,255,.09);
+
+      border-color:
+        var(--border-strong);
+    }
+
+    .top-btn.primary {
+      background:
+        linear-gradient(
+          135deg,
+          var(--blue),
+          var(--blue-2)
+        );
+
+      border-color:
+        transparent;
+
+      color:
+        white;
+
+      font-weight: 700;
+    }
+
+    .top-btn.recording {
+      background:
+        rgba(255,79,100,.14);
+
+      border-color:
+        rgba(255,79,100,.35);
+
+      color:
+        #ff7182;
+    }
+
+    /* =====================================================
+       WORKSPACE
+       ===================================================== */
+
+    .workspace {
+      min-height: 0;
+
+      display: grid;
+
+      grid-template-columns:
+        minmax(0, 1fr)
+        280px;
+
+      gap: 10px;
+
+      padding: 10px;
+
+      overflow: hidden;
+    }
+
+    .stage-panel {
+      min-width: 0;
+      min-height: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      background:
+        rgba(14,22,34,.82);
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        var(--radius);
+
+      overflow: hidden;
+
+      box-shadow:
+        var(--shadow);
+    }
+
+    /* =====================================================
+       STAGE HEADER
+       ===================================================== */
+
+    .stage-header {
+      height: 48px;
+
+      flex: 0 0 48px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding:
+        0 12px;
+
+      border-bottom:
+        1px solid var(--border);
+
+      background:
+        rgba(255,255,255,.018);
+    }
+
+    .stage-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stage-title-dot {
+      width: 8px;
+      height: 8px;
+
+      border-radius: 50%;
+
+      background:
+        var(--green);
+
+      box-shadow:
+        0 0 14px
+        rgba(53,213,138,.7);
+    }
+
+    .stage-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mini-btn {
+      width: 32px;
+      height: 32px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(255,255,255,.05);
+
+      color:
+        #b9c5d4;
+
+      cursor: pointer;
+
+      border:
+        1px solid transparent;
+    }
+
+    .mini-btn:hover {
+      border-color:
+        var(--border);
+
+      color:
+        white;
+    }
+
+    /* =====================================================
+       STAGE
+       ===================================================== */
+
+    .stage-wrap {
+      min-height: 0;
+      flex: 1;
+
+      padding: 10px;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      background:
+        #05080e;
+
+      position: relative;
+    }
+
+    #stage {
+      width: 100%;
+      height: 100%;
+
+      position: relative;
+
+      overflow: hidden;
+
+      background:
+        #10141d;
+
+      border-radius:
+        12px;
+
+      user-select: none;
+
+      isolation: isolate;
+    }
+
+    #mainImage,
+    #mainVideo {
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      display: none;
+
+      background:
+        #10141d;
+    }
+
+    #welcomeContent {
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      text-align: center;
+
+      padding: 30px;
+
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(61,164,255,.09),
+          transparent 38%
+        );
+    }
+
+    #welcomeContent h2 {
+      font-size:
+        clamp(24px,3vw,40px);
+
+      margin-bottom: 10px;
+    }
+
+    #welcomeContent p {
+      max-width: 520px;
+
+      color:
+        var(--muted);
+
+      font-size: 13px;
+
+      line-height: 1.7;
+    }
+
+    /* =====================================================
+       MENTOR CARD
+       ===================================================== */
+
+    #mentorCard {
+      position: absolute;
+
+      top: 22px;
+      right: 22px;
+
+      width: 190px;
+      height: 125px;
+
+      min-width: 130px;
+      min-height: 90px;
+
+      max-width: 45%;
+      max-height: 70%;
+
+      border-radius:
+        16px;
+
+      overflow: hidden;
+
+      background:
+        #121923;
+
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+
+      box-shadow:
+        0 18px 45px
+        rgba(0,0,0,.42);
+
+      z-index: 8;
+
+      cursor: grab;
+
+      touch-action: none;
+    }
+
+    #mentorCard.dragging {
+      cursor: grabbing;
+
+      box-shadow:
+        0 25px 60px
+        rgba(0,0,0,.55);
+    }
+
+    #mentorVideo,
+    #mentorCameraVideo,
+    #mentorAICanvas {
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      display: none;
+    }
+
+    #mentorPlaceholder {
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      gap: 8px;
+
+      color:
+        #8795a8;
+
+      background:
+        linear-gradient(
+          145deg,
+          #141d29,
+          #0c121b
+        );
+
+      font-size: 11px;
+    }
+
+    .mentor-avatar {
+      width: 36px;
+      height: 36px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 50%;
+
+      background:
+        rgba(61,164,255,.12);
+
+      color:
+        #69b8ff;
+
+      font-size: 18px;
+    }
+
+    #mentorSourceLabel {
+      position: absolute;
+
+      left: 9px;
+      top: 8px;
+
+      z-index: 5;
+
+      padding:
+        4px 7px;
+
+      border-radius: 6px;
+
+      background:
+        rgba(0,0,0,.48);
+
+      color:
+        rgba(255,255,255,.82);
+
+      font-size: 8px;
+
+      pointer-events: none;
+    }
+
+    #mentorResize {
+      position: absolute;
+
+      right: 5px;
+      bottom: 5px;
+
+      width: 18px;
+      height: 18px;
+
+      z-index: 15;
+
+      border-radius: 5px;
+
+      background:
+        rgba(255,255,255,.13);
+
+      cursor:
+        nwse-resize;
+    }
+
+    #mentorResize::before {
+      content: "";
+
+      position: absolute;
+
+      right: 4px;
+      bottom: 4px;
+
+      width: 7px;
+      height: 7px;
+
+      border-right:
+        2px solid
+        rgba(255,255,255,.7);
+
+      border-bottom:
+        2px solid
+        rgba(255,255,255,.7);
+    }
+
+    /* =====================================================
+       BRAND BADGE
+       ===================================================== */
+
+    #brandBadge {
+      position: absolute;
+
+      left: 16px;
+      bottom: 16px;
+
+      z-index: 12;
+
+      max-width: 45%;
+
+      padding:
+        9px 13px;
+
+      border-radius: 10px;
+
+      background:
+        rgba(4,7,12,.72);
+
+      border:
+        1px solid
+        rgba(255,255,255,.09);
+
+      backdrop-filter:
+        blur(10px);
+
+      color:
+        white;
+
+      font-size: 11px;
+
+      font-weight: 700;
+
+      pointer-events: none;
+    }
+
+    /* =====================================================
+       RECORDING LIVE OVERLAY
+       ===================================================== */
+
+    #recordingOverlay {
+      position: absolute;
+
+      top: 15px;
+      left: 15px;
+
+      z-index: 30;
+
+      display: none;
+
+      align-items: center;
+      gap: 9px;
+
+      padding:
+        7px 10px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(4,7,12,.78);
+
+      border:
+        1px solid
+        rgba(255,79,100,.25);
+
+      backdrop-filter:
+        blur(10px);
+
+      pointer-events: none;
+    }
+
+    #recordingOverlay.show {
+      display: flex;
+    }
+
+    .recording-dot {
+      width: 9px;
+      height: 9px;
+
+      border-radius: 50%;
+
+      background:
+        var(--red);
+
+      box-shadow:
+        0 0 14px
+        rgba(255,79,100,.8);
+
+      animation:
+        recordPulse 1s infinite;
+    }
+
+    @keyframes recordPulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .35;
+      }
+    }
+
+    #recordingOverlayText {
+      color:
+        #ff9aa7;
+
+      font-size: 10px;
+
+      font-weight: 800;
+
+      letter-spacing:
+        .04em;
+    }
+
+    #recordingOverlayTime {
+      color:
+        white;
+
+      font-size: 11px;
+
+      font-variant-numeric:
+        tabular-nums;
+    }
+
+    /* =====================================================
+       SCREEN SHARE BADGE
+       ===================================================== */
+
+    #screenShareBadge {
+      position: absolute;
+
+      right: 16px;
+      bottom: 16px;
+
+      z-index: 20;
+
+      display: none;
+
+      padding:
+        7px 10px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(53,213,138,.11);
+
+      border:
+        1px solid
+        rgba(53,213,138,.25);
+
+      color:
+        #67e7a9;
+
+      font-size: 9px;
+
+      font-weight: 700;
+    }
+
+    #screenShareBadge.show {
+      display: block;
+    }
+
+    /* =====================================================
+       TOOLBAR
+       ===================================================== */
+
+    .toolbar {
+      flex: 0 0 auto;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      padding:
+        9px;
+
+      border-top:
+        1px solid var(--border);
+
+      background:
+        rgba(255,255,255,.018);
+
+      overflow-x: auto;
+    }
+
+    .tool-btn {
+      height: 36px;
+
+      padding:
+        0 11px;
+
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      gap: 7px;
+
+      border-radius: 9px;
+
+      white-space: nowrap;
+
+      background:
+        rgba(255,255,255,.055);
+
+      border:
+        1px solid transparent;
+
+      color:
+        #bdc8d7;
+
+      cursor: pointer;
+
+      font-size: 11px;
+
+      transition:
+        .18s ease;
+    }
+
+    .tool-btn:hover {
+      color:
+        white;
+
+      background:
+        rgba(255,255,255,.085);
+
+      border-color:
+        var(--border);
+    }
+
+    .tool-btn.blue {
+      background:
+        rgba(61,164,255,.12);
+
+      color:
+        #73beff;
+    }
+
+    .tool-btn.red {
+      background:
+        rgba(255,79,100,.11);
+
+      color:
+        #ff7182;
+    }
+
+    .tool-spacer {
+      flex: 1;
+    }
+
+    /* =====================================================
+       SIDE PANEL
+       ===================================================== */
+
+    .side-panel {
+      min-height: 0;
+
+      overflow-y: auto;
+
+      background:
+        rgba(14,22,34,.86);
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        var(--radius);
+
+      padding:
+        10px;
+
+      box-shadow:
+        var(--shadow);
+    }
+
+    .side-section {
+      padding:
+        12px 0;
+
+      border-bottom:
+        1px solid var(--border);
+    }
+
+    .side-section:first-child {
+      padding-top: 3px;
+    }
+
+    .side-section:last-child {
+      border-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom:
+        10px;
+    }
+
+    .section-title strong {
+      font-size: 11px;
+    }
+
+    .section-title span {
+      color:
+        var(--muted-2);
+
+      font-size: 9px;
+    }
+
+    .side-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2,1fr);
+
+      gap: 6px;
+    }
+
+    .side-btn {
+      min-height: 36px;
+
+      padding:
+        7px;
+
+      border-radius:
+        9px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      border:
+        1px solid transparent;
+
+      color:
+        #b7c3d2;
+
+      cursor: pointer;
+
+      font-size: 10px;
+
+      transition:
+        .18s ease;
+    }
+
+    .side-btn:hover,
+    .side-btn.active {
+      background:
+        rgba(61,164,255,.1);
+
+      border-color:
+        rgba(61,164,255,.25);
+
+      color:
+        #72bfff;
+    }
+
+    /* =====================================================
+       CAMERA STATUS
+       ===================================================== */
+
+    .status-box {
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+      padding:
+        9px;
+
+      border-radius:
+        9px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      margin-bottom:
+        8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+
+      border-radius: 50%;
+
+      background:
+        var(--muted-2);
+
+      flex: 0 0 auto;
+    }
+
+    .status-dot.online {
+      background:
+        var(--green);
+
+      box-shadow:
+        0 0 10px
+        rgba(53,213,138,.65);
+    }
+
+    .status-content {
+      min-width: 0;
+    }
+
+    .status-content strong {
+      display: block;
+
+      font-size: 10px;
+    }
+
+    .status-content span {
+      display: block;
+
+      margin-top: 2px;
+
+      font-size: 8px;
+
+      color:
+        var(--muted);
+    }
+
+    /* =====================================================
+       AUDIO CONTROLS
+       ===================================================== */
+
+    .control-row {
+      margin-bottom:
+        11px;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      display: flex;
+
+      justify-content: space-between;
+
+      margin-bottom:
+        6px;
+
+      color:
+        #aeb9c9;
+
+      font-size: 9px;
+    }
+
+    .control-label span:last-child {
+      color:
+        #6faee0;
+    }
+
+    input[type="range"] {
+      width: 100%;
+
+      accent-color:
+        var(--blue);
+
+      cursor: pointer;
+    }
+
+    .check-row {
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      margin-bottom:
+        9px;
+
+      color:
+        #b6c1d0;
+
+      font-size: 9px;
+
+      cursor: pointer;
+    }
+
+    .check-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .check-row input {
+      accent-color:
+        var(--blue);
+    }
+
+    /* =====================================================
+       RECORDING QUALITY
+       ===================================================== */
+
+    .select-wrap {
+      margin-bottom:
+        9px;
+    }
+
+    .select-wrap label {
+      display: block;
+
+      margin-bottom:
+        5px;
+
+      color:
+        var(--muted);
+
+      font-size: 9px;
+    }
+
+    .select-wrap select {
+      width: 100%;
+
+      height: 36px;
+
+      border-radius:
+        9px;
+
+      padding:
+        0 9px;
+
+      border:
+        1px solid
+        var(--border);
+
+      background:
+        #0a111b;
+
+      color:
+        #dbe6f3;
+
+      outline: none;
+
+      cursor: pointer;
+    }
+
+    .quality-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2,1fr);
+
+      gap: 6px;
+    }
+
+    /* =====================================================
+       STUDENTS
+       ===================================================== */
+
+    .student-row {
+      display: flex;
+
+      align-items: center;
+
+      gap: 5px;
+
+      padding:
+        8px 7px;
+
+      border-radius:
+        8px;
+
+      background:
+        rgba(255,255,255,.025);
+
+      margin-bottom:
+        5px;
+
+      font-size: 10px;
+    }
+
+    .student-row:last-child {
+      margin-bottom: 0;
+    }
+
+    /* =====================================================
+       FULLSCREEN
+       ===================================================== */
+
+    body.studio-fullscreen
+    .side-panel {
+      display: none;
+    }
+
+    body.studio-fullscreen
+    .workspace {
+      grid-template-columns:
+        minmax(0,1fr);
+    }
+
+    body.studio-fullscreen
+    .stage-panel {
+      border-radius: 0;
+    }
+
+    body.studio-fullscreen
+    .workspace {
+      padding: 0;
+    }
+
+    body.stage-only-fullscreen
+    .topbar,
+    body.stage-only-fullscreen
+    .side-panel,
+    body.stage-only-fullscreen
+    .statusbar {
+      display: none;
+    }
+
+    body.stage-only-fullscreen
+    .studio-app {
+      grid-template-rows:
+        1fr;
+    }
+
+    body.stage-only-fullscreen
+    .workspace {
+      padding: 0;
+      grid-template-columns: 1fr;
+    }
+
+    body.stage-only-fullscreen
+    .stage-panel {
+      border-radius: 0;
+    }
+
+    /* =====================================================
+       STATUS BAR
+       ===================================================== */
+
+    .statusbar {
+      display: flex;
+
+      align-items: center;
+      justify-content: space-between;
+
+      padding:
+        0 14px;
+
+      background:
+        #080d15;
+
+      border-top:
+        1px solid var(--border);
+
+      color:
+        var(--muted);
+
+      font-size: 9px;
+    }
+
+    .status-left,
+    .status-right {
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+    }
+
+    .status-item {
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 5px;
+    }
+
+    .tiny-dot {
+      width: 6px;
+      height: 6px;
+
+      border-radius: 50%;
+
+      background:
+        var(--muted-2);
+    }
+
+    .tiny-dot.green {
+      background:
+        var(--green);
+    }
+
+    .tiny-dot.red {
+      background:
+        var(--red);
+    }
+
+    /* =====================================================
+       SETTINGS MODAL
+       ===================================================== */
+
+    #settingsModal {
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 100000;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        rgba(0,0,0,.72);
+
+      backdrop-filter:
+        blur(12px);
+    }
+
+    #settingsModal.show {
+      display: flex;
+    }
+
+    .settings-card {
+      width:
+        min(480px,96vw);
+
+      border-radius:
+        18px;
+
+      background:
+        #0d1520;
+
+      border:
+        1px solid
+        var(--border-strong);
+
+      box-shadow:
+        0 30px 100px
+        rgba(0,0,0,.55);
+
+      overflow: hidden;
+    }
+
+    .settings-header {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      padding:
+        16px;
+
+      border-bottom:
+        1px solid var(--border);
+    }
+
+    .settings-header strong {
+      font-size: 15px;
+    }
+
+    .settings-header button {
+      width: 34px;
+      height: 34px;
+
+      border-radius: 9px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      color:
+        white;
+
+      cursor: pointer;
+    }
+
+    .settings-body {
+      padding:
+        18px;
+    }
+
+    .form-group {
+      margin-bottom:
+        15px;
+    }
+
+    .form-group label {
+      display: block;
+
+      margin-bottom:
+        7px;
+
+      color:
+        #aeb9c8;
+
+      font-size: 10px;
+    }
+
+    .form-group input {
+      width: 100%;
+
+      height: 40px;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid
+        var(--border);
+
+      background:
+        rgba(255,255,255,.035);
+
+      color:
+        white;
+
+      padding:
+        0 11px;
+
+      outline: none;
+    }
+
+    .settings-footer {
+      display: flex;
+
+      justify-content: flex-end;
+
+      gap: 8px;
+
+      padding:
+        13px 16px;
+
+      border-top:
+        1px solid var(--border);
+    }
+
+    .modal-btn {
+      height: 38px;
+
+      padding:
+        0 13px;
+
+      border-radius:
+        9px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      color:
+        #c8d2df;
+
+      cursor: pointer;
+    }
+
+    .modal-btn.primary {
+      background:
+        var(--blue);
+
+      color:
+        white;
+
+      font-weight:
+        700;
+    }
+
+    /* =====================================================
+       RECORDING SETTINGS MODAL
+       ===================================================== */
+
+    #recordingSettingsModal {
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 100001;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        rgba(0,0,0,.75);
+
+      backdrop-filter:
+        blur(14px);
+    }
+
+    #recordingSettingsModal.show {
+      display: flex;
+    }
+
+    .recording-settings-card {
+      width:
+        min(620px,96vw);
+
+      max-height:
+        90vh;
+
+      overflow-y: auto;
+
+      background:
+        #0d1520;
+
+      border:
+        1px solid
+        var(--border-strong);
+
+      border-radius:
+        18px;
+
+      box-shadow:
+        0 30px 100px
+        rgba(0,0,0,.55);
+    }
+
+    .recording-settings-header {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      padding:
+        17px;
+
+      border-bottom:
+        1px solid var(--border);
+    }
+
+    .recording-settings-header strong {
+      display: block;
+
+      font-size: 15px;
+    }
+
+    .recording-settings-header span {
+      display: block;
+
+      margin-top: 4px;
+
+      color:
+        var(--muted);
+
+      font-size: 9px;
+    }
+
+    .recording-settings-close {
+      width: 34px;
+      height: 34px;
+
+      border-radius:
+        9px;
+
+      background:
+        rgba(255,255,255,.06);
+
+      color:
+        white;
+
+      cursor: pointer;
+    }
+
+    .recording-settings-body {
+      padding:
+        17px;
+    }
+
+    .recording-settings-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2,1fr);
+
+      gap: 12px;
+    }
+
+    .recording-setting-card {
+      padding:
+        12px;
+
+      border-radius:
+        12px;
+
+      background:
+        rgba(255,255,255,.035);
+
+      border:
+        1px solid var(--border);
+    }
+
+    .recording-setting-card label {
+      display: block;
+
+      margin-bottom:
+        7px;
+
+      color:
+        #aeb9c8;
+
+      font-size: 9px;
+    }
+
+    .recording-setting-card select {
+      width: 100%;
+
+      height: 38px;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid var(--border);
+
+      background:
+        #09111b;
+
+      color:
+        white;
+
+      padding:
+        0 8px;
+
+      outline: none;
+    }
+
+    .recording-info {
+      margin-top:
+        13px;
+
+      padding:
+        11px;
+
+      border-radius:
+        10px;
+
+      background:
+        rgba(61,164,255,.06);
+
+      border:
+        1px solid
+        rgba(61,164,255,.14);
+
+      color:
+        #9dcfff;
+
+      font-size: 9px;
+
+      line-height: 1.6;
+    }
+
+    .recording-settings-footer {
+      display: flex;
+
+      justify-content: flex-end;
+
+      gap: 8px;
+
+      padding:
+        13px 17px;
+
+      border-top:
+        1px solid var(--border);
+    }
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 1100px) {
+      .workspace {
+        grid-template-columns:
+          minmax(0,1fr)
+          240px;
+      }
+
+      #mentorCard {
+        width: 170px;
+        height: 112px;
+      }
+    }
+
+    @media (max-width: 850px) {
+      body {
+        overflow: auto;
+      }
+
+      .studio-app {
+        min-height: 100vh;
+        height: auto;
+
+        grid-template-rows:
+          60px
+          auto
+          50px;
+      }
+
+      .workspace {
+        grid-template-columns:
+          1fr;
+
+        overflow: visible;
+      }
+
+      .stage-panel {
+        min-height:
+          calc(100vh - 150px);
+      }
+
+      .side-panel {
+        max-height:
+          none;
+      }
+
+      .top-actions
+      .top-btn:nth-child(1) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        padding:
+          0 10px;
+      }
+
+      .brand-text span {
+        display: none;
+      }
+
+      .top-btn {
+        padding:
+          0 9px;
+
+        font-size: 10px;
+      }
+
+      .workspace {
+        padding: 6px;
+        gap: 6px;
+      }
+
+      .stage-header {
+        padding:
+          0 9px;
+      }
+
+      .toolbar {
+        padding:
+          7px;
+
+        gap: 5px;
+      }
+
+      .tool-btn {
+        padding:
+          0 9px;
+
+        font-size: 10px;
+      }
+
+      #mentorCard {
+        width: 145px;
+        height: 98px;
+
+        top: 12px;
+        right: 12px;
+      }
+
+      #brandBadge {
+        left: 10px;
+        bottom: 10px;
+
+        font-size: 9px;
+      }
+
+      .recording-settings-grid {
+        grid-template-columns:
+          1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="studio-app">
+
+    <!-- ===================================================
+         TOP BAR
+         =================================================== -->
+
+    <header class="topbar">
+
+      <div class="brand">
+
+        <div class="brand-icon">
+          M
+        </div>
+
+        <div class="brand-text">
+          <strong>
+            Mentor Studio
+          </strong>
+
+          <span>
+            Personal Course Studio
+          </span>
+        </div>
+
+      </div>
+
+
+      <div class="top-actions">
+
+        <button
+          type="button"
+          class="top-btn"
+          id="openTeleprompterTopBtn"
+        >
+          Teleprompter
+        </button>
+
+        <button
+          type="button"
+          class="top-btn"
+          id="recordingSettingsTopBtn"
+        >
+          Recording
+        </button>
+
+        <button
+          type="button"
+          class="top-btn"
+          id="settingsBtn"
+        >
+          Settings
+        </button>
+
+        <button
+          type="button"
+          class="top-btn primary"
+          id="recordBtn"
+        >
+          <span data-record-icon>●</span>
+          <span data-record-text>Record</span>
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================================================
+         WORKSPACE
+         =================================================== -->
+
+    <main class="workspace">
+
+      <!-- =================================================
+           STAGE PANEL
+           ================================================= -->
+
+      <section class="stage-panel">
+
+        <div class="stage-header">
+
+          <div class="stage-title">
+
+            <span
+              class="stage-title-dot"
+              id="stageStatusDot"
+            ></span>
+
+            <span>
+              Course Stage
+            </span>
+
+          </div>
+
+
+          <div class="stage-actions">
+
+            <button
+              type="button"
+              class="mini-btn"
+              id="fullscreenStageBtn"
+              title="Stage fullscreen"
+            >
+              ⛶
+            </button>
+
+            <button
+              type="button"
+              class="mini-btn"
+              id="fullscreenStudioBtn"
+              title="Studio fullscreen"
+            >
+              ⛶
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="stage-wrap">
+
+          <div id="stage">
+
+            <!-- Main image -->
+            <img
+              id="mainImage"
+              alt="Main content"
+              draggable="false"
+            >
+
+            <!-- Main video -->
+            <video
+              id="mainVideo"
+              playsinline
+              preload="metadata"
+            ></video>
+
+
+            <!-- Welcome -->
+            <div id="welcomeContent">
+
+              <h2>
+                Personal Course Studio
+              </h2>
+
+              <p>
+                Upload your course slide or main
+                video, add your mentor camera,
+                prepare your teleprompter and
+                start recording.
+              </p>
+
+            </div>
+
+
+            <!-- =========================================
+                 MENTOR CARD
+                 ========================================= -->
+
+            <div id="mentorCard">
+
+              <video
+                id="mentorVideo"
+                playsinline
+                muted
+                preload="metadata"
+              ></video>
+
+              <video
+                id="mentorCameraVideo"
+                playsinline
+                muted
+                autoplay
+              ></video>
+
+              <canvas
+                id="mentorAICanvas"
+              ></canvas>
+
+              <div
+                id="mentorPlaceholder"
+              >
+
+                <div class="mentor-avatar">
+                  👤
+                </div>
+
+                <span>
+                  Add mentor camera
+                </span>
+
+              </div>
+
+              <div id="mentorSourceLabel">
+                Mentor
+              </div>
+
+              <div
+                id="mentorResize"
+                title="Resize mentor"
+              ></div>
+
+            </div>
+
+
+            <!-- Brand -->
+            <div id="brandBadge">
+              <span data-brand-name>
+                Personal Course Studio
+              </span>
+            </div>
+
+
+            <!-- =========================================
+                 RECORDING OVERLAY
+                 ========================================= -->
+
+            <div id="recordingOverlay">
+
+              <span class="recording-dot"></span>
+
+              <span id="recordingOverlayText">
+                RECORDING
+              </span>
+
+              <span id="recordingOverlayTime">
+                00:00:00
+              </span>
+
+            </div>
+
+
+            <!-- Screen share badge -->
+            <div id="screenShareBadge">
+              🖥 Screen capture active
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TOOLBAR
+             ================================================= -->
+
+        <div class="toolbar">
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="uploadMainBtn"
+          >
+            🖼 Main Image
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="uploadVideoBtn"
+          >
+            🎬 Main Video
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="mainPlayBtn"
+          >
+            ▶ Play
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="mainPauseBtn"
+          >
+            ❚❚ Pause
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="uploadMentorBtn"
+          >
+            👤 Mentor Video
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="startCameraBtn"
+          >
+            📷 Camera
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            id="stopCameraBtn"
+          >
+            ■ Camera
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn blue"
+            id="openTeleprompterBtn"
+          >
+            ▤ Teleprompter
+          </button>
+
+          <div class="tool-spacer"></div>
+
+          <button
+            type="button"
+            class="tool-btn red"
+            id="toolbarRecordBtn"
+          >
+            ● Record
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           SIDE PANEL
+           ================================================= -->
+
+      <aside class="side-panel">
+
+
+        <!-- CAMERA -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Camera
+            </strong>
+
+            <span>
+              LIVE INPUT
+            </span>
+
+          </div>
+
+
+          <div class="status-box">
+
+            <span
+              class="status-dot"
+              id="cameraStatusDot"
+            ></span>
+
+            <div class="status-content">
+
+              <strong>
+                Camera
+              </strong>
+
+              <span id="cameraStatus">
+                Camera stopped
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="side-grid">
+
+            <button
+              type="button"
+              class="side-btn"
+              id="startCameraSideBtn"
+            >
+              Start
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="stopCameraSideBtn"
+            >
+              Stop
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="switchCameraSideBtn"
+            >
+              Switch
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="cameraSettingsBtn"
+            >
+              Camera
+            </button>
+
+          </div>
+
+        </section>
+
+
+        <!-- AI BACKGROUND -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              AI Background
+            </strong>
+
+            <span>
+              SEGMENTATION
+            </span>
+
+          </div>
+
+
+          <div class="side-grid">
+
+            <button
+              type="button"
+              class="side-btn active"
+              id="bgOriginalBtn"
+            >
+              Original
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="bgRemoveBtn"
+            >
+              Remove
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="bgBlurBtn"
+            >
+              Blur
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="bgImageBtn"
+            >
+              Image
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="bgColorBtn"
+            >
+              Color
+            </button>
+
+          </div>
+
+
+          <div
+            style="
+              display:grid;
+              grid-template-columns:1fr 45px;
+              gap:7px;
+              margin-top:8px;
+            "
+          >
+
+            <input
+              type="text"
+              id="backgroundColor"
+              value="#d9eafa"
+              aria-label="Background color"
+              style="
+                width:100%;
+                height:34px;
+                border-radius:8px;
+                border:1px solid rgba(255,255,255,.08);
+                background:#0a111b;
+                color:white;
+                padding:0 8px;
+                outline:none;
+                font-size:10px;
+              "
+            >
+
+            <input
+              type="color"
+              value="#d9eafa"
+              title="Choose background color"
+              id="backgroundColorPicker"
+              style="
+                width:45px;
+                height:34px;
+                padding:2px;
+                border-radius:8px;
+                border:1px solid rgba(255,255,255,.08);
+                background:#0a111b;
+                cursor:pointer;
+              "
+            >
+
+          </div>
+
+        </section>
+
+
+        <!-- TELEPROMPTER -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Teleprompter
+            </strong>
+
+            <span>
+              SCRIPT
+            </span>
+
+          </div>
+
+          <button
+            type="button"
+            class="side-btn"
+            id="openTeleprompterSide"
+            style="width:100%;"
+          >
+            Open Teleprompter
+          </button>
+
+        </section>
+
+
+        <!-- RECORDING QUALITY -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Recording Quality
+            </strong>
+
+            <span>
+              OUTPUT
+            </span>
+
+          </div>
+
+
+          <div class="select-wrap">
+
+            <label>
+              Resolution
+            </label>
+
+            <select
+              id="recordingResolution"
+            >
+              <option value="1280x720">
+                720p — HD
+              </option>
+
+              <option
+                value="1920x1080"
+                selected
+              >
+                1080p — Full HD
+              </option>
+
+              <option value="2560x1440">
+                1440p — 2K
+              </option>
+            </select>
+
+          </div>
+
+
+          <div class="select-wrap">
+
+            <label>
+              Frame Rate
+            </label>
+
+            <select
+              id="recordingFPS"
+            >
+              <option value="24">
+                24 FPS
+              </option>
+
+              <option
+                value="30"
+                selected
+              >
+                30 FPS
+              </option>
+
+              <option value="60">
+                60 FPS
+              </option>
+            </select>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="side-btn"
+            id="recordingSettingsBtn"
+            style="width:100%;"
+          >
+            Advanced Recording Settings
+          </button>
+
+        </section>
+
+
+        <!-- AUDIO -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Recording Audio
+            </strong>
+
+            <span>
+              MIXER
+            </span>
+
+          </div>
+
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="mainVideoAudioCheckbox"
+              checked
+            >
+
+            Main video audio
+
+          </label>
+
+
+          <div class="control-row">
+
+            <div class="control-label">
+
+              <span>
+                Main Volume
+              </span>
+
+              <span id="mainVolumeValue">
+                100%
+              </span>
+
+            </div>
+
+            <input
+              type="range"
+              id="mainVideoVolume"
+              min="0"
+              max="100"
+              value="100"
+            >
+
+          </div>
+
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="micEnabled"
+              checked
+            >
+
+            Microphone voice
+
+          </label>
+
+
+          <div class="control-row">
+
+            <div class="control-label">
+
+              <span>
+                Mic Volume
+              </span>
+
+              <span id="micVolumeValue">
+                100%
+              </span>
+
+            </div>
+
+            <input
+              type="range"
+              id="micVolume"
+              min="0"
+              max="150"
+              value="100"
+            >
+
+          </div>
+
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="micMonitor"
+            >
+
+            Mic monitoring
+
+          </label>
+
+
+          <div class="status-box">
+
+            <span
+              class="status-dot"
+              id="micStatusDot"
+            ></span>
+
+            <div class="status-content">
+
+              <strong>
+                Microphone
+              </strong>
+
+              <span data-mic-status>
+                Microphone not connected
+              </span>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- STUDENTS -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Students
+            </strong>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="addStudentBtn"
+              style="
+                min-height:26px;
+                padding:4px 8px;
+              "
+            >
+              + Add
+            </button>
+
+          </div>
+
+
+          <div id="studentsList">
+
+            <div
+              style="
+                padding:18px;
+                text-align:center;
+                opacity:.55;
+                font-size:12px;
+              "
+            >
+              No students added
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- QUICK ACTIONS -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Quick Actions
+            </strong>
+
+            <span>
+              STUDIO
+            </span>
+
+          </div>
+
+
+          <div class="side-grid">
+
+            <button
+              type="button"
+              class="side-btn"
+              id="fullscreenStageSideBtn"
+            >
+              Stage Fullscreen
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="fullscreenStudioSideBtn"
+            >
+              Studio Fullscreen
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="screenCaptureBtn"
+            >
+              Screen Capture
+            </button>
+
+            <button
+              type="button"
+              class="side-btn"
+              id="resetStudioBtn"
+            >
+              Reset
+            </button>
+
+          </div>
+
+        </section>
+
+
+        <!-- FILES -->
+        <section class="side-section">
+
+          <div class="section-title">
+
+            <strong>
+              Files
+            </strong>
+
+            <span>
+              LOCAL
+            </span>
+
+          </div>
+
+          <div
+            style="
+              color:#69788b;
+              font-size:9px;
+              line-height:1.6;
+            "
+          >
+            Files are processed locally
+            in your browser.
+          </div>
+
+        </section>
+
+      </aside>
+
+    </main>
+
+
+    <!-- ===================================================
+         STATUS BAR
+         =================================================== -->
+
+    <footer class="statusbar">
+
+      <div class="status-left">
+
+        <div class="status-item">
+
+          <span
+            class="tiny-dot green"
+            id="systemStatusDot"
+          ></span>
+
+          <span id="systemStatus">
+            Studio Ready
+          </span>
+
+        </div>
+
+        <div class="status-item">
+
+          <span
+            class="tiny-dot"
+            id="bottomCameraDot"
+          ></span>
+
+          <span>
+            Camera
+          </span>
+
+        </div>
+
+        <div class="status-item">
+
+          <span
+            class="tiny-dot"
+            id="bottomMicDot"
+          ></span>
+
+          <span>
+            Mic
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="status-right">
+
+        <span>
+          Personal Course Studio
+        </span>
+
+        <span
+          data-recording-time
+        >
+          00:00:00
+        </span>
+
+      </div>
+
+    </footer>
+
+  </div>
+
+
+  <!-- =====================================================
+       HIDDEN FILE INPUTS
+       ===================================================== -->
+
+  <input
+    type="file"
+    id="mainFileInput"
+    accept="image/*"
+    hidden
+  >
+
+  <input
+    type="file"
+    id="mainVideoInput"
+    accept="video/*"
+    hidden
+  >
+
+  <input
+    type="file"
+    id="mentorFileInput"
+    accept="video/*"
+    hidden
+  >
+
+  <input
+    type="file"
+    id="backgroundImageUpload"
+    accept="image/*"
+    hidden
+  >
+
+
+  <!-- =====================================================
+       SETTINGS MODAL
+       ===================================================== -->
+
+  <div
+    id="settingsModal"
+    hidden
+  >
+
+    <div class="settings-card">
+
+      <div class="settings-header">
+
+        <strong>
+          Studio Settings
+        </strong>
+
+        <button
+          type="button"
+          id="closeSettingsBtn"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="settings-body">
+
+        <div class="form-group">
+
+          <label>
+            Brand Name
+          </label>
+
+          <input
+            type="text"
+            id="brandNameInput"
+            value="Personal Course Studio"
+            placeholder="Enter brand name"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="settings-footer">
+
+        <button
+          type="button"
+          class="modal-btn"
+          id="closeSettingsFooterBtn"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="modal-btn primary"
+          id="saveSettingsBtn"
+        >
+          Save Settings
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       RECORDING SETTINGS MODAL
+       ===================================================== -->
+
+  <div
+    id="recordingSettingsModal"
+    hidden
+  >
+
+    <div class="recording-settings-card">
+
+      <div class="recording-settings-header">
+
+        <div>
+
+          <strong>
+            Professional Recording Settings
+          </strong>
+
+          <span>
+            Configure output quality before recording
+          </span>
+
+        </div>
+
+        <button
+          type="button"
+          class="recording-settings-close"
+          id="closeRecordingSettingsBtn"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="recording-settings-body">
+
+        <div class="recording-settings-grid">
+
+          <div class="recording-setting-card">
+
+            <label>
+              Resolution
+            </label>
+
+            <select
+              id="advancedResolution"
+            >
+
+              <option value="1280x720">
+                1280 × 720 — 720p
+              </option>
+
+              <option
+                value="1920x1080"
+                selected
+              >
+                1920 × 1080 — 1080p
+              </option>
+
+              <option value="2560x1440">
+                2560 × 1440 — 1440p
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="recording-setting-card">
+
+            <label>
+              Frame Rate
+            </label>
+
+            <select
+              id="advancedFPS"
+            >
+
+              <option value="24">
+                24 FPS
+              </option>
+
+              <option
+                value="30"
+                selected
+              >
+                30 FPS
+              </option>
+
+              <option value="60">
+                60 FPS
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="recording-setting-card">
+
+            <label>
+              Recording Format
+            </label>
+
+            <select
+              id="recordingFormat"
+            >
+
+              <option value="webm">
+                WebM
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="recording-setting-card">
+
+            <label>
+              Video Quality
+            </label>
+
+            <select
+              id="recordingBitrate"
+            >
+
+              <option value="4000000">
+                Standard — 4 Mbps
+              </option>
+
+              <option
+                value="8000000"
+                selected
+              >
+                High — 8 Mbps
+              </option>
+
+              <option value="12000000">
+                Very High — 12 Mbps
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <div class="recording-info">
+
+          <strong>
+            Recording workflow
+          </strong>
+
+          <br>
+
+          Main video + mentor/camera + microphone
+          will be combined into the final recording.
+          The Teleprompter remains a private guide
+          and is not drawn into the final composition.
+
+        </div>
+
+      </div>
+
+
+      <div class="recording-settings-footer">
+
+        <button
+          type="button"
+          class="modal-btn"
+          id="cancelRecordingSettingsBtn"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="modal-btn primary"
+          id="saveRecordingSettingsBtn"
+        >
+          Apply Settings
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       AI CANVASES
+       ===================================================== -->
+
+  <canvas
+    id="aiCanvas"
+    width="1280"
+    height="720"
+    hidden
+  ></canvas>
+
+  <canvas
+    id="aiSourceCanvas"
+    width="1280"
+    height="720"
+    hidden
+  ></canvas>
+
+  <canvas
+    id="aiMaskCanvas"
+    width="1280"
+    height="720"
+    hidden
+  ></canvas>
+
+
+  <!-- =====================================================
+       MEDIAPIPE
+       ===================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+  ></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+  ></script>
+
+
+  <!-- =====================================================
+       MAIN JAVASCRIPT
+       ===================================================== -->
+
+  <script src="script.js"></script>
+
+
+  <!-- =====================================================
+       STEP 3.8 UI BRIDGE
+       ===================================================== -->
+
+  <script>
+    document.addEventListener(
+      "DOMContentLoaded",
+      function () {
+
+        /*
+         * -------------------------------------------------
+         * Background color picker
+         * -------------------------------------------------
+         */
+
+        const colorInput =
+          document.getElementById(
+            "backgroundColor"
+          );
+
+        const colorPicker =
+          document.getElementById(
+            "backgroundColorPicker"
+          );
+
+        if (
+          colorPicker &&
+          colorInput
+        ) {
+
+          colorPicker.addEventListener(
+            "input",
+            function () {
+
+              colorInput.value =
+                colorPicker.value;
+
+              colorInput.dispatchEvent(
+                new Event(
+                  "input",
+                  {
+                    bubbles: true
+                  }
+                )
+              );
+
+            }
+          );
+
+          colorInput.addEventListener(
+            "input",
+            function () {
+
+              if (
+                /^#[0-9A-Fa-f]{6}$/.test(
+                  colorInput.value
+                )
+              ) {
+
+                colorPicker.value =
+                  colorInput.value;
+
+              }
+
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Fullscreen helpers
+         * -------------------------------------------------
+         */
+
+        const stageFullscreenBtn =
+          document.getElementById(
+            "fullscreenStageBtn"
+          );
+
+        const studioFullscreenBtn =
+          document.getElementById(
+            "fullscreenStudioBtn"
+          );
+
+        const stageFullscreenSide =
+          document.getElementById(
+            "fullscreenStageSideBtn"
+          );
+
+        const studioFullscreenSide =
+          document.getElementById(
+            "fullscreenStudioSideBtn"
+          );
+
+
+        function toggleStageFullscreen() {
+
+          document.body.classList.toggle(
+            "stage-only-fullscreen"
+          );
+
+          document.body.classList.remove(
+            "studio-fullscreen"
+          );
+
+        }
+
+
+        function toggleStudioFullscreen() {
+
+          document.body.classList.toggle(
+            "studio-fullscreen"
+          );
+
+          document.body.classList.remove(
+            "stage-only-fullscreen"
+          );
+
+        }
+
+
+        if (stageFullscreenBtn) {
+          stageFullscreenBtn.addEventListener(
+            "click",
+            toggleStageFullscreen
+          );
+        }
+
+        if (stageFullscreenSide) {
+          stageFullscreenSide.addEventListener(
+            "click",
+            toggleStageFullscreen
+          );
+        }
+
+        if (studioFullscreenBtn) {
+          studioFullscreenBtn.addEventListener(
+            "click",
+            toggleStudioFullscreen
+          );
+        }
+
+        if (studioFullscreenSide) {
+          studioFullscreenSide.addEventListener(
+            "click",
+            toggleStudioFullscreen
+          );
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * ESC exits custom fullscreen
+         * -------------------------------------------------
+         */
+
+        document.addEventListener(
+          "keydown",
+          function (event) {
+
+            if (
+              event.key === "Escape"
+            ) {
+
+              document.body.classList.remove(
+                "stage-only-fullscreen"
+              );
+
+              document.body.classList.remove(
+                "studio-fullscreen"
+              );
+
+            }
+
+          }
+        );
+
+
+        /*
+         * -------------------------------------------------
+         * Toolbar recording button
+         * -------------------------------------------------
+         */
+
+        const toolbarRecordBtn =
+          document.getElementById(
+            "toolbarRecordBtn"
+          );
+
+        const topRecordBtn =
+          document.getElementById(
+            "recordBtn"
+          );
+
+
+        if (toolbarRecordBtn) {
+
+          toolbarRecordBtn.addEventListener(
+            "click",
+            function () {
+
+              if (
+                window.CourseStudio &&
+                window.CourseStudio.startRecording
+              ) {
+
+                if (
+                  !window.CourseStudio
+                    .isRecording?.()
+                ) {
+
+                  window.CourseStudio
+                    .startRecording();
+
+                } else {
+
+                  window.CourseStudio
+                    .pauseRecording();
+
+                }
+
+              }
+
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Recording settings modal
+         * -------------------------------------------------
+         */
+
+        const recordingModal =
+          document.getElementById(
+            "recordingSettingsModal"
+          );
+
+        const openRecordingSettings =
+          document.getElementById(
+            "recordingSettingsBtn"
+          );
+
+        const openRecordingSettingsTop =
+          document.getElementById(
+            "recordingSettingsTopBtn"
+          );
+
+        const closeRecordingSettings =
+          document.getElementById(
+            "closeRecordingSettingsBtn"
+          );
+
+        const cancelRecordingSettings =
+          document.getElementById(
+            "cancelRecordingSettingsBtn"
+          );
+
+        const saveRecordingSettings =
+          document.getElementById(
+            "saveRecordingSettingsBtn"
+          );
+
+
+        function openRecordingSettingsModal() {
+
+          if (!recordingModal) {
+            return;
+          }
+
+          recordingModal.classList.add(
+            "show"
+          );
+
+          recordingModal.removeAttribute(
+            "hidden"
+          );
+
+        }
+
+
+        function closeRecordingSettingsModal() {
+
+          if (!recordingModal) {
+            return;
+          }
+
+          recordingModal.classList.remove(
+            "show"
+          );
+
+          recordingModal.setAttribute(
+            "hidden",
+            ""
+          );
+
+        }
+
+
+        if (openRecordingSettings) {
+
+          openRecordingSettings.addEventListener(
+            "click",
+            openRecordingSettingsModal
+          );
+
+        }
+
+
+        if (openRecordingSettingsTop) {
+
+          openRecordingSettingsTop.addEventListener(
+            "click",
+            openRecordingSettingsModal
+          );
+
+        }
+
+
+        if (closeRecordingSettings) {
+
+          closeRecordingSettings.addEventListener(
+            "click",
+            closeRecordingSettingsModal
+          );
+
+        }
+
+
+        if (cancelRecordingSettings) {
+
+          cancelRecordingSettings.addEventListener(
+            "click",
+            closeRecordingSettingsModal
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Recording quality sync
+         * -------------------------------------------------
+         */
+
+        const resolution =
+          document.getElementById(
+            "recordingResolution"
+          );
+
+        const advancedResolution =
+          document.getElementById(
+            "advancedResolution"
+          );
+
+        const fps =
+          document.getElementById(
+            "recordingFPS"
+          );
+
+        const advancedFPS =
+          document.getElementById(
+            "advancedFPS"
+          );
+
+
+        function syncRecordingSettings() {
+
+          if (
+            resolution &&
+            advancedResolution
+          ) {
+
+            resolution.value =
+              advancedResolution.value;
+
+          }
+
+          if (
+            fps &&
+            advancedFPS
+          ) {
+
+            fps.value =
+              advancedFPS.value;
+
+          }
+
+        }
+
+
+        if (resolution) {
+
+          resolution.addEventListener(
+            "change",
+            function () {
+
+              if (
+                advancedResolution
+              ) {
+
+                advancedResolution.value =
+                  resolution.value;
+
+              }
+
+            }
+          );
+
+        }
+
+
+        if (fps) {
+
+          fps.addEventListener(
+            "change",
+            function () {
+
+              if (
+                advancedFPS
+              ) {
+
+                advancedFPS.value =
+                  fps.value;
+
+              }
+
+            }
+          );
+
+        }
+
+
+        if (saveRecordingSettings) {
+
+          saveRecordingSettings.addEventListener(
+            "click",
+            function () {
+
+              syncRecordingSettings();
+
+              try {
+
+                localStorage.setItem(
+                  "courseStudioRecordingSettings",
+                  JSON.stringify({
+                    resolution:
+                      resolution?.value ||
+                      "1920x1080",
+
+                    fps:
+                      fps?.value ||
+                      "30",
+
+                    bitrate:
+                      document.getElementById(
+                        "recordingBitrate"
+                      )?.value ||
+                      "8000000"
+                  })
+                );
+
+              } catch (error) {
+                console.warn(
+                  error
+                );
+              }
+
+              closeRecordingSettingsModal();
+
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Restore recording settings
+         * -------------------------------------------------
+         */
+
+        try {
+
+          const saved =
+            localStorage.getItem(
+              "courseStudioRecordingSettings"
+            );
+
+          if (saved) {
+
+            const parsed =
+              JSON.parse(saved);
+
+            if (
+              parsed.resolution &&
+              resolution
+            ) {
+
+              resolution.value =
+                parsed.resolution;
+
+            }
+
+            if (
+              parsed.resolution &&
+              advancedResolution
+            ) {
+
+              advancedResolution.value =
+                parsed.resolution;
+
+            }
+
+            if (
+              parsed.fps &&
+              fps
+            ) {
+
+              fps.value =
+                parsed.fps;
+
+            }
+
+            if (
+              parsed.fps &&
+              advancedFPS
+            ) {
+
+              advancedFPS.value =
+                parsed.fps;
+
+            }
+
+            const bitrate =
+              document.getElementById(
+                "recordingBitrate"
+              );
+
+            if (
+              parsed.bitrate &&
+              bitrate
+            ) {
+
+              bitrate.value =
+                parsed.bitrate;
+
+            }
+
+          }
+
+        } catch (error) {
+
+          console.warn(
+            "Recording settings restore failed:",
+            error
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Screen capture
+         * -------------------------------------------------
+         */
+
+        const screenCaptureBtn =
+          document.getElementById(
+            "screenCaptureBtn"
+          );
+
+        if (screenCaptureBtn) {
+
+          screenCaptureBtn.addEventListener(
+            "click",
+            async function () {
+
+              if (
+                !navigator.mediaDevices ||
+                !navigator.mediaDevices
+                  .getDisplayMedia
+              ) {
+
+                alert(
+                  "Screen capture is not supported by this browser."
+                );
+
+                return;
+
+              }
+
+
+              try {
+
+                const stream =
+                  await navigator.mediaDevices
+                    .getDisplayMedia({
+                      video: true,
+                      audio: true
+                    });
+
+
+                window.CourseStudioScreenStream =
+                  stream;
+
+
+                const badge =
+                  document.getElementById(
+                    "screenShareBadge"
+                  );
+
+                if (badge) {
+
+                  badge.classList.add(
+                    "show"
+                  );
+
+                }
+
+
+                const videoTrack =
+                  stream.getVideoTracks()[0];
+
+
+                if (videoTrack) {
+
+                  videoTrack.addEventListener(
+                    "ended",
+                    function () {
+
+                      if (badge) {
+
+                        badge.classList.remove(
+                          "show"
+                        );
+
+                      }
+
+                      window.CourseStudioScreenStream =
+                        null;
+
+                    }
+                  );
+
+                }
+
+
+              } catch (error) {
+
+                console.warn(
+                  "Screen capture cancelled:",
+                  error
+                );
+
+              }
+
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Reset studio
+         * -------------------------------------------------
+         */
+
+        const resetStudioBtn =
+          document.getElementById(
+            "resetStudioBtn"
+          );
+
+        if (resetStudioBtn) {
+
+          resetStudioBtn.addEventListener(
+            "click",
+            function () {
+
+              const confirmed =
+                confirm(
+                  "Reset the current studio layout?"
+                );
+
+              if (!confirmed) {
+                return;
+              }
+
+
+              document.body.classList.remove(
+                "studio-fullscreen"
+              );
+
+              document.body.classList.remove(
+                "stage-only-fullscreen"
+              );
+
+
+              const mentor =
+                document.getElementById(
+                  "mentorCard"
+                );
+
+              if (mentor) {
+
+                mentor.style.left =
+                  "";
+
+                mentor.style.top =
+                  "";
+
+                mentor.style.right =
+                  "22px";
+
+                mentor.style.bottom =
+                  "";
+
+                mentor.style.width =
+                  "190px";
+
+                mentor.style.height =
+                  "125px";
+
+              }
+
+
+              try {
+
+                localStorage.removeItem(
+                  "courseStudioMentorPosition"
+                );
+
+              } catch {}
+
+
+              if (
+                window.CourseStudio
+              ) {
+
+                window.CourseStudio
+                  .renderCompositionFrame?.();
+
+              }
+
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Camera status bridge
+         * -------------------------------------------------
+         */
+
+        const cameraStatus =
+          document.getElementById(
+            "cameraStatus"
+          );
+
+        const cameraDot =
+          document.getElementById(
+            "cameraStatusDot"
+          );
+
+        const bottomCameraDot =
+          document.getElementById(
+            "bottomCameraDot"
+          );
+
+
+        const observer =
+          new MutationObserver(
+            function () {
+
+              const text =
+                cameraStatus
+                  ?.textContent
+                  ?.toLowerCase() ||
+                "";
+
+
+              const online =
+                text.includes("live") ||
+                text.includes("ready");
+
+
+              cameraDot?.classList.toggle(
+                "online",
+                online
+              );
+
+              bottomCameraDot?.classList.toggle(
+                "green",
+                online
+              );
+
+            }
+          );
+
+
+        if (cameraStatus) {
+
+          observer.observe(
+            cameraStatus,
+            {
+              childList: true,
+              subtree: true,
+              characterData: true
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * Microphone status bridge
+         * -------------------------------------------------
+         */
+
+        const micStatusDot =
+          document.getElementById(
+            "micStatusDot"
+          );
+
+        const bottomMicDot =
+          document.getElementById(
+            "bottomMicDot"
+          );
+
+
+        const micObserver =
+          new MutationObserver(
+            function () {
+
+              const element =
+                document.querySelector(
+                  "[data-mic-status]"
+                );
+
+              const text =
+                element
+                  ?.textContent
+                  ?.toLowerCase() ||
+                "";
+
+
+              const online =
+                text.includes("ready") ||
+                text.includes("connected");
+
+
+              micStatusDot?.classList.toggle(
+                "online",
+                online
+              );
+
+              bottomMicDot?.classList.toggle(
+                "green",
+                online
+              );
+
+            }
+          );
+
+
+        const micStatus =
+          document.querySelector(
+            "[data-mic-status]"
+          );
+
+
+        if (micStatus) {
+
+          micObserver.observe(
+            micStatus,
+            {
+              childList: true,
+              subtree: true,
+              characterData: true
+            }
+          );
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * System ready
+         * -------------------------------------------------
+         */
+
+        const systemStatus =
+          document.getElementById(
+            "systemStatus"
+          );
+
+        if (systemStatus) {
+
+          systemStatus.textContent =
+            "Studio Ready";
+
+        }
+
+      }
+    );
+  </script>
+
+</body>
+</html>
