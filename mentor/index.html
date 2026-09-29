@@ -10,12 +10,12 @@
 
   <meta
     name="theme-color"
-    content="#070b12"
+    content="#07111f"
   >
 
   <meta
     name="description"
-    content="SNK Mentor Studio — Personal Course Studio"
+    content="SNK Mentor Studio — Personal Course Recording Studio"
   >
 
   <title>Mentor Studio | Personal Course Studio</title>
@@ -28,66 +28,82 @@
 
 <body>
 
-  <!-- =========================================================
+  <!-- =====================================================
        APP
-       ========================================================= -->
+  ====================================================== -->
+
   <div class="app">
 
-    <!-- =======================================================
+    <!-- ===================================================
          TOP BAR
-         ======================================================= -->
+    ==================================================== -->
+
     <header class="topbar">
 
-      <div class="brand-area">
+      <div class="topbar-left">
 
-        <div class="brand-logo">
-          <span>SNK</span>
-        </div>
+        <div class="brand-mark">
+          <span class="brand-mark-icon">S</span>
 
-        <div class="brand-text">
-          <strong>Mentor Studio</strong>
-          <small>Personal Course Studio</small>
+          <div class="brand-mark-text">
+            <strong>Mentor Studio</strong>
+            <small>Personal Course Studio</small>
+          </div>
         </div>
 
       </div>
 
 
-      <div class="top-actions">
+      <div class="topbar-center">
+
+        <div class="studio-status">
+          <span class="status-dot"></span>
+          <span>Studio Ready</span>
+        </div>
+
+      </div>
+
+
+      <div class="topbar-right">
 
         <button
           type="button"
           class="top-btn"
           id="openShortcutsBtn"
+          title="Keyboard Shortcuts"
         >
-          <span>⌨</span>
-          Shortcuts
+          ⌨
+          <span>Shortcuts</span>
         </button>
 
         <button
           type="button"
           class="top-btn"
           id="startScreenCaptureBtn"
+          title="Start Screen Capture"
         >
-          <span>▣</span>
-          Screen
+          🖥
+          <span>Screen</span>
         </button>
 
         <button
           type="button"
           class="top-btn"
           id="fullscreenStageBtn"
+          title="Stage Fullscreen"
         >
-          <span>⛶</span>
-          Stage
+          ⛶
+          <span>Stage</span>
         </button>
 
         <button
           type="button"
           class="top-btn"
           id="fullscreenStudioBtn"
+          title="Fullscreen Studio"
         >
-          <span>⛶</span>
-          Studio
+          ⛶
+          <span>Studio</span>
         </button>
 
         <button
@@ -95,8 +111,8 @@
           class="top-btn"
           id="settingsBtn"
         >
-          <span>⚙</span>
-          Settings
+          ⚙
+          <span>Settings</span>
         </button>
 
         <button
@@ -104,17 +120,17 @@
           class="top-btn"
           id="openTeleprompterTopBtn"
         >
-          <span>▤</span>
-          Teleprompter
+          ▤
+          <span>Teleprompter</span>
         </button>
 
         <button
           type="button"
-          class="top-btn primary"
+          class="top-btn record-top-btn"
           id="recordBtn"
         >
-          <span class="record-dot"></span>
-          Record
+          ●
+          <span>Record</span>
         </button>
 
       </div>
@@ -122,9 +138,10 @@
     </header>
 
 
-    <!-- =======================================================
-         RECORDING STATUS BAR
-         ======================================================= -->
+    <!-- ===================================================
+         RECORDING CONTROL BAR
+    ==================================================== -->
+
     <section
       class="recording-status-bar"
       id="recordingStatusBar"
@@ -154,19 +171,24 @@
 
       <div class="recording-status-center">
 
-        <span id="recordingQuality">
+        <span
+          class="status-chip"
+          id="recordingQuality"
+        >
           1920×1080
         </span>
 
-        <span>•</span>
-
-        <span id="recordingFps">
+        <span
+          class="status-chip"
+          id="recordingFps"
+        >
           30 FPS
         </span>
 
-        <span>•</span>
-
-        <span id="recordingFormat">
+        <span
+          class="status-chip"
+          id="recordingFormat"
+        >
           WebM
         </span>
 
@@ -175,27 +197,62 @@
 
       <div class="recording-status-right">
 
+        <span
+          class="status-indicator"
+          id="cameraIndicator"
+        >
+          <span class="indicator-light"></span>
+          Camera
+        </span>
+
+        <span
+          class="status-indicator"
+          id="micIndicator"
+        >
+          <span class="indicator-light"></span>
+          Mic
+        </span>
+
+        <span
+          class="status-indicator"
+          id="audioIndicator"
+        >
+          <span class="indicator-light"></span>
+          Audio
+        </span>
+
+        <span
+          class="status-indicator"
+          id="screenIndicator"
+        >
+          <span class="indicator-light"></span>
+          Screen
+        </span>
+
         <button
           type="button"
-          class="status-action"
+          class="mini-record-btn"
           id="pauseRecordingBtn"
         >
+          ❚❚
           Pause
         </button>
 
         <button
           type="button"
-          class="status-action"
+          class="mini-record-btn"
           id="resumeRecordingBtn"
         >
+          ▶
           Resume
         </button>
 
         <button
           type="button"
-          class="status-action danger"
+          class="mini-record-btn danger"
           id="stopRecordingBtn"
         >
+          ■
           Stop
         </button>
 
@@ -204,346 +261,227 @@
     </section>
 
 
-    <!-- =======================================================
+    <!-- ===================================================
          MAIN WORKSPACE
-         ======================================================= -->
+    ==================================================== -->
+
     <main class="workspace">
 
-      <!-- =====================================================
-           MAIN STAGE AREA
-           ===================================================== -->
-      <section class="workspace-main">
+
+      <!-- ===============================================
+           MAIN STAGE
+      ================================================ -->
+
+      <section class="stage-shell" id="stageShell">
 
         <div
-          class="stage-shell"
-          id="stageShell"
+          class="stage"
+          id="stage"
         >
 
-          <!--
-            Actual composition ratio:
-            1920 × 1080
-            16 : 9
-          -->
-          <div
-            class="stage"
-            id="stage"
+          <!-- Main Image -->
+
+          <img
+            id="mainImage"
+            class="main-media"
+            alt="Main presentation"
+            draggable="false"
           >
 
-            <!-- ===============================================
-                 MAIN IMAGE
-                 =============================================== -->
-            <img
-              id="mainImage"
-              class="stage-main-media"
-              src=""
-              alt="Main content"
-              draggable="false"
-            >
+
+          <!-- Main Video -->
+
+          <video
+            id="mainVideo"
+            class="main-media"
+            playsinline
+            preload="metadata"
+          ></video>
 
 
-            <!-- ===============================================
-                 MAIN VIDEO
-                 =============================================== -->
+          <!-- Screen Capture -->
+
+          <video
+            id="screenCaptureVideo"
+            class="main-media"
+            autoplay
+            muted
+            playsinline
+          ></video>
+
+
+          <!-- Welcome -->
+
+          <div
+            class="welcome-content"
+            id="welcomeContent"
+          >
+
+            <div class="welcome-icon">
+              🎬
+            </div>
+
+            <h1>
+              Personal Course Studio
+            </h1>
+
+            <p>
+              Upload your lesson, add your mentor camera,
+              and start recording.
+            </p>
+
+            <div class="welcome-actions">
+
+              <button
+                type="button"
+                class="primary-btn"
+                id="uploadMainBtn"
+              >
+                Upload Slide / Image
+              </button>
+
+              <button
+                type="button"
+                class="secondary-btn"
+                id="uploadVideoBtn"
+              >
+                Upload Video
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- =========================================
+               MENTOR CARD
+          ========================================== -->
+
+          <div
+            class="mentor-card"
+            id="mentorCard"
+          >
+
             <video
-              id="mainVideo"
-              class="stage-main-media"
-              playsinline
-              preload="metadata"
-            ></video>
-
-
-            <!-- ===============================================
-                 SCREEN CAPTURE VIDEO
-                 =============================================== -->
-            <video
-              id="screenCaptureVideo"
-              class="stage-main-media"
+              id="mentorVideo"
+              class="mentor-media"
               playsinline
               muted
             ></video>
 
 
-            <!-- ===============================================
-                 WELCOME
-                 =============================================== -->
+            <video
+              id="mentorCameraVideo"
+              class="mentor-media"
+              autoplay
+              muted
+              playsinline
+            ></video>
+
+
+            <canvas
+              id="mentorAICanvas"
+              class="mentor-media"
+            ></canvas>
+
+
             <div
-              id="welcomeContent"
-              class="welcome-content"
+              class="mentor-placeholder"
+              id="mentorPlaceholder"
             >
 
-              <div class="welcome-icon">
-                ▶
+              <div class="mentor-placeholder-icon">
+                👤
               </div>
-
-              <h2>
-                Personal Course Studio
-              </h2>
-
-              <p>
-                Upload your class content or start your camera.
-              </p>
-
-              <div class="welcome-buttons">
-
-                <button
-                  type="button"
-                  id="welcomeUploadBtn"
-                  class="welcome-btn"
-                >
-                  Upload Content
-                </button>
-
-                <button
-                  type="button"
-                  id="welcomeCameraBtn"
-                  class="welcome-btn"
-                >
-                  Start Camera
-                </button>
-
-              </div>
-
-            </div>
-
-
-            <!-- ===============================================
-                 MENTOR VIDEO CARD
-                 =============================================== -->
-            <div
-              class="mentor-card"
-              id="mentorCard"
-            >
-
-              <!-- Uploaded mentor video -->
-              <video
-                id="mentorVideo"
-                playsinline
-                muted
-                preload="metadata"
-              ></video>
-
-
-              <!-- Live camera -->
-              <video
-                id="mentorCameraVideo"
-                playsinline
-                muted
-              ></video>
-
-
-              <!-- AI segmented canvas -->
-              <canvas
-                id="mentorAICanvas"
-              ></canvas>
-
-
-              <!-- Placeholder -->
-              <div
-                class="mentor-placeholder"
-                id="mentorPlaceholder"
-              >
-
-                <div class="mentor-placeholder-icon">
-                  👤
-                </div>
-
-                <strong>
-                  Mentor
-                </strong>
-
-                <span>
-                  Camera not active
-                </span>
-
-              </div>
-
-
-              <!-- Source label -->
-              <div
-                class="mentor-source-label"
-                id="mentorSourceLabel"
-              >
-                Mentor Camera
-              </div>
-
-
-              <!-- Resize -->
-              <div
-                class="mentor-resize"
-                id="mentorResize"
-                title="Resize mentor video"
-              >
-                ↘
-              </div>
-
-            </div>
-
-
-            <!-- ===============================================
-                 BRAND BADGE
-                 =============================================== -->
-            <div
-              class="brand-badge"
-              id="brandBadge"
-            >
 
               <span>
-                <strong id="brandBadgeText">
-                  SNK Institute
-                </strong>
+                Mentor Camera
               </span>
 
             </div>
 
 
-            <!-- ===============================================
-                 RECORDING OVERLAY
-                 =============================================== -->
+            <div class="mentor-source-label">
+              <span id="mentorSourceLabel">
+                Mentor
+              </span>
+            </div>
+
+
             <div
-              class="recording-overlay"
-              id="recordingOverlay"
-            >
-
-              <span class="recording-overlay-dot"></span>
-
-              <strong>
-                REC
-              </strong>
-
-              <span id="recordingOverlayTimer">
-                00:00:00
-              </span>
-
-            </div>
-
-
-            <!-- ===============================================
-                 STAGE BADGES
-                 =============================================== -->
-            <div
-              class="stage-badges"
-              id="stageBadges"
-            >
-
-              <span
-                class="stage-badge-item"
-                id="stageResolutionBadge"
-              >
-                1920×1080
-              </span>
-
-              <span
-                class="stage-badge-item"
-                id="stageFpsBadge"
-              >
-                30 FPS
-              </span>
-
-              <span
-                class="stage-badge-item"
-                id="stageSourceBadge"
-              >
-                Studio
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             MAIN TOOLBAR
-             ===================================================== -->
-        <div class="main-toolbar">
-
-          <div class="toolbar-group">
-
-            <button
-              type="button"
-              class="tool-btn"
-              id="uploadMainBtn"
-            >
-              <span>🖼</span>
-              Image
-            </button>
-
-            <button
-              type="button"
-              class="tool-btn"
-              id="uploadVideoBtn"
-            >
-              <span>🎬</span>
-              Video
-            </button>
-
-            <button
-              type="button"
-              class="tool-btn"
-              id="mainPlayBtn"
-            >
-              ▶ Play
-            </button>
-
-            <button
-              type="button"
-              class="tool-btn"
-              id="mainPauseBtn"
-            >
-              ❚❚ Pause
-            </button>
+              class="mentor-resize"
+              id="mentorResize"
+              title="Resize mentor video"
+            ></div>
 
           </div>
 
 
-          <div class="toolbar-group">
+          <!-- =========================================
+               BRAND BADGE
+          ========================================== -->
 
-            <button
-              type="button"
-              class="tool-btn"
-              id="uploadMentorBtn"
+          <div
+            class="brand-badge"
+            id="brandBadge"
+          >
+            <span
+              class="brand-badge-text"
+              id="brandBadgeText"
             >
-              👤 Mentor Video
-            </button>
+              SNK Mentor Studio
+            </span>
+          </div>
 
-            <button
-              type="button"
-              class="tool-btn"
-              id="startCameraBtn"
-            >
-              📷 Camera
-            </button>
 
-            <button
-              type="button"
-              class="tool-btn"
-              id="stopCameraBtn"
-            >
-              ■ Stop Camera
-            </button>
+          <!-- =========================================
+               RECORDING OVERLAY
+          ========================================== -->
+
+          <div
+            class="recording-overlay"
+            id="recordingOverlay"
+          >
+
+            <span class="recording-overlay-dot"></span>
+
+            <span>
+              REC
+            </span>
+
+            <strong id="recordingOverlayTimer">
+              00:00:00
+            </strong>
 
           </div>
 
 
-          <div class="toolbar-group toolbar-right">
+          <!-- =========================================
+               STAGE BADGES
+          ========================================== -->
 
-            <button
-              type="button"
-              class="tool-btn"
-              id="recordToolbarBtn"
-            >
-              <span class="record-dot"></span>
-              Record
-            </button>
+          <div class="stage-badges">
 
-            <button
-              type="button"
-              class="tool-btn"
-              id="openTeleprompterBtn"
+            <span
+              class="stage-badge"
+              id="stageResolutionBadge"
             >
-              ▤ Teleprompter
-            </button>
+              1920×1080
+            </span>
+
+            <span
+              class="stage-badge"
+              id="stageFpsBadge"
+            >
+              30 FPS
+            </span>
+
+            <span
+              class="stage-badge"
+              id="stageSourceBadge"
+            >
+              Studio
+            </span>
 
           </div>
 
@@ -552,110 +490,95 @@
       </section>
 
 
-      <!-- =====================================================
-           SIDE PANEL
-           ===================================================== -->
+      <!-- ===============================================
+           RIGHT SIDEBAR
+      ================================================ -->
+
       <aside class="sidebar">
 
 
-        <!-- ===================================================
+        <!-- =============================================
              CAMERA
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Camera</h3>
-              <small id="cameraStatus">
-                Camera inactive
-              </small>
+              <span>
+                Mentor camera & preview
+              </span>
             </div>
 
             <span
-              class="status-light"
-              id="cameraStatusLight"
+              class="section-live-dot"
+              id="cameraStatus"
             ></span>
 
           </div>
 
 
-          <div class="side-actions">
+          <div class="button-grid">
 
             <button
               type="button"
-              id="startCameraSideBtn"
               class="side-btn primary"
+              id="startCameraSideBtn"
             >
-              Start Camera
+              📷 Start Camera
             </button>
 
             <button
               type="button"
+              class="side-btn"
               id="stopCameraSideBtn"
-              class="side-btn"
             >
-              Stop
+              ■ Stop Camera
             </button>
 
             <button
               type="button"
+              class="side-btn"
               id="switchCameraSideBtn"
-              class="side-btn"
             >
-              Switch
+              🔄 Switch Camera
             </button>
 
             <button
               type="button"
-              id="uploadMentorSideBtn"
               class="side-btn"
+              id="uploadMentorSideBtn"
             >
-              Upload Video
+              📁 Upload Mentor
             </button>
 
           </div>
 
 
-          <!-- Camera device -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="cameraDeviceSelect">
-              Camera Device
-            </label>
-
-            <select id="cameraDeviceSelect">
-              <option value="">
-                Default Camera
-              </option>
-            </select>
-
-          </div>
-
-
-          <!-- Camera quality -->
-          <div class="field">
-
-            <label for="cameraQuality">
+            <label>
               Camera Quality
             </label>
 
             <select id="cameraQuality">
 
-              <option value="640x360">
-                360p — 640×360
+              <option value="360">
+                360p
               </option>
 
-              <option value="854x480">
-                480p — 854×480
+              <option value="480">
+                480p
               </option>
 
-              <option value="1280x720" selected>
-                720p — 1280×720
+              <option value="720" selected>
+                720p
               </option>
 
-              <option value="1920x1080">
-                1080p — 1920×1080
+              <option value="1080">
+                1080p
               </option>
 
             </select>
@@ -663,10 +586,9 @@
           </div>
 
 
-          <!-- Camera FPS -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="cameraFps">
+            <label>
               Camera FPS
             </label>
 
@@ -688,21 +610,39 @@
 
           </div>
 
+
+          <div class="setting-row">
+
+            <label>
+              Camera Device
+            </label>
+
+            <select id="cameraDeviceSelect">
+
+              <option value="">
+                Default Camera
+              </option>
+
+            </select>
+
+          </div>
+
         </section>
 
 
-        <!-- ===================================================
+        <!-- =============================================
              AI BACKGROUND
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>AI Background</h3>
-              <small>
-                Keep mentor visible
-              </small>
+              <span>
+                Keep person visible
+              </span>
             </div>
 
             <span class="ai-badge">
@@ -712,66 +652,61 @@
           </div>
 
 
-          <div class="ai-grid">
+          <div class="button-grid">
 
             <button
               type="button"
-              class="ai-btn active"
+              class="side-btn"
               id="bgOriginalBtn"
             >
-              <span>◉</span>
               Original
             </button>
 
             <button
               type="button"
-              class="ai-btn"
+              class="side-btn"
               id="bgRemoveBtn"
             >
-              <span>✦</span>
               Remove
             </button>
 
             <button
               type="button"
-              class="ai-btn"
+              class="side-btn"
               id="bgBlurBtn"
             >
-              <span>◌</span>
               Blur
             </button>
 
             <button
               type="button"
-              class="ai-btn"
+              class="side-btn"
               id="bgImageBtn"
             >
-              <span>▧</span>
-              Image
+              Custom Image
             </button>
 
             <button
               type="button"
-              class="ai-btn"
+              class="side-btn"
               id="bgColorBtn"
             >
-              <span>●</span>
-              Color
+              Solid Color
             </button>
 
           </div>
 
 
-          <div class="field">
+          <div class="color-setting">
 
-            <label for="backgroundColor">
+            <label>
               Background Color
             </label>
 
             <input
               type="color"
               id="backgroundColor"
-              value="#111827"
+              value="#0b1220"
             >
 
           </div>
@@ -783,8 +718,12 @@
           >
 
             <span>
-              + Upload Background
+              🖼
             </span>
+
+            <strong>
+              Upload Background Image
+            </strong>
 
             <small>
               JPG / PNG / WEBP
@@ -795,187 +734,175 @@
         </section>
 
 
-        <!-- ===================================================
+        <!-- =============================================
              SCREEN CAPTURE
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Screen Capture</h3>
-              <small id="screenCaptureStatus">
-                Not sharing
-              </small>
+              <span>
+                Screen / window / tab
+              </span>
             </div>
 
             <span
-              class="status-light"
+              class="section-live-dot"
               id="screenCaptureStatusLight"
             ></span>
 
           </div>
 
 
-          <div class="side-actions">
+          <button
+            type="button"
+            class="side-btn primary full"
+            id="startScreenCaptureSideBtn"
+          >
+            🖥 Start Screen Capture
+          </button>
 
-            <button
-              type="button"
-              class="side-btn primary"
-              id="startScreenCaptureSideBtn"
-            >
-              Share Screen
-            </button>
 
-            <button
-              type="button"
-              class="side-btn"
-              id="stopScreenCaptureBtn"
-            >
-              Stop
-            </button>
+          <button
+            type="button"
+            class="side-btn danger full"
+            id="stopScreenCaptureBtn"
+          >
+            ■ Stop Screen Capture
+          </button>
 
+
+          <div
+            class="capture-status"
+            id="screenCaptureStatus"
+          >
+            Screen capture is not active.
           </div>
 
         </section>
 
 
-        <!-- ===================================================
+        <!-- =============================================
              AUDIO
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Audio</h3>
-              <small>
-                Recording audio
-              </small>
+              <span>
+                Main video + microphone
+              </span>
             </div>
 
           </div>
 
 
-          <!-- Main video audio -->
-          <div class="audio-row">
+          <label class="check-row">
 
-            <label class="check-label">
+            <input
+              type="checkbox"
+              id="mainVideoAudioCheckbox"
+              checked
+            >
 
-              <input
-                type="checkbox"
-                id="mainVideoAudioCheckbox"
-                checked
-              >
+            <span>
+              Main video audio
+            </span>
 
-              <span>
-                Main Video Audio
-              </span>
-
-            </label>
-
-          </div>
+          </label>
 
 
           <div class="range-row">
 
-            <label for="mainVideoVolume">
-              Main Volume
-            </label>
+            <div class="range-header">
 
-            <div class="range-value">
-              <span id="mainVolumeValue">
-                100%
+              <span>
+                Main Audio
               </span>
+
+              <strong id="mainVolumeValue">
+                100%
+              </strong>
+
             </div>
+
+            <input
+              type="range"
+              id="mainVideoVolume"
+              min="0"
+              max="100"
+              value="100"
+            >
 
           </div>
 
-          <input
-            type="range"
-            id="mainVideoVolume"
-            min="0"
-            max="100"
-            value="100"
-          >
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="micEnabled"
+              checked
+            >
+
+            <span>
+              Microphone
+            </span>
+
+          </label>
 
 
-          <!-- Microphone -->
-          <div class="audio-row">
+          <div class="range-row">
 
-            <label class="check-label">
+            <div class="range-header">
 
-              <input
-                type="checkbox"
-                id="micEnabled"
-                checked
-              >
+              <span>
+                Mic Volume
+              </span>
+
+              <strong id="micVolumeValue">
+                100%
+              </strong>
+
+            </div>
+
+            <input
+              type="range"
+              id="micVolume"
+              min="0"
+              max="100"
+              value="100"
+            >
+
+          </div>
+
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="micMonitor"
+            >
+
+            <span>
+              Monitor microphone
+            </span>
+
+          </label>
+
+
+          <div class="audio-meter">
+
+            <div class="meter-title">
 
               <span>
                 Microphone
-              </span>
-
-            </label>
-
-            <span
-              class="mic-status"
-              data-mic-status
-            >
-              Ready
-            </span>
-
-          </div>
-
-
-          <div class="range-row">
-
-            <label for="micVolume">
-              Mic Volume
-            </label>
-
-            <div class="range-value">
-              <span id="micVolumeValue">
-                100%
-              </span>
-            </div>
-
-          </div>
-
-          <input
-            type="range"
-            id="micVolume"
-            min="0"
-            max="100"
-            value="100"
-          >
-
-
-          <!-- Mic monitor -->
-          <div class="audio-row">
-
-            <label class="check-label">
-
-              <input
-                type="checkbox"
-                id="micMonitor"
-              >
-
-              <span>
-                Monitor Mic
-              </span>
-
-            </label>
-
-          </div>
-
-
-          <!-- Mic meter -->
-          <div class="meter-block">
-
-            <div class="meter-header">
-
-              <span>
-                Microphone Level
               </span>
 
               <strong id="micLevelValue">
@@ -984,7 +911,7 @@
 
             </div>
 
-            <div class="meter">
+            <div class="meter-track">
 
               <div
                 class="meter-fill"
@@ -996,13 +923,12 @@
           </div>
 
 
-          <!-- Main audio meter -->
-          <div class="meter-block">
+          <div class="audio-meter">
 
-            <div class="meter-header">
+            <div class="meter-title">
 
               <span>
-                Main Audio Level
+                Main Audio
               </span>
 
               <strong id="mainAudioLevelValue">
@@ -1011,7 +937,7 @@
 
             </div>
 
-            <div class="meter">
+            <div class="meter-track">
 
               <div
                 class="meter-fill"
@@ -1023,53 +949,62 @@
           </div>
 
 
-          <!-- Waveform -->
-          <div class="waveform-wrap">
+          <canvas
+            id="micWaveformCanvas"
+            class="waveform-canvas"
+            width="600"
+            height="90"
+          ></canvas>
 
-            <canvas
-              id="micWaveformCanvas"
-              width="640"
-              height="120"
-            ></canvas>
 
+          <div
+            class="mic-status"
+            data-mic-status
+          >
+            Microphone ready.
           </div>
 
         </section>
 
 
-        <!-- ===================================================
+        <!-- =============================================
              TELEPROMPTER
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Teleprompter</h3>
-              <small>
-                Read while recording
-              </small>
+              <span>
+                Script while recording
+              </span>
             </div>
 
           </div>
 
 
           <div
-            class="teleprompter-mini"
+            class="teleprompter-mini-preview"
             id="teleprompterMiniPreview"
           >
-            Upload or write your script.
+
+            <span>
+              No script loaded.
+            </span>
+
           </div>
 
 
-          <div class="side-actions">
+          <div class="button-grid">
 
             <button
               type="button"
               class="side-btn primary"
               id="openTeleprompterSide"
             >
-              Open
+              ▤ Open
             </button>
 
             <button
@@ -1077,50 +1012,99 @@
               class="side-btn"
               id="uploadTeleprompterBtn"
             >
-              Upload TXT
+              📄 Upload TXT
             </button>
 
           </div>
 
+
+          <label class="check-row">
+
+            <input
+              type="checkbox"
+              id="includeTeleprompterInRecording"
+              checked
+            >
+
+            <span>
+              Include teleprompter in recording
+            </span>
+
+          </label>
+
         </section>
 
 
-        <!-- ===================================================
-             RECORDING SETTINGS
-             =================================================== -->
-        <section class="side-card">
+        <!-- =============================================
+             STUDENTS
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
+
+            <div>
+              <h3>Students</h3>
+              <span>
+                Live class participants
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="small-add-btn"
+              id="addStudentBtn"
+            >
+              +
+            </button>
+
+          </div>
+
+
+          <div
+            class="students-list"
+            id="studentsList"
+          ></div>
+
+        </section>
+
+
+        <!-- =============================================
+             RECORDING SETTINGS
+        ============================================== -->
+
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Recording</h3>
-              <small>
-                Professional output
-              </small>
+              <span>
+                Final output settings
+              </span>
             </div>
 
           </div>
 
 
-          <!-- Quality -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="recordingQualitySide">
+            <label>
               Resolution
             </label>
 
             <select id="recordingQualitySide">
 
               <option value="1280x720">
-                720p — 1280×720
+                1280×720
               </option>
 
               <option value="1920x1080" selected>
-                1080p — 1920×1080
+                1920×1080
               </option>
 
               <option value="2560x1440">
-                1440p — 2560×1440
+                2560×1440
               </option>
 
             </select>
@@ -1128,11 +1112,10 @@
           </div>
 
 
-          <!-- FPS -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="recordingFpsSide">
-              Frame Rate
+            <label>
+              FPS
             </label>
 
             <select id="recordingFpsSide">
@@ -1154,25 +1137,24 @@
           </div>
 
 
-          <!-- Format -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="recordingFormatSide">
+            <label>
               Format
             </label>
 
             <select id="recordingFormatSide">
 
               <option value="webm-vp9" selected>
-                WebM — VP9
+                WebM VP9
               </option>
 
               <option value="webm-vp8">
-                WebM — VP8
+                WebM VP8
               </option>
 
               <option value="mp4">
-                MP4 — if supported
+                MP4
               </option>
 
             </select>
@@ -1180,99 +1162,47 @@
           </div>
 
 
-          <!-- Filename -->
-          <div class="field">
+          <div class="setting-row">
 
-            <label for="recordingFileNameSide">
+            <label>
               File Name
             </label>
 
             <input
               type="text"
               id="recordingFileNameSide"
-              value="SNK-Course-Recording"
+              value="mentor-class"
               placeholder="Recording name"
             >
 
           </div>
 
-
-          <!-- Teleprompter -->
-          <label class="check-label recording-check">
-
-            <input
-              type="checkbox"
-              id="includeTeleprompterInRecording"
-            >
-
-            <span>
-              Include teleprompter in recording
-            </span>
-
-          </label>
-
         </section>
 
 
-        <!-- ===================================================
-             STUDENTS
-             =================================================== -->
-        <section class="side-card">
-
-          <div class="side-card-header">
-
-            <div>
-              <h3>Students</h3>
-              <small>
-                Class participants
-              </small>
-            </div>
-
-            <button
-              type="button"
-              class="mini-add-btn"
-              id="addStudentBtn"
-            >
-              +
-            </button>
-
-          </div>
-
-
-          <div
-            class="students-list"
-            id="studentsList"
-          >
-
-            <!-- JS will populate -->
-
-          </div>
-
-        </section>
-
-
-        <!-- ===================================================
+        <!-- =============================================
              FILES
-             =================================================== -->
-        <section class="side-card">
+        ============================================== -->
 
-          <div class="side-card-header">
+        <section class="side-section">
+
+          <div class="section-heading">
 
             <div>
               <h3>Files</h3>
-              <small>
-                Studio assets
-              </small>
+              <span>
+                Project media
+              </span>
             </div>
 
           </div>
 
 
-          <div class="file-actions">
+          <div class="button-grid">
 
             <button
               type="button"
-              class="file-btn"
+              class="side-btn"
               id="uploadMainSideBtn"
             >
               🖼 Main Image
@@ -1280,7 +1210,7 @@
 
             <button
               type="button"
-              class="file-btn"
+              class="side-btn"
               id="uploadVideoSideBtn"
             >
               🎬 Main Video
@@ -1288,7 +1218,7 @@
 
             <button
               type="button"
-              class="file-btn"
+              class="side-btn"
               id="uploadMentorFileSideBtn"
             >
               👤 Mentor Video
@@ -1296,10 +1226,10 @@
 
             <button
               type="button"
-              class="file-btn"
+              class="side-btn"
               id="uploadBackgroundSideBtn"
             >
-              🌄 Background
+              🖼 Background
             </button>
 
           </div>
@@ -1310,12 +1240,119 @@
 
     </main>
 
+
+    <!-- ===================================================
+         BOTTOM TOOLBAR
+    ==================================================== -->
+
+    <footer class="toolbar">
+
+      <div class="toolbar-left">
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="uploadMainBtnBottom"
+        >
+          🖼
+          <span>Image</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="uploadVideoBtnBottom"
+        >
+          🎬
+          <span>Video</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="mainPlayBtn"
+        >
+          ▶
+          <span>Play</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="mainPauseBtn"
+        >
+          ❚❚
+          <span>Pause</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="uploadMentorBtn"
+        >
+          👤
+          <span>Mentor</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="startCameraBtn"
+        >
+          📷
+          <span>Camera</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="stopCameraBtn"
+        >
+          ■
+          <span>Stop Cam</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn record-toolbar-btn"
+          id="recordToolbarBtn"
+        >
+          ●
+          <span>Record</span>
+        </button>
+
+        <button
+          type="button"
+          class="toolbar-btn"
+          id="openTeleprompterBtn"
+        >
+          ▤
+          <span>Teleprompter</span>
+        </button>
+
+      </div>
+
+
+      <div class="toolbar-right">
+
+        <span class="toolbar-info">
+          16:9 Studio Frame
+        </span>
+
+        <span class="toolbar-info">
+          1920×1080
+        </span>
+
+      </div>
+
+    </footer>
+
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        HIDDEN FILE INPUTS
-       ========================================================= -->
+  ====================================================== -->
 
   <input
     type="file"
@@ -1353,35 +1390,10 @@
   >
 
 
-  <!-- =========================================================
-       AI CANVASES
-       ========================================================= -->
-
-  <canvas
-    id="aiCanvas"
-    width="1920"
-    height="1080"
-    hidden
-  ></canvas>
-
-  <canvas
-    id="aiSourceCanvas"
-    width="1920"
-    height="1080"
-    hidden
-  ></canvas>
-
-  <canvas
-    id="aiMaskCanvas"
-    width="1920"
-    height="1080"
-    hidden
-  ></canvas>
-
-
-  <!-- =========================================================
+  <!-- =====================================================
        SETTINGS MODAL
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="modal"
     id="settingsModal"
@@ -1390,17 +1402,14 @@
 
     <div class="modal-backdrop"></div>
 
-    <div class="modal-panel">
+    <div class="modal-card">
 
       <div class="modal-header">
 
         <div>
-          <h2>
-            Studio Settings
-          </h2>
-
+          <h2>Studio Settings</h2>
           <p>
-            Configure your Mentor Studio.
+            Configure your recording workspace.
           </p>
         </div>
 
@@ -1417,40 +1426,39 @@
 
       <div class="modal-body">
 
-        <div class="field">
+        <div class="form-group">
 
-          <label for="brandNameInput">
+          <label>
             Brand Name
           </label>
 
           <input
             type="text"
             id="brandNameInput"
-            value="SNK Institute"
-            placeholder="Your brand name"
+            value="SNK Mentor Studio"
           >
 
         </div>
 
 
-        <div class="field">
+        <div class="form-group">
 
-          <label for="settingsRecordingQuality">
-            Recording Resolution
+          <label>
+            Recording Quality
           </label>
 
           <select id="settingsRecordingQuality">
 
             <option value="1280x720">
-              720p — 1280×720
+              1280×720
             </option>
 
             <option value="1920x1080" selected>
-              1080p — 1920×1080
+              1920×1080
             </option>
 
             <option value="2560x1440">
-              1440p — 2560×1440
+              2560×1440
             </option>
 
           </select>
@@ -1458,9 +1466,9 @@
         </div>
 
 
-        <div class="field">
+        <div class="form-group">
 
-          <label for="settingsRecordingFps">
+          <label>
             Recording FPS
           </label>
 
@@ -1483,7 +1491,7 @@
         </div>
 
 
-        <label class="check-label">
+        <label class="check-row">
 
           <input
             type="checkbox"
@@ -1491,13 +1499,13 @@
           >
 
           <span>
-            Auto-start teleprompter with recording
+            Auto-start teleprompter when recording
           </span>
 
         </label>
 
 
-        <label class="check-label">
+        <label class="check-row">
 
           <input
             type="checkbox"
@@ -1518,7 +1526,7 @@
 
         <button
           type="button"
-          class="modal-btn"
+          class="secondary-btn"
           id="closeSettingsFooterBtn"
         >
           Cancel
@@ -1526,7 +1534,7 @@
 
         <button
           type="button"
-          class="modal-btn primary"
+          class="primary-btn"
           id="saveSettingsBtn"
         >
           Save Settings
@@ -1539,9 +1547,10 @@
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        SHORTCUTS MODAL
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="modal"
     id="shortcutsModal"
@@ -1550,17 +1559,14 @@
 
     <div class="modal-backdrop"></div>
 
-    <div class="modal-panel small">
+    <div class="modal-card small">
 
       <div class="modal-header">
 
         <div>
-          <h2>
-            Keyboard Shortcuts
-          </h2>
-
+          <h2>Keyboard Shortcuts</h2>
           <p>
-            Fast studio controls.
+            Control the studio quickly.
           </p>
         </div>
 
@@ -1578,33 +1584,33 @@
       <div class="shortcut-list">
 
         <div class="shortcut-row">
-          <span>Space</span>
-          <strong>Play / Pause Main Video</strong>
+          <span>Play / Pause</span>
+          <kbd>Space</kbd>
         </div>
 
         <div class="shortcut-row">
-          <span>R</span>
-          <strong>Start Recording</strong>
+          <span>Start Recording</span>
+          <kbd>R</kbd>
         </div>
 
         <div class="shortcut-row">
-          <span>P</span>
-          <strong>Pause / Resume Recording</strong>
+          <span>Pause / Resume Recording</span>
+          <kbd>P</kbd>
         </div>
 
         <div class="shortcut-row">
-          <span>S</span>
-          <strong>Stop Recording</strong>
+          <span>Stop Recording</span>
+          <kbd>S</kbd>
         </div>
 
         <div class="shortcut-row">
-          <span>F</span>
-          <strong>Stage Fullscreen</strong>
+          <span>Fullscreen Stage</span>
+          <kbd>F</kbd>
         </div>
 
         <div class="shortcut-row">
-          <span>Esc</span>
-          <strong>Close Modal / Fullscreen</strong>
+          <span>Close / Exit</span>
+          <kbd>Esc</kbd>
         </div>
 
       </div>
@@ -1614,9 +1620,10 @@
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        TELEPROMPTER MODAL
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="modal"
     id="teleprompterModal"
@@ -1625,17 +1632,14 @@
 
     <div class="modal-backdrop"></div>
 
-    <div class="modal-panel teleprompter-panel">
+    <div class="modal-card teleprompter-modal-card">
 
       <div class="modal-header">
 
         <div>
-          <h2>
-            Teleprompter
-          </h2>
-
+          <h2>Teleprompter</h2>
           <p>
-            Prepare your course script.
+            Prepare your class script.
           </p>
         </div>
 
@@ -1650,120 +1654,128 @@
       </div>
 
 
-      <div class="teleprompter-editor">
+      <div class="teleprompter-layout">
 
-        <div class="teleprompter-input-area">
+        <div class="teleprompter-editor">
+
+          <label>
+            Script
+          </label>
 
           <textarea
             id="teleprompterText"
-            placeholder="Write or paste your script here..."
+            placeholder="Write or paste your class script here..."
           ></textarea>
+
+
+          <div class="teleprompter-controls">
+
+            <div class="form-group">
+
+              <label>
+                Speed
+              </label>
+
+              <input
+                type="range"
+                id="teleprompterSpeed"
+                min="1"
+                max="10"
+                value="3"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Font Size
+              </label>
+
+              <input
+                type="range"
+                id="teleprompterFontSize"
+                min="18"
+                max="72"
+                value="36"
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Opacity
+              </label>
+
+              <input
+                type="range"
+                id="teleprompterOpacity"
+                min="20"
+                max="100"
+                value="92"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="teleprompter-buttons">
+
+            <button
+              type="button"
+              class="secondary-btn"
+              id="teleprompterResetBtn"
+            >
+              Reset
+            </button>
+
+            <button
+              type="button"
+              class="secondary-btn"
+              id="teleprompterPauseBtn"
+            >
+              Pause
+            </button>
+
+            <button
+              type="button"
+              class="primary-btn"
+              id="teleprompterPlayBtn"
+            >
+              Play
+            </button>
+
+            <button
+              type="button"
+              class="primary-btn"
+              id="teleprompterSaveBtn"
+            >
+              Save
+            </button>
+
+          </div>
 
         </div>
 
 
-        <div class="teleprompter-preview-area">
+        <div class="teleprompter-preview-panel">
+
+          <div class="preview-title">
+            Live Preview
+          </div>
 
           <div
             class="teleprompter-preview"
             id="teleprompterPreview"
           >
-            Your teleprompter preview will appear here.
+            Your script preview will appear here.
           </div>
 
         </div>
-
-      </div>
-
-
-      <div class="teleprompter-controls">
-
-        <div class="field">
-
-          <label for="teleprompterSpeed">
-            Speed
-          </label>
-
-          <input
-            type="range"
-            id="teleprompterSpeed"
-            min="1"
-            max="10"
-            value="4"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="teleprompterFontSize">
-            Font Size
-          </label>
-
-          <input
-            type="range"
-            id="teleprompterFontSize"
-            min="20"
-            max="72"
-            value="36"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="teleprompterOpacity">
-            Opacity
-          </label>
-
-          <input
-            type="range"
-            id="teleprompterOpacity"
-            min="20"
-            max="100"
-            value="90"
-          >
-
-        </div>
-
-      </div>
-
-
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="teleprompterResetBtn"
-        >
-          Reset
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="teleprompterPauseBtn"
-        >
-          Pause
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="teleprompterPlayBtn"
-        >
-          Play
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn primary"
-          id="teleprompterSaveBtn"
-        >
-          Save
-        </button>
 
       </div>
 
@@ -1772,9 +1784,10 @@
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        RECORDING PREVIEW MODAL
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="modal"
     id="recordingPreviewModal"
@@ -1783,20 +1796,15 @@
 
     <div class="modal-backdrop"></div>
 
-    <div class="modal-panel recording-preview-panel">
+    <div class="modal-card recording-preview-card">
 
       <div class="modal-header">
 
         <div>
-
-          <h2>
-            Recording Preview
-          </h2>
-
-          <p id="recordingFileInfo">
-            Your recording is ready.
+          <h2>Recording Preview</h2>
+          <p>
+            Review your recorded class before saving.
           </p>
-
         </div>
 
         <button
@@ -1810,205 +1818,242 @@
       </div>
 
 
-      <!-- Preview video -->
-      <div class="recording-preview-video-wrap">
+      <div class="recording-preview-layout">
 
-        <video
-          id="recordingPreviewVideo"
-          playsinline
-          controls
-        ></video>
+        <div class="recording-video-area">
 
-      </div>
+          <video
+            id="recordingPreviewVideo"
+            controls
+            playsinline
+          ></video>
 
-
-      <!-- Preview time -->
-      <div class="recording-time-info">
-
-        <span id="recordingCurrentTime">
-          00:00
-        </span>
-
-        <span>
-          /
-        </span>
-
-        <span id="recordingDuration">
-          00:00
-        </span>
-
-      </div>
+        </div>
 
 
-      <!-- Preview controls -->
-      <div class="preview-controls">
+        <div class="recording-preview-sidebar">
 
-        <button
-          type="button"
-          class="modal-btn"
-          id="recordingPreviewPlayBtn"
-        >
-          ▶ Play
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="recordingPreviewPauseBtn"
-        >
-          ❚❚ Pause
-        </button>
-
-      </div>
+          <div
+            class="recording-file-info"
+            id="recordingFileInfo"
+          >
+            Recording information
+          </div>
 
 
-      <!-- File name -->
-      <div class="field">
+          <div class="recording-time-row">
 
-        <label for="recordingFileName">
-          Recording Name
-        </label>
+            <span>
+              Current
+            </span>
 
-        <input
-          type="text"
-          id="recordingFileName"
-          value="SNK-Course-Recording"
-        >
+            <strong id="recordingCurrentTime">
+              00:00
+            </strong>
 
-      </div>
+          </div>
 
 
-      <!-- Trim -->
-      <div class="trim-section">
+          <div class="recording-time-row">
 
-        <div class="trim-header">
+            <span>
+              Duration
+            </span>
 
-          <div>
+            <strong id="recordingDuration">
+              00:00
+            </strong>
+
+          </div>
+
+
+          <div class="preview-controls">
+
+            <button
+              type="button"
+              class="secondary-btn"
+              id="recordingPreviewPlayBtn"
+            >
+              ▶ Play
+            </button>
+
+            <button
+              type="button"
+              class="secondary-btn"
+              id="recordingPreviewPauseBtn"
+            >
+              ❚❚ Pause
+            </button>
+
+          </div>
+
+
+          <!-- Trim -->
+
+          <div class="trim-panel">
 
             <h3>
               Trim Recording
             </h3>
 
-            <p>
-              Set start and end points for preview/export.
-            </p>
+            <div class="trim-input-row">
+
+              <label>
+                Start
+              </label>
+
+              <input
+                type="number"
+                id="recordingTrimStart"
+                min="0"
+                step="0.1"
+                value="0"
+              >
+
+              <span>
+                sec
+              </span>
+
+            </div>
+
+
+            <div class="trim-input-row">
+
+              <label>
+                End
+              </label>
+
+              <input
+                type="number"
+                id="recordingTrimEnd"
+                min="0"
+                step="0.1"
+                value="0"
+              >
+
+              <span>
+                sec
+              </span>
+
+            </div>
+
+
+            <div class="trim-time-row">
+
+              <span id="recordingTrimStartTime">
+                00:00
+              </span>
+
+              <span>
+                —
+              </span>
+
+              <span id="recordingTrimEndTime">
+                00:00
+              </span>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="primary-btn full"
+              id="applyTrimBtn"
+            >
+              Apply Trim
+            </button>
+
+
+            <button
+              type="button"
+              class="secondary-btn full"
+              id="resetTrimBtn"
+            >
+              Reset Trim
+            </button>
 
           </div>
 
-        </div>
 
+          <!-- Rename -->
 
-        <div class="trim-inputs">
+          <div class="rename-panel">
 
-          <div class="field">
-
-            <label for="recordingTrimStart">
-              Start
-            </label>
+            <h3>
+              Recording Name
+            </h3>
 
             <input
-              type="range"
-              id="recordingTrimStart"
-              min="0"
-              max="0"
-              value="0"
-              step="0.01"
+              type="text"
+              id="recordingNameInput"
+              placeholder="Recording name"
             >
 
-            <span id="recordingTrimStartTime">
-              00:00
-            </span>
+            <button
+              type="button"
+              class="secondary-btn full"
+              id="renameRecordingBtn"
+            >
+              Rename
+            </button>
 
           </div>
 
 
-          <div class="field">
+          <!-- Actions -->
 
-            <label for="recordingTrimEnd">
-              End
-            </label>
+          <div class="preview-action-buttons">
 
-            <input
-              type="range"
-              id="recordingTrimEnd"
-              min="0"
-              max="0"
-              value="0"
-              step="0.01"
+            <button
+              type="button"
+              class="primary-btn full"
+              id="downloadRecordingBtn"
             >
+              ↓ Download
+            </button>
 
-            <span id="recordingTrimEndTime">
-              00:00
-            </span>
+            <button
+              type="button"
+              class="secondary-btn full"
+              id="recordAgainBtn"
+            >
+              ● Record Again
+            </button>
+
+            <button
+              type="button"
+              class="danger-btn full"
+              id="deleteRecordingBtn"
+            >
+              Delete Recording
+            </button>
 
           </div>
-
-        </div>
-
-
-        <div class="trim-actions">
-
-          <button
-            type="button"
-            class="modal-btn primary"
-            id="applyTrimBtn"
-          >
-            Apply Trim
-          </button>
-
-          <button
-            type="button"
-            class="modal-btn"
-            id="resetTrimBtn"
-          >
-            Reset Trim
-          </button>
 
         </div>
 
       </div>
 
 
-      <!-- Rename -->
-      <div class="rename-row">
+      <!-- Recording History -->
 
-        <input
-          type="text"
-          id="recordingNameInput"
-          placeholder="New recording name"
-        >
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="renameRecordingBtn"
-        >
-          Rename
-        </button>
-
-      </div>
-
-
-      <!-- History -->
-      <div class="recording-history-section">
+      <div class="recording-history">
 
         <div class="history-header">
 
           <div>
-
             <h3>
               Recording History
             </h3>
 
-            <p>
-              Your recent recordings.
-            </p>
-
+            <span>
+              Saved recordings from this studio
+            </span>
           </div>
 
           <button
             type="button"
-            class="text-btn danger"
+            class="secondary-btn"
             id="clearRecordingHistoryBtn"
           >
             Clear History
@@ -2020,39 +2065,7 @@
         <div
           class="recording-history-list"
           id="recordingHistoryList"
-        >
-          <!-- JS -->
-        </div>
-
-      </div>
-
-
-      <!-- Footer -->
-      <div class="modal-footer">
-
-        <button
-          type="button"
-          class="modal-btn danger"
-          id="deleteRecordingBtn"
-        >
-          Delete
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn"
-          id="recordAgainBtn"
-        >
-          Record Again
-        </button>
-
-        <button
-          type="button"
-          class="modal-btn primary"
-          id="downloadRecordingBtn"
-        >
-          Download
-        </button>
+        ></div>
 
       </div>
 
@@ -2061,9 +2074,10 @@
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        STUDENT MODAL
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="modal"
     id="studentModal"
@@ -2072,20 +2086,15 @@
 
     <div class="modal-backdrop"></div>
 
-    <div class="modal-panel small">
+    <div class="modal-card small">
 
       <div class="modal-header">
 
         <div>
-
-          <h2>
-            Add Student
-          </h2>
-
+          <h2>Add Student</h2>
           <p>
-            Add a class participant.
+            Add a student to your live class.
           </p>
-
         </div>
 
         <button
@@ -2101,9 +2110,9 @@
 
       <div class="modal-body">
 
-        <div class="field">
+        <div class="form-group">
 
-          <label for="studentNameInput">
+          <label>
             Student Name
           </label>
 
@@ -2122,7 +2131,7 @@
 
         <button
           type="button"
-          class="modal-btn"
+          class="secondary-btn"
           id="cancelStudentBtn"
         >
           Cancel
@@ -2130,7 +2139,7 @@
 
         <button
           type="button"
-          class="modal-btn primary"
+          class="primary-btn"
           id="saveStudentBtn"
         >
           Add Student
@@ -2143,19 +2152,22 @@
   </div>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        TOAST
-       ========================================================= -->
+  ====================================================== -->
+
   <div
     class="toast-container"
     id="toastContainer"
     aria-live="polite"
+    aria-atomic="true"
   ></div>
 
 
-  <!-- =========================================================
-       MICROPHONE BRIDGE
-       ========================================================= -->
+  <!-- =====================================================
+       GLOBAL MIC BRIDGE
+  ====================================================== -->
+
   <script>
     window.CourseStudioMicVolume = 1;
     window.CourseStudioMicEnabled = true;
@@ -2163,9 +2175,10 @@
   </script>
 
 
-  <!-- =========================================================
-       MEDIAPIPE SELFIE SEGMENTATION
-       ========================================================= -->
+  <!-- =====================================================
+       MEDIAPIPE
+  ====================================================== -->
+
   <script
     src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
   ></script>
@@ -2175,10 +2188,162 @@
   ></script>
 
 
-  <!-- =========================================================
+  <!-- =====================================================
        MAIN JAVASCRIPT
-       ========================================================= -->
+  ====================================================== -->
+
   <script src="script.js"></script>
+
+
+  <!-- =====================================================
+       MENTOR RESIZE BRIDGE
+  ====================================================== -->
+
+  <script>
+
+    (function () {
+
+      const mentorCard =
+        document.getElementById("mentorCard");
+
+      const resizeHandle =
+        document.getElementById("mentorResize");
+
+      if (!mentorCard || !resizeHandle) {
+        return;
+      }
+
+      let resizing = false;
+
+      let startX = 0;
+      let startY = 0;
+
+      let startWidth = 0;
+      let startHeight = 0;
+
+      function pointerStart(event) {
+
+        event.preventDefault();
+
+        resizing = true;
+
+        const point =
+          event.touches
+            ? event.touches[0]
+            : event;
+
+        startX = point.clientX;
+        startY = point.clientY;
+
+        const rect =
+          mentorCard.getBoundingClientRect();
+
+        startWidth = rect.width;
+        startHeight = rect.height;
+
+        document.body.classList.add(
+          "resizing-mentor"
+        );
+
+      }
+
+
+      function pointerMove(event) {
+
+        if (!resizing) {
+          return;
+        }
+
+        const point =
+          event.touches
+            ? event.touches[0]
+            : event;
+
+        const deltaX =
+          point.clientX - startX;
+
+        const deltaY =
+          point.clientY - startY;
+
+        const nextWidth =
+          Math.max(
+            130,
+            Math.min(
+              startWidth + deltaX,
+              window.innerWidth * 0.45
+            )
+          );
+
+        const ratio =
+          16 / 9;
+
+        const nextHeight =
+          nextWidth / ratio;
+
+        mentorCard.style.width =
+          `${nextWidth}px`;
+
+        mentorCard.style.height =
+          `${nextHeight}px`;
+
+      }
+
+
+      function pointerEnd() {
+
+        if (!resizing) {
+          return;
+        }
+
+        resizing = false;
+
+        document.body.classList.remove(
+          "resizing-mentor"
+        );
+
+      }
+
+
+      resizeHandle.addEventListener(
+        "mousedown",
+        pointerStart
+      );
+
+      resizeHandle.addEventListener(
+        "touchstart",
+        pointerStart,
+        {
+          passive: false
+        }
+      );
+
+      window.addEventListener(
+        "mousemove",
+        pointerMove
+      );
+
+      window.addEventListener(
+        "touchmove",
+        pointerMove,
+        {
+          passive: false
+        }
+      );
+
+      window.addEventListener(
+        "mouseup",
+        pointerEnd
+      );
+
+      window.addEventListener(
+        "touchend",
+        pointerEnd
+      );
+
+    })();
+
+  </script>
+
 
 </body>
 </html>
