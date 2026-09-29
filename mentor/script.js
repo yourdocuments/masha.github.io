@@ -1,40 +1,62 @@
 /* =========================================================
    SNK MENTOR STUDIO
-   Personal Course Studio — Main JavaScript
+   PERSONAL COURSE STUDIO
+   STEP 3.3 — CAMERA + AI QUALITY UPDATE
 
    File:
    mentor/script.js
 
-   STEP 3.2
-   Features:
-   - Main image upload
-   - Main video upload
-   - Main video play / pause
+   Includes:
+   ---------------------------------------------------------
+   MAIN MEDIA
+   - Image upload
+   - Video upload
+   - Play / pause
+   - Clear
+   - Fullscreen
+
+   MENTOR
    - Mentor video upload
-   - Real webcam camera
-   - Front / rear camera switch
-   - AI person segmentation
-   - Original background
-   - Remove background
-   - Blur background
-   - Custom image background
-   - Solid color background
-   - Correct person alpha masking
-   - Mentor drag / move
-   - Mentor resize compatibility
-   - Screen recording
-   - Students management
-   - Brand settings
-   - Mentor settings
+   - Live webcam
+   - Camera switch
+   - Front camera mirror
+   - Rear camera normal
+   - Drag / move
+   - Resize compatibility
+
+   AI BACKGROUND
+   - Original
+   - Remove
+   - Blur
+   - Custom image
+   - Solid color
+   - Soft segmentation edge
+   - Hair / shoulder edge smoothing
+   - Better custom background compositing
+
+   RECORDING
+   - Screen / stage recording
+   - Microphone
+   - WebM download
+
+   STUDENTS
+   - Add
+   - Remove
+   - Online / offline
+
+   SETTINGS
+   - Brand
+   - Background
+   - Mentor position
    - LocalStorage
-   - Keyboard shortcuts
+
    ========================================================= */
 
 "use strict";
 
 
 /* =========================================================
-   DOM REFERENCES
+   DOM
    ========================================================= */
 
 const imageUpload =
@@ -67,6 +89,15 @@ const mentorPlaceholder =
 const mentorSourceLabel =
   document.getElementById("mentorSourceLabel");
 
+const mentorCard =
+  document.getElementById("mentorCard");
+
+const mentorResize =
+  document.getElementById("mentorResize");
+
+const stage =
+  document.getElementById("stage");
+
 const welcomeContent =
   document.getElementById("welcomeContent");
 
@@ -75,9 +106,6 @@ const brandBadge =
 
 const brandInput =
   document.getElementById("brandInput");
-
-const mentorCard =
-  document.getElementById("mentorCard");
 
 const studentsList =
   document.getElementById("studentsList");
@@ -100,12 +128,9 @@ const settingsModal =
 const toast =
   document.getElementById("toast");
 
-const stage =
-  document.getElementById("stage");
-
 
 /* =========================================================
-   CAMERA DOM
+   CAMERA CONTROLS
    ========================================================= */
 
 const startCameraBtn =
@@ -122,7 +147,7 @@ const cameraStatus =
 
 
 /* =========================================================
-   AI BACKGROUND DOM
+   BACKGROUND CONTROLS
    ========================================================= */
 
 const bgOriginalBtn =
@@ -148,7 +173,7 @@ const backgroundImageUpload =
 
 
 /* =========================================================
-   AI CANVAS REFERENCES
+   AI CANVASES
    ========================================================= */
 
 const aiCanvas =
@@ -162,7 +187,7 @@ const aiMaskCanvas =
 
 
 /* =========================================================
-   STATE
+   STUDENTS
    ========================================================= */
 
 let students = [
@@ -202,7 +227,7 @@ let students = [
 
 
 /* =========================================================
-   RECORDING STATE
+   RECORDING
    ========================================================= */
 
 let isRecording = false;
@@ -213,9 +238,11 @@ let recordedChunks = [];
 
 let recordingStream = null;
 
+let recordingAudioStream = null;
+
 
 /* =========================================================
-   CAMERA STATE
+   CAMERA
    ========================================================= */
 
 let cameraStream = null;
@@ -226,7 +253,7 @@ let cameraRunning = false;
 
 
 /* =========================================================
-   AI STATE
+   AI
    ========================================================= */
 
 let selfieSegmentation = null;
@@ -239,22 +266,31 @@ let aiAnimationFrame = null;
 
 let aiInitialized = false;
 
-let currentBackgroundMode = "original";
 
-let customBackgroundImage = null;
+/* =========================================================
+   BACKGROUND
+   ========================================================= */
+
+let currentBackgroundMode =
+  "original";
+
+let customBackgroundImage =
+  null;
 
 
 /* =========================================================
-   CANVAS STATE
+   CANVAS
    ========================================================= */
 
 let canvasWidth = 640;
 
 let canvasHeight = 480;
 
+let personCanvasCache = null;
+
 
 /* =========================================================
-   MENTOR DRAG STATE
+   DRAG
    ========================================================= */
 
 let mentorDragging = false;
@@ -271,12 +307,36 @@ let mentorStartTop = 0;
 
 
 /* =========================================================
-   UTILITY
+   AI QUALITY
    ========================================================= */
 
-function $(id) {
-  return document.getElementById(id);
-}
+/*
+   These values control the person edge.
+
+   Lower edgeStart:
+   More person included.
+
+   Higher edgeEnd:
+   More solid person area.
+*/
+
+const MASK_EDGE_START = 0.10;
+
+const MASK_EDGE_END = 0.62;
+
+
+/*
+   Extra edge softness.
+*/
+
+const MASK_EDGE_POWER = 1.15;
+
+
+/*
+   Small alpha cleanup.
+*/
+
+const MIN_VISIBLE_ALPHA = 0.015;
 
 
 /* =========================================================
@@ -284,19 +344,30 @@ function $(id) {
    ========================================================= */
 
 function showToast(message) {
+
   if (!toast) {
     return;
   }
 
-  toast.textContent = message;
+  toast.textContent =
+    message;
 
-  toast.classList.add("show");
+  toast.classList.add(
+    "show"
+  );
 
-  clearTimeout(showToast.timer);
+  clearTimeout(
+    showToast.timer
+  );
 
-  showToast.timer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2600);
+  showToast.timer =
+    setTimeout(() => {
+
+      toast.classList.remove(
+        "show"
+      );
+
+    }, 2600);
 }
 
 
@@ -305,71 +376,135 @@ function showToast(message) {
    ========================================================= */
 
 function setStatus(text) {
+
   if (statusText) {
-    statusText.textContent = text;
+    statusText.textContent =
+      text;
   }
 
-  if (statusDot) {
-    statusDot.classList.remove(
-      "online",
-      "recording",
-      "warning"
+  if (!statusDot) {
+    return;
+  }
+
+  statusDot.classList.remove(
+    "online",
+    "recording",
+    "warning"
+  );
+
+  if (
+    text
+      .toLowerCase()
+      .includes("record")
+  ) {
+
+    statusDot.classList.add(
+      "recording"
     );
 
-    if (
-      text.toLowerCase().includes("record")
-    ) {
-      statusDot.classList.add("recording");
-    } else {
-      statusDot.classList.add("online");
-    }
+  } else {
+
+    statusDot.classList.add(
+      "online"
+    );
   }
 }
 
 
 /* =========================================================
-   HTML ESCAPE
+   CAMERA STATUS
+   ========================================================= */
+
+function setCameraStatus(text) {
+
+  if (cameraStatus) {
+    cameraStatus.textContent =
+      text;
+  }
+}
+
+
+/* =========================================================
+   ESCAPE HTML
    ========================================================= */
 
 function escapeHTML(value) {
+
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
 
 
 /* =========================================================
-   DATE FOR RECORDING
+   FILE DATE
    ========================================================= */
 
 function createFileDate() {
-  const now = new Date();
+
+  const now =
+    new Date();
 
   const year =
     now.getFullYear();
 
   const month =
-    String(now.getMonth() + 1)
-      .padStart(2, "0");
+    String(
+      now.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
 
   const day =
-    String(now.getDate())
-      .padStart(2, "0");
+    String(
+      now.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
 
   const hour =
-    String(now.getHours())
-      .padStart(2, "0");
+    String(
+      now.getHours()
+    ).padStart(
+      2,
+      "0"
+    );
 
   const minute =
-    String(now.getMinutes())
-      .padStart(2, "0");
+    String(
+      now.getMinutes()
+    ).padStart(
+      2,
+      "0"
+    );
 
   const second =
-    String(now.getSeconds())
-      .padStart(2, "0");
+    String(
+      now.getSeconds()
+    ).padStart(
+      2,
+      "0"
+    );
 
   return (
     year +
@@ -392,82 +527,114 @@ function createFileDate() {
    ========================================================= */
 
 function renderStudents() {
+
   if (!studentsList) {
     return;
   }
 
-  studentsList.innerHTML = "";
+  studentsList.innerHTML =
+    "";
 
-  students.forEach((student, index) => {
-    const item =
-      document.createElement("div");
+  students.forEach(
+    (
+      student,
+      index
+    ) => {
 
-    item.className =
-      "student-item";
+      const item =
+        document.createElement(
+          "div"
+        );
 
-    item.innerHTML = `
-      <div class="student-avatar">
-        ${escapeHTML(
-          student.name
-            .charAt(0)
-            .toUpperCase()
-        )}
-      </div>
+      item.className =
+        "student-item";
 
-      <div class="student-info">
-        <div class="student-name">
-          ${escapeHTML(student.name)}
+      item.innerHTML = `
+        <div class="student-avatar">
+          ${escapeHTML(
+            student.name
+              .charAt(0)
+              .toUpperCase()
+          )}
         </div>
 
-        <div class="student-status">
-          <span class="student-dot ${
-            student.online
-              ? "online"
-              : ""
-          }"></span>
+        <div class="student-info">
 
-          ${
-            student.online
-              ? "Online"
-              : "Offline"
-          }
+          <div class="student-name">
+            ${escapeHTML(
+              student.name
+            )}
+          </div>
+
+          <div class="student-status">
+
+            <span
+              class="student-dot ${
+                student.online
+                  ? "online"
+                  : ""
+              }"
+            ></span>
+
+            ${
+              student.online
+                ? "Online"
+                : "Offline"
+            }
+
+          </div>
+
         </div>
-      </div>
 
-      <button
-        type="button"
-        class="student-remove"
-        data-index="${index}"
-        title="Remove student"
-      >
-        ×
-      </button>
-    `;
+        <button
+          type="button"
+          class="student-remove"
+          data-index="${index}"
+          title="Remove student"
+        >
+          ×
+        </button>
+      `;
 
-    studentsList.appendChild(item);
-  });
+      studentsList.appendChild(
+        item
+      );
+    }
+  );
+
 
   studentsList
-    .querySelectorAll(".student-remove")
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          removeStudent(
-            Number(
-              button.dataset.index
-            )
-          );
-        }
-      );
-    });
+    .querySelectorAll(
+      ".student-remove"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            removeStudent(
+              Number(
+                button.dataset.index
+              )
+            );
+
+          }
+        );
+
+      }
+    );
+
 
   updateStudentCount();
 }
 
 
 function updateStudentCount() {
+
   if (studentCount) {
+
     studentCount.textContent =
       students.length;
   }
@@ -475,14 +642,19 @@ function updateStudentCount() {
 
 
 function addStudent() {
+
   const number =
     students.length + 1;
 
   students.push({
     name:
       "Student " +
-      String(number)
-        .padStart(2, "0"),
+      String(
+        number
+      ).padStart(
+        2,
+        "0"
+      ),
     online: true
   });
 
@@ -495,6 +667,7 @@ function addStudent() {
 
 
 function removeStudent(index) {
+
   if (
     index < 0 ||
     index >= students.length
@@ -502,7 +675,10 @@ function removeStudent(index) {
     return;
   }
 
-  students.splice(index, 1);
+  students.splice(
+    index,
+    1
+  );
 
   renderStudents();
 
@@ -513,13 +689,15 @@ function removeStudent(index) {
 
 
 /* =========================================================
-   MAIN IMAGE UPLOAD
+   MAIN IMAGE
    ========================================================= */
 
 if (imageUpload) {
+
   imageUpload.addEventListener(
     "change",
     event => {
+
       const file =
         event.target.files &&
         event.target.files[0];
@@ -529,10 +707,14 @@ if (imageUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
       if (mainImage) {
-        mainImage.src = url;
+
+        mainImage.src =
+          url;
 
         mainImage.classList.add(
           "active"
@@ -540,6 +722,7 @@ if (imageUpload) {
       }
 
       if (mainVideo) {
+
         mainVideo.pause();
 
         mainVideo.classList.remove(
@@ -548,6 +731,7 @@ if (imageUpload) {
       }
 
       if (welcomeContent) {
+
         welcomeContent.classList.add(
           "hidden"
         );
@@ -566,13 +750,15 @@ if (imageUpload) {
 
 
 /* =========================================================
-   MAIN VIDEO UPLOAD
+   MAIN VIDEO
    ========================================================= */
 
 if (videoUpload) {
+
   videoUpload.addEventListener(
     "change",
     event => {
+
       const file =
         event.target.files &&
         event.target.files[0];
@@ -582,10 +768,14 @@ if (videoUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
       if (mainVideo) {
-        mainVideo.src = url;
+
+        mainVideo.src =
+          url;
 
         mainVideo.classList.add(
           "active"
@@ -595,12 +785,14 @@ if (videoUpload) {
       }
 
       if (mainImage) {
+
         mainImage.classList.remove(
           "active"
         );
       }
 
       if (welcomeContent) {
+
         welcomeContent.classList.add(
           "hidden"
         );
@@ -619,13 +811,15 @@ if (videoUpload) {
 
 
 /* =========================================================
-   MENTOR VIDEO UPLOAD
+   MENTOR VIDEO
    ========================================================= */
 
 if (mentorUpload) {
+
   mentorUpload.addEventListener(
     "change",
     event => {
+
       const file =
         event.target.files &&
         event.target.files[0];
@@ -635,47 +829,59 @@ if (mentorUpload) {
       }
 
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
 
       stopCamera(
         false
       );
 
       if (mentorVideo) {
-        mentorVideo.src = url;
+
+        mentorVideo.src =
+          url;
 
         mentorVideo.classList.add(
           "active"
         );
 
-        mentorVideo.muted = true;
+        mentorVideo.muted =
+          true;
 
-        mentorVideo.loop = true;
+        mentorVideo.loop =
+          true;
 
         mentorVideo
           .play()
-          .catch(() => {});
+          .catch(
+            () => {}
+          );
       }
 
       if (mentorCameraVideo) {
+
         mentorCameraVideo.classList.remove(
           "active"
         );
       }
 
       if (mentorAICanvas) {
+
         mentorAICanvas.classList.remove(
           "active"
         );
       }
 
       if (mentorPlaceholder) {
+
         mentorPlaceholder.classList.add(
           "hidden"
         );
       }
 
       if (mentorSourceLabel) {
+
         mentorSourceLabel.textContent =
           "Uploaded Video";
       }
@@ -693,10 +899,11 @@ if (mentorUpload) {
 
 
 /* =========================================================
-   MAIN VIDEO PLAY / PAUSE
+   MAIN VIDEO PLAY
    ========================================================= */
 
 function toggleMainPlay() {
+
   if (!mainVideo) {
     return;
   }
@@ -705,14 +912,19 @@ function toggleMainPlay() {
     mainVideo.paused ||
     mainVideo.ended
   ) {
+
     mainVideo
       .play()
-      .catch(() => {});
+      .catch(
+        () => {}
+      );
 
     setStatus(
       "Playing class video"
     );
+
   } else {
+
     mainVideo.pause();
 
     setStatus(
@@ -723,43 +935,55 @@ function toggleMainPlay() {
 
 
 if (mainVideo) {
+
   mainVideo.addEventListener(
     "play",
     () => {
+
       setStatus(
         "Playing class video"
       );
+
     }
   );
+
 
   mainVideo.addEventListener(
     "pause",
     () => {
+
       if (!isRecording) {
+
         setStatus(
           "Video paused"
         );
       }
+
     }
   );
+
 
   mainVideo.addEventListener(
     "ended",
     () => {
+
       setStatus(
         "Video finished"
       );
+
     }
   );
 }
 
 
 /* =========================================================
-   CLEAR MAIN CONTENT
+   CLEAR MAIN
    ========================================================= */
 
 function clearMainContent() {
+
   if (mainImage) {
+
     mainImage.removeAttribute(
       "src"
     );
@@ -769,7 +993,9 @@ function clearMainContent() {
     );
   }
 
+
   if (mainVideo) {
+
     mainVideo.pause();
 
     mainVideo.removeAttribute(
@@ -783,11 +1009,14 @@ function clearMainContent() {
     );
   }
 
+
   if (welcomeContent) {
+
     welcomeContent.classList.remove(
       "hidden"
     );
   }
+
 
   setStatus(
     "Stage cleared"
@@ -804,6 +1033,7 @@ function clearMainContent() {
    ========================================================= */
 
 function fullscreenStage() {
+
   if (!stage) {
     return;
   }
@@ -811,88 +1041,134 @@ function fullscreenStage() {
   if (
     document.fullscreenElement
   ) {
-    document.exitFullscreen()
-      .catch(() => {});
+
+    document
+      .exitFullscreen()
+      .catch(
+        () => {}
+      );
 
     return;
   }
 
   stage
     .requestFullscreen()
-    .catch(() => {
-      showToast(
-        "Fullscreen is not available."
-      );
-    });
+    .catch(
+      () => {
+
+        showToast(
+          "Fullscreen is not available."
+        );
+
+      }
+    );
 }
 
 
 /* =========================================================
-   CAMERA
+   CAMERA START
    ========================================================= */
 
 async function startCamera() {
+
   if (
     !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
+    !navigator.mediaDevices
+      .getUserMedia
   ) {
-    showToast(
-      "Camera is not supported by this browser."
-    );
 
     setCameraStatus(
       "Camera not supported"
     );
 
+    showToast(
+      "Camera is not supported."
+    );
+
     return;
   }
 
+
   try {
+
     stopCamera(
       false
     );
+
 
     setCameraStatus(
       "Starting camera..."
     );
 
+
     const constraints = {
+
       audio: true,
+
       video: {
+
         facingMode:
           cameraFacingMode,
+
         width: {
           ideal: 1280
         },
+
         height: {
           ideal: 720
+        },
+
+        frameRate: {
+          ideal: 30,
+          max: 30
         }
+
       }
+
     };
 
+
     cameraStream =
-      await navigator.mediaDevices
+      await navigator
+        .mediaDevices
         .getUserMedia(
           constraints
         );
 
-    cameraRunning = true;
+
+    cameraRunning =
+      true;
+
 
     if (mentorCameraVideo) {
+
       mentorCameraVideo.srcObject =
         cameraStream;
 
-      mentorCameraVideo.muted = true;
+      mentorCameraVideo.muted =
+        true;
 
       mentorCameraVideo.playsInline =
         true;
 
+      /*
+        Mirror is controlled with CSS
+        below.
+      */
+
+      applyCameraOrientation();
+
+
       await mentorCameraVideo
         .play()
-        .catch(() => {});
+        .catch(
+          () => {}
+        );
     }
 
+
     if (mentorVideo) {
+
       mentorVideo.pause();
 
       mentorVideo.classList.remove(
@@ -900,95 +1176,166 @@ async function startCamera() {
       );
     }
 
-    if (mentorCameraVideo) {
-      mentorCameraVideo.classList.add(
-        "active"
-      );
-    }
 
     if (mentorPlaceholder) {
+
       mentorPlaceholder.classList.add(
         "hidden"
       );
     }
 
-    if (mentorSourceLabel) {
-      mentorSourceLabel.textContent =
-        "Live Camera";
+
+    if (mentorCameraVideo) {
+
+      mentorCameraVideo.classList.add(
+        "active"
+      );
     }
+
+
+    if (mentorSourceLabel) {
+
+      mentorSourceLabel.textContent =
+        cameraFacingMode ===
+        "user"
+          ? "Live Camera"
+          : "Rear Camera";
+    }
+
 
     setCameraStatus(
       "Camera is live"
     );
 
+
     setStatus(
       "Camera live"
     );
 
+
     await initializeAI();
 
-    startAIProcessing();
+
+    /*
+      Original mode doesn't need
+      segmentation rendering.
+
+      Other modes do.
+    */
+
+    if (
+      currentBackgroundMode ===
+      "original"
+    ) {
+
+      showOriginalCamera();
+
+    } else {
+
+      startAIProcessing();
+    }
+
 
     updateCameraButtons();
+
 
     showToast(
       "Camera started."
     );
+
+
   } catch (error) {
+
     console.error(
       "Camera start error:",
       error
     );
 
-    cameraRunning = false;
 
-    setCameraStatus(
-      "Camera permission required"
-    );
+    cameraRunning =
+      false;
+
 
     updateCameraButtons();
+
 
     if (
       error &&
       error.name ===
         "NotAllowedError"
     ) {
+
+      setCameraStatus(
+        "Permission denied"
+      );
+
       showToast(
         "Please allow camera permission."
       );
+
     } else if (
       error &&
       error.name ===
         "NotFoundError"
     ) {
+
+      setCameraStatus(
+        "No camera found"
+      );
+
       showToast(
         "No camera was found."
       );
+
     } else {
+
+      setCameraStatus(
+        "Camera failed"
+      );
+
       showToast(
         "Unable to start camera."
       );
     }
+
   }
 }
 
 
-function stopCamera(showMessage = true) {
+/* =========================================================
+   CAMERA STOP
+   ========================================================= */
+
+function stopCamera(
+  showMessage = true
+) {
+
   stopAIProcessing();
 
+
   if (cameraStream) {
+
     cameraStream
       .getTracks()
-      .forEach(track => {
-        track.stop();
-      });
+      .forEach(
+        track => {
 
-    cameraStream = null;
+          track.stop();
+
+        }
+      );
+
+    cameraStream =
+      null;
   }
 
-  cameraRunning = false;
+
+  cameraRunning =
+    false;
+
 
   if (mentorCameraVideo) {
+
     mentorCameraVideo.pause();
 
     mentorCameraVideo.srcObject =
@@ -997,17 +1344,25 @@ function stopCamera(showMessage = true) {
     mentorCameraVideo.classList.remove(
       "active"
     );
+
+    mentorCameraVideo.style.transform =
+      "";
   }
 
+
   if (mentorAICanvas) {
+
     mentorAICanvas.classList.remove(
       "active"
     );
   }
 
+
   updateCameraButtons();
 
+
   if (showMessage) {
+
     setCameraStatus(
       "Camera stopped"
     );
@@ -1023,20 +1378,11 @@ function stopCamera(showMessage = true) {
 }
 
 
+/* =========================================================
+   SWITCH CAMERA
+   ========================================================= */
+
 async function switchCamera() {
-  if (!cameraRunning) {
-    cameraFacingMode =
-      cameraFacingMode ===
-      "user"
-        ? "environment"
-        : "user";
-
-    showToast(
-      "Camera mode changed. Start camera."
-    );
-
-    return;
-  }
 
   cameraFacingMode =
     cameraFacingMode ===
@@ -1044,25 +1390,103 @@ async function switchCamera() {
       ? "environment"
       : "user";
 
+
+  /*
+    If camera isn't running,
+    just remember selected mode.
+  */
+
+  if (!cameraRunning) {
+
+    showToast(
+      cameraFacingMode ===
+        "user"
+        ? "Front camera selected."
+        : "Rear camera selected."
+    );
+
+    applyCameraOrientation();
+
+    return;
+  }
+
+
   await startCamera();
 }
 
 
-function setCameraStatus(text) {
-  if (cameraStatus) {
-    cameraStatus.textContent =
-      text;
+/* =========================================================
+   CAMERA ORIENTATION
+   ========================================================= */
+
+function applyCameraOrientation() {
+
+  if (!mentorCameraVideo) {
+    return;
+  }
+
+
+  /*
+    Front camera:
+    mirrored like normal selfie camera.
+
+    Rear camera:
+    normal orientation.
+  */
+
+  if (
+    cameraFacingMode ===
+    "user"
+  ) {
+
+    mentorCameraVideo.style.transform =
+      "scaleX(-1)";
+
+  } else {
+
+    mentorCameraVideo.style.transform =
+      "scaleX(1)";
+  }
+
+
+  /*
+    AI canvas must use the same orientation.
+  */
+
+  if (mentorAICanvas) {
+
+    if (
+      cameraFacingMode ===
+      "user"
+    ) {
+
+      mentorAICanvas.style.transform =
+        "scaleX(-1)";
+
+    } else {
+
+      mentorAICanvas.style.transform =
+        "scaleX(1)";
+    }
   }
 }
 
 
+/* =========================================================
+   CAMERA BUTTON UI
+   ========================================================= */
+
 function updateCameraButtons() {
+
   if (startCameraBtn) {
+
     startCameraBtn.disabled =
       cameraRunning;
   }
 
+
   if (stopCameraBtn) {
+
     stopCameraBtn.disabled =
       !cameraRunning;
   }
@@ -1070,84 +1494,176 @@ function updateCameraButtons() {
 
 
 /* =========================================================
-   MEDIA PIPE SELFIE SEGMENTATION
+   ORIGINAL CAMERA
+   ========================================================= */
+
+function showOriginalCamera() {
+
+  if (mentorCameraVideo) {
+
+    mentorCameraVideo.classList.add(
+      "active"
+    );
+  }
+
+
+  if (mentorAICanvas) {
+
+    mentorAICanvas.classList.remove(
+      "active"
+    );
+  }
+
+
+  applyCameraOrientation();
+}
+
+
+/* =========================================================
+   AI INITIALIZATION
    ========================================================= */
 
 async function initializeAI() {
+
   if (aiInitialized) {
     return;
   }
+
 
   if (
     typeof SelfieSegmentation ===
     "undefined"
   ) {
+
     console.warn(
-      "MediaPipe SelfieSegmentation is not loaded."
+      "SelfieSegmentation unavailable."
     );
 
+    segmentationReady =
+      false;
+
     setCameraStatus(
-      "AI unavailable — original camera mode"
+      "Camera live — AI unavailable"
     );
 
     return;
   }
 
+
   try {
+
     selfieSegmentation =
       new SelfieSegmentation({
-        locateFile: file => {
-          return (
-            "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/" +
-            file
-          );
-        }
+
+        locateFile:
+          file => {
+
+            return (
+              "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/" +
+              file
+            );
+
+          }
+
       });
 
+
     selfieSegmentation.setOptions({
+
       modelSelection: 1
+
     });
+
 
     selfieSegmentation.onResults(
       handleSegmentationResults
     );
 
-    segmentationReady = true;
 
-    aiInitialized = true;
+    segmentationReady =
+      true;
+
+    aiInitialized =
+      true;
+
 
     prepareCanvases();
 
+
     console.log(
-      "Selfie Segmentation initialized."
+      "AI segmentation ready."
     );
+
+
   } catch (error) {
+
     console.error(
       "AI initialization error:",
       error
     );
 
-    segmentationReady = false;
+    segmentationReady =
+      false;
   }
 }
 
 
 /* =========================================================
-   CANVAS PREPARATION
+   CANVAS SIZE
+   ========================================================= */
+
+function setCanvasSize(
+  canvas,
+  width,
+  height
+) {
+
+  if (!canvas) {
+    return;
+  }
+
+
+  if (
+    canvas.width !==
+    width
+  ) {
+
+    canvas.width =
+      width;
+  }
+
+
+  if (
+    canvas.height !==
+    height
+  ) {
+
+    canvas.height =
+      height;
+  }
+}
+
+
+/* =========================================================
+   PREPARE CANVASES
    ========================================================= */
 
 function prepareCanvases() {
+
   if (!mentorCameraVideo) {
     return;
   }
+
 
   const width =
     mentorCameraVideo.videoWidth ||
     640;
 
+
   const height =
     mentorCameraVideo.videoHeight ||
     480;
+
 
   canvasWidth =
     width;
@@ -1155,11 +1671,13 @@ function prepareCanvases() {
   canvasHeight =
     height;
 
+
   setCanvasSize(
     aiCanvas,
     width,
     height
   );
+
 
   setCanvasSize(
     aiSourceCanvas,
@@ -1167,104 +1685,107 @@ function prepareCanvases() {
     height
   );
 
+
   setCanvasSize(
     aiMaskCanvas,
     width,
     height
   );
 
+
   setCanvasSize(
     mentorAICanvas,
     width,
     height
   );
-}
 
 
-function setCanvasSize(
-  canvas,
-  width,
-  height
-) {
-  if (!canvas) {
-    return;
-  }
+  /*
+    Keep person cache in correct size.
+  */
 
-  if (
-    canvas.width !== width
-  ) {
-    canvas.width = width;
-  }
+  if (personCanvasCache) {
 
-  if (
-    canvas.height !== height
-  ) {
-    canvas.height = height;
+    setCanvasSize(
+      personCanvasCache,
+      width,
+      height
+    );
   }
 }
 
 
 /* =========================================================
-   AI PROCESSING LOOP
+   START AI
    ========================================================= */
 
 function startAIProcessing() {
+
   stopAIProcessing();
+
 
   if (!cameraRunning) {
     return;
   }
 
+
   if (
     currentBackgroundMode ===
     "original"
   ) {
-    if (mentorAICanvas) {
-      mentorAICanvas.classList.remove(
-        "active"
-      );
-    }
 
-    if (mentorCameraVideo) {
-      mentorCameraVideo.classList.add(
-        "active"
-      );
-    }
+    showOriginalCamera();
 
     return;
   }
+
 
   if (
     !segmentationReady ||
     !selfieSegmentation
   ) {
-    if (mentorCameraVideo) {
-      mentorCameraVideo.classList.add(
-        "active"
-      );
-    }
+
+    showOriginalCamera();
+
+    setCameraStatus(
+      "AI loading..."
+    );
 
     return;
   }
 
+
   if (mentorAICanvas) {
+
     mentorAICanvas.classList.add(
       "active"
     );
   }
 
+
   if (mentorCameraVideo) {
+
     mentorCameraVideo.classList.remove(
       "active"
     );
   }
 
+
+  applyCameraOrientation();
+
+
   processAIFrame();
 }
 
 
+/* =========================================================
+   STOP AI
+   ========================================================= */
+
 function stopAIProcessing() {
+
   if (aiAnimationFrame) {
+
     cancelAnimationFrame(
       aiAnimationFrame
     );
@@ -1273,25 +1794,29 @@ function stopAIProcessing() {
       null;
   }
 
+
   segmentationBusy =
     false;
 }
 
 
 /* =========================================================
-   SEND CAMERA FRAME TO MEDIAPIPE
+   AI FRAME LOOP
    ========================================================= */
 
 async function processAIFrame() {
+
   if (!cameraRunning) {
     return;
   }
+
 
   if (
     !mentorCameraVideo ||
     mentorCameraVideo.readyState <
       2
   ) {
+
     aiAnimationFrame =
       requestAnimationFrame(
         processAIFrame
@@ -1299,11 +1824,13 @@ async function processAIFrame() {
 
     return;
   }
+
 
   if (
     !segmentationReady ||
     !selfieSegmentation
   ) {
+
     aiAnimationFrame =
       requestAnimationFrame(
         processAIFrame
@@ -1312,25 +1839,36 @@ async function processAIFrame() {
     return;
   }
 
+
   if (!segmentationBusy) {
+
     segmentationBusy =
       true;
 
+
     try {
+
       await selfieSegmentation.send({
+
         image:
           mentorCameraVideo
+
       });
+
     } catch (error) {
+
       console.error(
-        "Segmentation frame error:",
+        "AI frame error:",
         error
       );
+
     } finally {
+
       segmentationBusy =
         false;
     }
   }
+
 
   aiAnimationFrame =
     requestAnimationFrame(
@@ -1346,12 +1884,14 @@ async function processAIFrame() {
 function handleSegmentationResults(
   results
 ) {
+
   if (
     !results ||
     !mentorAICanvas
   ) {
     return;
   }
+
 
   if (
     !mentorCameraVideo ||
@@ -1360,32 +1900,50 @@ function handleSegmentationResults(
     return;
   }
 
+
+  if (
+    currentBackgroundMode ===
+    "original"
+  ) {
+
+    showOriginalCamera();
+
+    return;
+  }
+
+
   prepareCanvases();
+
 
   const sourceContext =
     aiSourceCanvas
       ? aiSourceCanvas.getContext(
           "2d",
           {
-            willReadFrequently: true
+            willReadFrequently:
+              true
           }
         )
       : null;
+
 
   const maskContext =
     aiMaskCanvas
       ? aiMaskCanvas.getContext(
           "2d",
           {
-            willReadFrequently: true
+            willReadFrequently:
+              true
           }
         )
       : null;
+
 
   const outputContext =
     mentorAICanvas.getContext(
       "2d"
     );
+
 
   if (
     !sourceContext ||
@@ -1395,16 +1953,18 @@ function handleSegmentationResults(
     return;
   }
 
+
   const width =
     canvasWidth;
+
 
   const height =
     canvasHeight;
 
 
-  /* ---------------------------------------------------------
-     Draw original camera frame
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     SOURCE
+     ------------------------------------------------------- */
 
   sourceContext.clearRect(
     0,
@@ -1412,6 +1972,7 @@ function handleSegmentationResults(
     width,
     height
   );
+
 
   sourceContext.drawImage(
     results.image,
@@ -1422,31 +1983,9 @@ function handleSegmentationResults(
   );
 
 
-  /* ---------------------------------------------------------
-     ORIGINAL MODE
-     --------------------------------------------------------- */
-
-  if (
-    currentBackgroundMode ===
-    "original"
-  ) {
-    mentorAICanvas.classList.remove(
-      "active"
-    );
-
-    if (mentorCameraVideo) {
-      mentorCameraVideo.classList.add(
-        "active"
-      );
-    }
-
-    return;
-  }
-
-
-  /* ---------------------------------------------------------
-     Draw segmentation mask
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     MASK
+     ------------------------------------------------------- */
 
   maskContext.clearRect(
     0,
@@ -1455,9 +1994,11 @@ function handleSegmentationResults(
     height
   );
 
+
   if (
     results.segmentationMask
   ) {
+
     maskContext.drawImage(
       results.segmentationMask,
       0,
@@ -1468,9 +2009,9 @@ function handleSegmentationResults(
   }
 
 
-  /* ---------------------------------------------------------
-     Get pixel data
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     IMAGE DATA
+     ------------------------------------------------------- */
 
   const sourceData =
     sourceContext.getImageData(
@@ -1479,6 +2020,7 @@ function handleSegmentationResults(
       width,
       height
     );
+
 
   const maskData =
     maskContext.getImageData(
@@ -1489,15 +2031,13 @@ function handleSegmentationResults(
     );
 
 
-  /* ---------------------------------------------------------
-     Create isolated person layer
+  const sourcePixels =
+    sourceData.data;
 
-     IMPORTANT:
-     MediaPipe mask is NOT directly an alpha channel.
 
-     We convert confidence into alpha so the person
-     remains visible over custom / blur / color backgrounds.
-     --------------------------------------------------------- */
+  const maskPixels =
+    maskData.data;
+
 
   const personImage =
     new ImageData(
@@ -1505,55 +2045,68 @@ function handleSegmentationResults(
       height
     );
 
-  const sourcePixels =
-    sourceData.data;
-
-  const maskPixels =
-    maskData.data;
 
   const personPixels =
     personImage.data;
+
+
+  /* -------------------------------------------------------
+     CREATE SOFT PERSON MASK
+
+     Important:
+     We don't simply copy mask red channel
+     into alpha.
+
+     We create a soft alpha curve.
+     ------------------------------------------------------- */
 
   for (
     let i = 0;
     i < sourcePixels.length;
     i += 4
   ) {
-    const confidence =
+
+    let confidence =
       maskPixels[i] / 255;
 
-    /*
-      Soft threshold.
 
-      0.15 = beginning of person
-      0.65 = fully visible person
+    /*
+      Smooth transition.
     */
 
     let alpha =
-      (confidence - 0.15) /
-      0.65;
-
-    alpha =
-      Math.max(
-        0,
-        Math.min(
-          1,
-          alpha
-        )
+      smoothStep(
+        MASK_EDGE_START,
+        MASK_EDGE_END,
+        confidence
       );
 
+
     /*
-      Slight edge smoothing.
+      Slight power adjustment.
+    */
+
+    alpha =
+      Math.pow(
+        alpha,
+        MASK_EDGE_POWER
+      );
+
+
+    /*
+      Very low values become
+      completely transparent.
     */
 
     if (
-      alpha > 0 &&
-      alpha < 1
+      alpha <
+      MIN_VISIBLE_ALPHA
     ) {
-      alpha =
-        alpha * alpha *
-        (3 - 2 * alpha);
+
+      alpha = 0;
+
     }
+
 
     personPixels[i] =
       sourcePixels[i];
@@ -1571,9 +2124,9 @@ function handleSegmentationResults(
   }
 
 
-  /* ---------------------------------------------------------
-     Clear final canvas
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     OUTPUT BACKGROUND
+     ------------------------------------------------------- */
 
   outputContext.clearRect(
     0,
@@ -1583,10 +2136,6 @@ function handleSegmentationResults(
   );
 
 
-  /* ---------------------------------------------------------
-     BACKGROUND
-     --------------------------------------------------------- */
-
   drawSelectedBackground(
     outputContext,
     results.image,
@@ -1595,28 +2144,34 @@ function handleSegmentationResults(
   );
 
 
-  /* ---------------------------------------------------------
-     PERSON ON TOP
-     --------------------------------------------------------- */
-
-  /*
-    Put the isolated person over the
-    selected background.
-  */
+  /* -------------------------------------------------------
+     PERSON
+     ------------------------------------------------------- */
 
   const personCanvas =
     getPersonCanvas();
+
 
   const personContext =
     personCanvas.getContext(
       "2d"
     );
 
+
+  personContext.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+
   personContext.putImageData(
     personImage,
     0,
     0
   );
+
 
   outputContext.drawImage(
     personCanvas,
@@ -1627,38 +2182,94 @@ function handleSegmentationResults(
   );
 
 
-  /* ---------------------------------------------------------
-     Show AI canvas
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     SHOW AI
+     ------------------------------------------------------- */
 
   mentorAICanvas.classList.add(
     "active"
   );
 
-  if (mentorCameraVideo) {
-    mentorCameraVideo.classList.remove(
-      "active"
-    );
-  }
+
+  mentorCameraVideo.classList.remove(
+    "active"
+  );
+
+
+  applyCameraOrientation();
 }
 
 
 /* =========================================================
-   PERSON CANVAS CACHE
+   SMOOTH STEP
    ========================================================= */
 
-let personCanvasCache = null;
+function smoothStep(
+  edge0,
+  edge1,
+  value
+) {
 
+  if (
+    edge0 ===
+    edge1
+  ) {
+
+    return value >=
+      edge1
+      ? 1
+      : 0;
+  }
+
+
+  let x =
+    (
+      value -
+      edge0
+    ) /
+    (
+      edge1 -
+      edge0
+    );
+
+
+  x =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        x
+      )
+    );
+
+
+  return (
+    x *
+    x *
+    (
+      3 -
+      2 * x
+    )
+  );
+}
+
+
+/* =========================================================
+   PERSON CANVAS
+   ========================================================= */
 
 function getPersonCanvas() {
+
   if (
     !personCanvasCache
   ) {
+
     personCanvasCache =
       document.createElement(
         "canvas"
       );
   }
+
 
   setCanvasSize(
     personCanvasCache,
@@ -1666,12 +2277,13 @@ function getPersonCanvas() {
     canvasHeight
   );
 
+
   return personCanvasCache;
 }
 
 
 /* =========================================================
-   BACKGROUND DRAWING
+   DRAW BACKGROUND
    ========================================================= */
 
 function drawSelectedBackground(
@@ -1680,33 +2292,42 @@ function drawSelectedBackground(
   width,
   height
 ) {
+
+  /* -------------------------------------------------------
+     REMOVE
+     ------------------------------------------------------- */
+
   if (
     currentBackgroundMode ===
     "remove"
   ) {
+
     /*
-      Transparent background.
+      Transparent.
     */
 
     return;
   }
 
 
-  /* ---------------------------------------------------------
-     SOLID COLOR
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     COLOR
+     ------------------------------------------------------- */
 
   if (
     currentBackgroundMode ===
     "color"
   ) {
+
     const color =
       backgroundColor
         ? backgroundColor.value
         : "#101827";
 
+
     context.fillStyle =
       color;
+
 
     context.fillRect(
       0,
@@ -1715,22 +2336,25 @@ function drawSelectedBackground(
       height
     );
 
+
     return;
   }
 
 
-  /* ---------------------------------------------------------
+  /* -------------------------------------------------------
      CUSTOM IMAGE
-     --------------------------------------------------------- */
+     ------------------------------------------------------- */
 
   if (
     currentBackgroundMode ===
     "image"
   ) {
+
     if (
       customBackgroundImage &&
       customBackgroundImage.complete
     ) {
+
       drawCoverImage(
         context,
         customBackgroundImage,
@@ -1738,16 +2362,14 @@ function drawSelectedBackground(
         height
       );
 
+
       return;
     }
 
-    /*
-      If image isn't ready,
-      use a clean fallback.
-    */
 
     context.fillStyle =
       "#101827";
+
 
     context.fillRect(
       0,
@@ -1756,46 +2378,61 @@ function drawSelectedBackground(
       height
     );
 
+
     return;
   }
 
 
-  /* ---------------------------------------------------------
-     BLUR BACKGROUND
-     --------------------------------------------------------- */
+  /* -------------------------------------------------------
+     BLUR
+     ------------------------------------------------------- */
 
   if (
     currentBackgroundMode ===
     "blur"
   ) {
+
     context.save();
 
-    context.filter =
-      "blur(18px)";
 
     /*
-      Slight scale prevents transparent
-      edges caused by blur.
+      Scale up slightly to avoid
+      transparent blur edges.
     */
 
     const scale =
-      1.08;
+      1.10;
+
 
     const drawWidth =
-      width * scale;
+      width *
+      scale;
+
 
     const drawHeight =
-      height * scale;
+      height *
+      scale;
+
 
     const x =
-      (width -
-        drawWidth) /
+      (
+        width -
+        drawWidth
+      ) /
       2;
 
+
     const y =
-      (height -
-        drawHeight) /
+      (
+        height -
+        drawHeight
+      ) /
       2;
+
+
+    context.filter =
+      "blur(20px)";
+
 
     context.drawImage(
       sourceImage,
@@ -1805,15 +2442,17 @@ function drawSelectedBackground(
       drawHeight
     );
 
+
     context.restore();
+
 
     return;
   }
 
 
-  /* ---------------------------------------------------------
+  /* -------------------------------------------------------
      DEFAULT
-     --------------------------------------------------------- */
+     ------------------------------------------------------- */
 
   context.drawImage(
     sourceImage,
@@ -1835,13 +2474,16 @@ function drawCoverImage(
   width,
   height
 ) {
+
   const imageWidth =
     image.naturalWidth ||
     image.width;
 
+
   const imageHeight =
     image.naturalHeight ||
     image.height;
+
 
   if (
     !imageWidth ||
@@ -1850,13 +2492,16 @@ function drawCoverImage(
     return;
   }
 
+
   const imageRatio =
     imageWidth /
     imageHeight;
 
+
   const canvasRatio =
     width /
     height;
+
 
   let drawWidth;
 
@@ -1866,10 +2511,12 @@ function drawCoverImage(
 
   let y;
 
+
   if (
     imageRatio >
     canvasRatio
   ) {
+
     drawHeight =
       height;
 
@@ -1878,12 +2525,16 @@ function drawCoverImage(
       imageRatio;
 
     x =
-      (width -
-        drawWidth) /
+      (
+        width -
+        drawWidth
+      ) /
       2;
 
     y = 0;
+
   } else {
+
     drawWidth =
       width;
 
@@ -1894,10 +2545,13 @@ function drawCoverImage(
     x = 0;
 
     y =
-      (height -
-        drawHeight) /
+      (
+        height -
+        drawHeight
+      ) /
       2;
   }
+
 
   context.drawImage(
     image,
@@ -1916,143 +2570,180 @@ function drawCoverImage(
 function setBackgroundMode(
   mode
 ) {
+
   currentBackgroundMode =
     mode;
 
+
   updateBackgroundButtons();
+
 
   if (
     mode ===
     "original"
   ) {
-    if (mentorCameraVideo) {
-      mentorCameraVideo.classList.add(
-        "active"
-      );
-    }
 
-    if (mentorAICanvas) {
-      mentorAICanvas.classList.remove(
-        "active"
-      );
-    }
+    showOriginalCamera();
+
 
     setStatus(
       "Original camera"
     );
 
+
     showToast(
       "Original background selected."
     );
 
+
     return;
   }
 
+
   if (!cameraRunning) {
+
     showToast(
       "Start the camera first."
     );
 
+
     return;
   }
+
 
   if (!segmentationReady) {
+
     showToast(
-      "AI is still loading. Please wait."
+      "AI is still loading."
     );
+
 
     return;
   }
+
 
   startAIProcessing();
 
+
   const messages = {
+
     remove:
       "Background removed.",
+
     blur:
       "Background blur enabled.",
+
     image:
       "Custom background enabled.",
+
     color:
       "Solid color background enabled."
+
   };
+
 
   setStatus(
     messages[mode] ||
-      "AI background enabled."
+    "AI background enabled."
   );
+
 
   showToast(
     messages[mode] ||
-      "Background changed."
+    "Background changed."
   );
 }
 
 
+/* =========================================================
+   BACKGROUND BUTTON UI
+   ========================================================= */
+
 function updateBackgroundButtons() {
+
   const buttons = [
+
     bgOriginalBtn,
+
     bgRemoveBtn,
+
     bgBlurBtn,
+
     bgImageBtn,
+
     bgColorBtn
+
   ];
 
-  buttons.forEach(button => {
-    if (!button) {
-      return;
-    }
 
-    button.classList.remove(
-      "active"
-    );
-  });
+  buttons.forEach(
+    button => {
+
+      if (!button) {
+        return;
+      }
+
+      button.classList.remove(
+        "active"
+      );
+
+    }
+  );
 
 
   if (
     currentBackgroundMode ===
     "original"
   ) {
+
     bgOriginalBtn &&
       bgOriginalBtn.classList.add(
         "active"
       );
   }
 
+
   if (
     currentBackgroundMode ===
     "remove"
   ) {
+
     bgRemoveBtn &&
       bgRemoveBtn.classList.add(
         "active"
       );
   }
 
+
   if (
     currentBackgroundMode ===
     "blur"
   ) {
+
     bgBlurBtn &&
       bgBlurBtn.classList.add(
         "active"
       );
   }
 
+
   if (
     currentBackgroundMode ===
     "image"
   ) {
+
     bgImageBtn &&
       bgImageBtn.classList.add(
         "active"
       );
   }
 
+
   if (
     currentBackgroundMode ===
     "color"
   ) {
+
     bgColorBtn &&
       bgColorBtn.classList.add(
         "active"
@@ -2062,213 +2753,302 @@ function updateBackgroundButtons() {
 
 
 /* =========================================================
-   BACKGROUND BUTTON EVENTS
+   BACKGROUND EVENTS
    ========================================================= */
 
 if (bgOriginalBtn) {
+
   bgOriginalBtn.addEventListener(
     "click",
     () => {
+
       setBackgroundMode(
         "original"
       );
+
     }
   );
 }
 
 
 if (bgRemoveBtn) {
+
   bgRemoveBtn.addEventListener(
     "click",
     () => {
+
       setBackgroundMode(
         "remove"
       );
+
     }
   );
 }
 
 
 if (bgBlurBtn) {
+
   bgBlurBtn.addEventListener(
     "click",
     () => {
+
       setBackgroundMode(
         "blur"
       );
+
     }
   );
 }
 
 
 if (bgImageBtn) {
+
   bgImageBtn.addEventListener(
     "click",
     () => {
+
       if (
         backgroundImageUpload
       ) {
+
         backgroundImageUpload.click();
+
       }
+
     }
   );
 }
 
 
 if (bgColorBtn) {
+
   bgColorBtn.addEventListener(
     "click",
     () => {
+
       setBackgroundMode(
         "color"
       );
+
     }
   );
 }
 
 
 /* =========================================================
-   COLOR INPUT
+   COLOR
    ========================================================= */
 
 if (backgroundColor) {
+
   backgroundColor.addEventListener(
     "input",
     () => {
-      if (
-        currentBackgroundMode !==
-        "color"
-      ) {
-        currentBackgroundMode =
-          "color";
 
-        updateBackgroundButtons();
+      currentBackgroundMode =
+        "color";
+
+
+      updateBackgroundButtons();
+
+
+      if (
+        cameraRunning
+      ) {
+
+        startAIProcessing();
+
       }
+
     }
   );
 }
 
 
 /* =========================================================
-   CUSTOM BACKGROUND UPLOAD
+   CUSTOM IMAGE
    ========================================================= */
 
 if (
   backgroundImageUpload
 ) {
+
   backgroundImageUpload.addEventListener(
     "change",
     event => {
+
       const file =
         event.target.files &&
         event.target.files[0];
+
 
       if (!file) {
         return;
       }
 
+
       const url =
-        URL.createObjectURL(file);
+        URL.createObjectURL(
+          file
+        );
+
 
       const image =
         new Image();
 
-      image.onload = () => {
-        customBackgroundImage =
-          image;
 
-        currentBackgroundMode =
-          "image";
+      image.onload =
+        () => {
 
-        updateBackgroundButtons();
+          customBackgroundImage =
+            image;
 
-        if (cameraRunning) {
-          startAIProcessing();
-        }
 
-        setStatus(
-          "Custom background ready"
-        );
+          currentBackgroundMode =
+            "image";
 
-        showToast(
-          "Custom background applied."
-        );
-      };
 
-      image.onerror = () => {
-        showToast(
-          "Unable to load background image."
-        );
-      };
+          updateBackgroundButtons();
 
-      image.src = url;
+
+          if (
+            cameraRunning
+          ) {
+
+            startAIProcessing();
+
+          }
+
+
+          setStatus(
+            "Custom background ready"
+          );
+
+
+          showToast(
+            "Custom background applied."
+          );
+
+
+        };
+
+
+      image.onerror =
+        () => {
+
+          showToast(
+            "Unable to load background image."
+          );
+
+        };
+
+
+      image.src =
+        url;
     }
   );
 }
 
 
 /* =========================================================
-   CAMERA BUTTON EVENTS
+   CAMERA EVENTS
    ========================================================= */
 
 if (startCameraBtn) {
+
   startCameraBtn.addEventListener(
     "click",
-    () => {
-      startCamera();
-    }
+    startCamera
   );
 }
 
 
 if (stopCameraBtn) {
+
   stopCameraBtn.addEventListener(
     "click",
     () => {
+
       stopCamera();
+
     }
   );
 }
 
 
 if (switchCameraBtn) {
+
   switchCameraBtn.addEventListener(
     "click",
+    switchCamera
+  );
+}
+
+
+/* =========================================================
+   CAMERA VIDEO METADATA
+   ========================================================= */
+
+if (mentorCameraVideo) {
+
+  mentorCameraVideo.addEventListener(
+    "loadedmetadata",
     () => {
-      switchCamera();
+
+      prepareCanvases();
+
+      applyCameraOrientation();
+
+
+      if (
+        cameraRunning &&
+        currentBackgroundMode !==
+          "original"
+      ) {
+
+        startAIProcessing();
+
+      }
+
     }
   );
 }
 
 
 /* =========================================================
-   MENTOR DRAG / MOVE
+   MENTOR DRAG
    ========================================================= */
 
 function initializeMentorDrag() {
+
   if (!mentorCard) {
     return;
   }
+
 
   mentorCard.addEventListener(
     "pointerdown",
     mentorPointerDown
   );
 
+
   mentorCard.addEventListener(
     "pointermove",
     mentorPointerMove
   );
+
 
   mentorCard.addEventListener(
     "pointerup",
     mentorPointerUp
   );
 
+
   mentorCard.addEventListener(
     "pointercancel",
     mentorPointerUp
   );
+
 
   mentorCard.addEventListener(
     "lostpointercapture",
@@ -2277,12 +3057,18 @@ function initializeMentorDrag() {
 }
 
 
+/* =========================================================
+   INTERACTIVE ELEMENT CHECK
+   ========================================================= */
+
 function isInteractiveMentorElement(
   target
 ) {
+
   if (!target) {
     return false;
   }
+
 
   return Boolean(
     target.closest(
@@ -2292,110 +3078,155 @@ function isInteractiveMentorElement(
 }
 
 
+/* =========================================================
+   POINTER DOWN
+   ========================================================= */
+
 function mentorPointerDown(
   event
 ) {
+
   if (!mentorCard) {
     return;
   }
+
 
   if (
     isInteractiveMentorElement(
       event.target
     )
   ) {
+
     return;
   }
+
 
   if (
-    event.button !== undefined &&
-    event.button !== 0
+    event.button !==
+      undefined &&
+    event.button !==
+      0
   ) {
+
     return;
   }
 
+
+  if (!stage) {
+    return;
+  }
+
+
   const stageRect =
-    stage
-      ? stage.getBoundingClientRect()
-      : null;
+    stage.getBoundingClientRect();
+
 
   const mentorRect =
     mentorCard.getBoundingClientRect();
 
-  if (!stageRect) {
-    return;
-  }
 
-  mentorDragging = true;
+  mentorDragging =
+    true;
+
 
   mentorDragPointerId =
     event.pointerId;
 
+
   mentorStartPointerX =
     event.clientX;
 
+
   mentorStartPointerY =
     event.clientY;
+
 
   mentorStartLeft =
     mentorRect.left -
     stageRect.left;
 
+
   mentorStartTop =
     mentorRect.top -
     stageRect.top;
+
 
   mentorCard.classList.add(
     "dragging"
   );
 
-  mentorCard.setPointerCapture(
-    event.pointerId
-  );
+
+  try {
+
+    mentorCard.setPointerCapture(
+      event.pointerId
+    );
+
+  } catch (error) {
+
+    /* ignore */
+
+  }
+
 
   event.preventDefault();
 }
 
 
+/* =========================================================
+   POINTER MOVE
+   ========================================================= */
+
 function mentorPointerMove(
   event
 ) {
+
   if (
     !mentorDragging ||
     !stage ||
     !mentorCard
   ) {
+
     return;
   }
+
 
   if (
     event.pointerId !==
     mentorDragPointerId
   ) {
+
     return;
   }
+
 
   const stageRect =
     stage.getBoundingClientRect();
 
+
   const mentorRect =
     mentorCard.getBoundingClientRect();
+
 
   const deltaX =
     event.clientX -
     mentorStartPointerX;
 
+
   const deltaY =
     event.clientY -
     mentorStartPointerY;
+
 
   let newLeft =
     mentorStartLeft +
     deltaX;
 
+
   let newTop =
     mentorStartTop +
     deltaY;
+
 
   const maxLeft =
     Math.max(
@@ -2404,12 +3235,14 @@ function mentorPointerMove(
         mentorRect.width
     );
 
+
   const maxTop =
     Math.max(
       0,
       stageRect.height -
         mentorRect.height
     );
+
 
   newLeft =
     Math.max(
@@ -2420,6 +3253,7 @@ function mentorPointerMove(
       )
     );
 
+
   newTop =
     Math.max(
       0,
@@ -2429,92 +3263,126 @@ function mentorPointerMove(
       )
     );
 
+
   mentorCard.style.left =
     newLeft + "px";
+
 
   mentorCard.style.top =
     newTop + "px";
 
+
   mentorCard.style.right =
     "auto";
+
 
   mentorCard.style.bottom =
     "auto";
 }
 
 
+/* =========================================================
+   POINTER UP
+   ========================================================= */
+
 function mentorPointerUp(
   event
 ) {
+
   if (!mentorDragging) {
     return;
   }
 
+
   if (
     mentorDragPointerId !==
-    null &&
+      null &&
     event.pointerId !==
-    mentorDragPointerId
+      mentorDragPointerId
   ) {
+
     return;
   }
 
-  mentorDragging = false;
+
+  mentorDragging =
+    false;
+
 
   mentorCard.classList.remove(
     "dragging"
   );
 
+
   try {
+
     if (
       mentorDragPointerId !==
-      null &&
+        null &&
       mentorCard.hasPointerCapture(
         mentorDragPointerId
       )
     ) {
+
       mentorCard.releasePointerCapture(
         mentorDragPointerId
       );
+
     }
+
   } catch (error) {
+
     /* ignore */
+
   }
+
 
   mentorDragPointerId =
     null;
+
 
   saveMentorPosition();
 }
 
 
+/* =========================================================
+   SAVE MENTOR POSITION
+   ========================================================= */
+
 function saveMentorPosition() {
+
   if (!mentorCard) {
     return;
   }
 
-  const left =
-    mentorCard.offsetLeft;
-
-  const top =
-    mentorCard.offsetTop;
 
   localStorage.setItem(
     "courseStudioMentorLeft",
-    String(left)
+    String(
+      mentorCard.offsetLeft
+    )
   );
+
 
   localStorage.setItem(
     "courseStudioMentorTop",
-    String(top)
+    String(
+      mentorCard.offsetTop
+    )
   );
 }
 
 
+/* =========================================================
+   RESET MENTOR POSITION
+   ========================================================= */
+
 function resetMentorPosition() {
+
   if (!mentorCard) {
     return;
   }
+
 
   mentorCard.style.left =
     "";
@@ -2528,13 +3396,16 @@ function resetMentorPosition() {
   mentorCard.style.bottom =
     "";
 
+
   localStorage.removeItem(
     "courseStudioMentorLeft"
   );
 
+
   localStorage.removeItem(
     "courseStudioMentorTop"
   );
+
 
   showToast(
     "Mentor position reset."
@@ -2547,18 +3418,27 @@ function resetMentorPosition() {
    ========================================================= */
 
 function toggleRecording() {
+
   if (isRecording) {
+
     stopRecording();
+
   } else {
+
     startRecording();
+
   }
 }
 
 
+/* =========================================================
+   START RECORDING
+   ========================================================= */
+
 async function startRecording() {
-  if (
-    !stage
-  ) {
+
+  if (!stage) {
+
     showToast(
       "Recording stage not found."
     );
@@ -2566,8 +3446,16 @@ async function startRecording() {
     return;
   }
 
+
   try {
-    recordedChunks = [];
+
+    recordedChunks =
+      [];
+
+
+    /*
+      Capture stage.
+    */
 
     const canvasStream =
       stage.captureStream
@@ -2576,56 +3464,66 @@ async function startRecording() {
           )
         : null;
 
+
     if (!canvasStream) {
-      /*
-        Fallback:
-        try to capture display.
-      */
 
       if (
         navigator.mediaDevices &&
         navigator.mediaDevices
           .getDisplayMedia
       ) {
+
         recordingStream =
-          await navigator.mediaDevices
+          await navigator
+            .mediaDevices
             .getDisplayMedia({
               video: true,
               audio: true
             });
+
       } else {
+
         throw new Error(
-          "Recording is not supported."
+          "Recording unsupported."
         );
       }
+
     } else {
+
       recordingStream =
         canvasStream;
 
+
       /*
-        Try to add microphone audio.
+        Microphone.
       */
 
       try {
-        const audioStream =
-          await navigator.mediaDevices
+
+        recordingAudioStream =
+          await navigator
+            .mediaDevices
             .getUserMedia({
               audio: true
             });
 
-        const audioTracks =
-          audioStream.getAudioTracks();
 
-        audioTracks.forEach(
-          track => {
-            recordingStream.addTrack(
-              track
-            );
-          }
-        );
+        recordingAudioStream
+          .getAudioTracks()
+          .forEach(
+            track => {
+
+              recordingStream.addTrack(
+                track
+              );
+
+            }
+          );
+
       } catch (audioError) {
+
         console.warn(
-          "Microphone not available:",
+          "Microphone unavailable:",
           audioError
         );
       }
@@ -2633,18 +3531,25 @@ async function startRecording() {
 
 
     const mimeTypes = [
+
       "video/webm;codecs=vp9,opus",
+
       "video/webm;codecs=vp8,opus",
+
       "video/webm"
+
     ];
+
 
     let selectedMime =
       "";
+
 
     for (
       const mimeType
       of mimeTypes
     ) {
+
       if (
         typeof MediaRecorder !==
           "undefined" &&
@@ -2652,6 +3557,7 @@ async function startRecording() {
           mimeType
         )
       ) {
+
         selectedMime =
           mimeType;
 
@@ -2664,8 +3570,9 @@ async function startRecording() {
       typeof MediaRecorder ===
       "undefined"
     ) {
+
       throw new Error(
-        "MediaRecorder is not supported."
+        "MediaRecorder unsupported."
       );
     }
 
@@ -2684,34 +3591,42 @@ async function startRecording() {
 
     mediaRecorder.ondataavailable =
       event => {
+
         if (
           event.data &&
           event.data.size >
             0
         ) {
+
           recordedChunks.push(
             event.data
           );
         }
+
       };
 
 
     mediaRecorder.onstop =
       () => {
+
         finishRecording();
+
       };
 
 
     mediaRecorder.onerror =
       event => {
+
         console.error(
-          "Recorder error:",
+          "Recording error:",
           event
         );
+
 
         showToast(
           "Recording error."
         );
+
 
         cleanupRecordingStream();
       };
@@ -2721,24 +3636,34 @@ async function startRecording() {
       1000
     );
 
-    isRecording = true;
+
+    isRecording =
+      true;
+
 
     updateRecordingUI();
+
 
     setStatus(
       "Recording"
     );
 
+
     showToast(
       "Recording started."
     );
+
+
   } catch (error) {
+
     console.error(
       "Recording start error:",
       error
     );
 
+
     cleanupRecordingStream();
+
 
     showToast(
       "Unable to start recording."
@@ -2747,36 +3672,56 @@ async function startRecording() {
 }
 
 
+/* =========================================================
+   STOP RECORDING
+   ========================================================= */
+
 function stopRecording() {
+
   if (
     mediaRecorder &&
     mediaRecorder.state !==
       "inactive"
   ) {
+
     mediaRecorder.stop();
 
-    isRecording = false;
+
+    isRecording =
+      false;
+
 
     updateRecordingUI();
+
 
     setStatus(
       "Preparing recording..."
     );
 
+
     return;
   }
 
-  isRecording = false;
+
+  isRecording =
+    false;
+
 
   updateRecordingUI();
 }
 
 
+/* =========================================================
+   FINISH RECORDING
+   ========================================================= */
+
 function finishRecording() {
+
   if (
     recordedChunks.length ===
     0
   ) {
+
     cleanupRecordingStream();
 
     setStatus(
@@ -2785,6 +3730,7 @@ function finishRecording() {
 
     return;
   }
+
 
   const blob =
     new Blob(
@@ -2795,46 +3741,59 @@ function finishRecording() {
       }
     );
 
+
   const url =
     URL.createObjectURL(
       blob
     );
+
 
   const link =
     document.createElement(
       "a"
     );
 
+
   link.href =
     url;
+
 
   link.download =
     "mentor-studio-" +
     createFileDate() +
     ".webm";
 
+
   document.body.appendChild(
     link
   );
 
+
   link.click();
+
 
   link.remove();
 
+
   setTimeout(
     () => {
+
       URL.revokeObjectURL(
         url
       );
+
     },
     5000
   );
 
+
   cleanupRecordingStream();
+
 
   setStatus(
     "Recording saved"
   );
+
 
   showToast(
     "Recording saved successfully."
@@ -2842,15 +3801,21 @@ function finishRecording() {
 }
 
 
+/* =========================================================
+   RECORDING CLEANUP
+   ========================================================= */
+
 function cleanupRecordingStream() {
-  if (
-    recordingStream
-  ) {
+
+  if (recordingStream) {
+
     recordingStream
       .getTracks()
       .forEach(
         track => {
+
           track.stop();
+
         }
       );
 
@@ -2858,29 +3823,62 @@ function cleanupRecordingStream() {
       null;
   }
 
+
+  if (
+    recordingAudioStream
+  ) {
+
+    recordingAudioStream
+      .getTracks()
+      .forEach(
+        track => {
+
+          track.stop();
+
+        }
+      );
+
+    recordingAudioStream =
+      null;
+  }
+
+
   mediaRecorder =
     null;
 
-  recordedChunks = [];
+
+  recordedChunks =
+    [];
 }
 
 
+/* =========================================================
+   RECORDING UI
+   ========================================================= */
+
 function updateRecordingUI() {
+
   if (!recordTopBtn) {
     return;
   }
 
+
   if (isRecording) {
+
     recordTopBtn.classList.add(
       "recording"
     );
 
+
     recordTopBtn.textContent =
       "■ Stop Recording";
+
   } else {
+
     recordTopBtn.classList.remove(
       "recording"
     );
+
 
     recordTopBtn.textContent =
       "● Record";
@@ -2893,9 +3891,11 @@ function updateRecordingUI() {
    ========================================================= */
 
 function openSettings() {
+
   if (!settingsModal) {
     return;
   }
+
 
   settingsModal.classList.add(
     "open"
@@ -2904,9 +3904,11 @@ function openSettings() {
 
 
 function closeSettings() {
+
   if (!settingsModal) {
     return;
   }
+
 
   settingsModal.classList.remove(
     "open"
@@ -2915,13 +3917,19 @@ function closeSettings() {
 
 
 function openBrandSettings() {
+
   openSettings();
 
+
   if (brandInput) {
+
     setTimeout(
       () => {
+
         brandInput.focus();
+
         brandInput.select();
+
       },
       100
     );
@@ -2929,41 +3937,54 @@ function openBrandSettings() {
 }
 
 
+/* =========================================================
+   SAVE SETTINGS
+   ========================================================= */
+
 function saveSettings() {
+
   const brand =
     brandInput
       ? brandInput.value.trim()
       : "";
 
+
   if (brand) {
+
     localStorage.setItem(
       "courseStudioBrand",
       brand
     );
 
+
     if (brandBadge) {
+
       brandBadge.textContent =
         brand;
     }
   }
+
 
   localStorage.setItem(
     "courseStudioMentorBg",
     currentBackgroundMode
   );
 
-  if (
-    backgroundColor
-  ) {
+
+  if (backgroundColor) {
+
     localStorage.setItem(
       "courseStudioBackgroundColor",
       backgroundColor.value
     );
   }
 
+
   saveMentorPosition();
 
+
   closeSettings();
+
 
   showToast(
     "Settings saved."
@@ -2971,24 +3992,33 @@ function saveSettings() {
 }
 
 
+/* =========================================================
+   LOAD SETTINGS
+   ========================================================= */
+
 function loadSettings() {
+
   const savedBrand =
     localStorage.getItem(
       "courseStudioBrand"
     );
 
+
   if (
     savedBrand &&
     brandInput
   ) {
+
     brandInput.value =
       savedBrand;
   }
+
 
   if (
     savedBrand &&
     brandBadge
   ) {
+
     brandBadge.textContent =
       savedBrand;
   }
@@ -2999,9 +4029,9 @@ function loadSettings() {
       "courseStudioMentorBg"
     );
 
-  if (
-    savedMode
-  ) {
+
+  if (savedMode) {
+
     currentBackgroundMode =
       savedMode;
   }
@@ -3012,10 +4042,12 @@ function loadSettings() {
       "courseStudioBackgroundColor"
     );
 
+
   if (
     savedColor &&
     backgroundColor
   ) {
+
     backgroundColor.value =
       savedColor;
   }
@@ -3026,28 +4058,35 @@ function loadSettings() {
       "courseStudioMentorLeft"
     );
 
+
   const savedTop =
     localStorage.getItem(
       "courseStudioMentorTop"
     );
+
 
   if (
     mentorCard &&
     savedLeft !== null &&
     savedTop !== null
   ) {
+
     mentorCard.style.left =
       savedLeft + "px";
+
 
     mentorCard.style.top =
       savedTop + "px";
 
+
     mentorCard.style.right =
       "auto";
+
 
     mentorCard.style.bottom =
       "auto";
   }
+
 
   updateBackgroundButtons();
 }
@@ -3060,12 +4099,15 @@ function loadSettings() {
 function changeMentorBackground(
   color
 ) {
+
   if (!mentorCard) {
     return;
   }
 
+
   mentorCard.style.background =
     color;
+
 
   localStorage.setItem(
     "courseStudioMentorCardBg",
@@ -3075,123 +4117,179 @@ function changeMentorBackground(
 
 
 /* =========================================================
-   MODAL CLICK OUTSIDE
+   SETTINGS OUTSIDE CLICK
    ========================================================= */
 
 if (settingsModal) {
+
   settingsModal.addEventListener(
     "click",
     event => {
+
       if (
         event.target ===
         settingsModal
       ) {
+
         closeSettings();
+
       }
+
     }
   );
 }
 
 
 /* =========================================================
-   GLOBAL BUTTON SUPPORT
+   DATA ACTION BUTTONS
    ========================================================= */
 
 document.addEventListener(
   "click",
   event => {
+
     const button =
       event.target.closest(
         "[data-action]"
       );
 
+
     if (!button) {
       return;
     }
 
+
     const action =
       button.dataset.action;
 
+
     switch (action) {
+
       case "add-student":
+
         addStudent();
+
         break;
 
+
       case "remove-student":
+
         if (
           button.dataset.index !==
           undefined
         ) {
+
           removeStudent(
             Number(
               button.dataset.index
             )
           );
         }
+
         break;
+
 
       case "play-main":
+
         toggleMainPlay();
+
         break;
+
 
       case "clear-main":
+
         clearMainContent();
+
         break;
+
 
       case "fullscreen":
+
         fullscreenStage();
+
         break;
+
 
       case "record":
+
         toggleRecording();
+
         break;
+
 
       case "settings":
+
         openSettings();
+
         break;
+
 
       case "close-settings":
+
         closeSettings();
+
         break;
+
 
       case "save-settings":
+
         saveSettings();
+
         break;
+
 
       case "brand":
+
         openBrandSettings();
+
         break;
+
 
       case "reset-mentor":
+
         resetMentorPosition();
+
         break;
+
 
       case "camera-start":
+
         startCamera();
+
         break;
+
 
       case "camera-stop":
+
         stopCamera();
+
         break;
+
 
       case "camera-switch":
+
         switchCamera();
+
         break;
 
+
       default:
+
         break;
     }
+
   }
 );
 
 
 /* =========================================================
-   KEYBOARD SHORTCUTS
+   KEYBOARD
    ========================================================= */
 
 document.addEventListener(
   "keydown",
   event => {
+
     /*
       ESC
     */
@@ -3200,11 +4298,16 @@ document.addEventListener(
       event.key ===
       "Escape"
     ) {
+
       closeSettings();
 
+
       if (isRecording) {
+
         stopRecording();
+
       }
+
 
       return;
     }
@@ -3212,7 +4315,7 @@ document.addEventListener(
 
     /*
       CTRL + ENTER
-      Recording
+      Record
     */
 
     if (
@@ -3220,9 +4323,12 @@ document.addEventListener(
       event.key ===
         "Enter"
     ) {
+
       event.preventDefault();
 
+
       toggleRecording();
+
 
       return;
     }
@@ -3240,8 +4346,10 @@ document.addEventListener(
       !event.altKey &&
       !event.shiftKey
     ) {
+
       const active =
         document.activeElement;
+
 
       const typing =
         active &&
@@ -3254,34 +4362,17 @@ document.addEventListener(
             "SELECT"
         );
 
+
       if (!typing) {
+
         resetMentorPosition();
+
       }
+
     }
+
   }
 );
-
-
-/* =========================================================
-   CAMERA VIDEO METADATA
-   ========================================================= */
-
-if (mentorCameraVideo) {
-  mentorCameraVideo.addEventListener(
-    "loadedmetadata",
-    () => {
-      prepareCanvases();
-
-      if (
-        currentBackgroundMode !==
-          "original" &&
-        cameraRunning
-      ) {
-        startAIProcessing();
-      }
-    }
-  );
-}
 
 
 /* =========================================================
@@ -3291,9 +4382,6 @@ if (mentorCameraVideo) {
 window.addEventListener(
   "resize",
   () => {
-    /*
-      Keep mentor card inside stage.
-    */
 
     if (
       !stage ||
@@ -3302,17 +4390,22 @@ window.addEventListener(
       return;
     }
 
+
     const stageRect =
       stage.getBoundingClientRect();
+
 
     const mentorRect =
       mentorCard.getBoundingClientRect();
 
+
     let left =
       mentorCard.offsetLeft;
 
+
     let top =
       mentorCard.offsetTop;
+
 
     const maxLeft =
       Math.max(
@@ -3321,6 +4414,7 @@ window.addEventListener(
           mentorRect.width
       );
 
+
     const maxTop =
       Math.max(
         0,
@@ -3328,42 +4422,56 @@ window.addEventListener(
           mentorRect.height
       );
 
+
     if (
       left >
       maxLeft
     ) {
+
       left =
         maxLeft;
     }
+
 
     if (
       top >
       maxTop
     ) {
+
       top =
         maxTop;
     }
 
+
     if (
       left < 0
     ) {
-      left = 0;
+
+      left =
+        0;
     }
+
 
     if (
       top < 0
     ) {
-      top = 0;
+
+      top =
+        0;
     }
+
 
     mentorCard.style.left =
       left + "px";
 
+
     mentorCard.style.top =
       top + "px";
 
+
     mentorCard.style.right =
       "auto";
+
 
     mentorCard.style.bottom =
       "auto";
@@ -3378,23 +4486,25 @@ window.addEventListener(
 document.addEventListener(
   "visibilitychange",
   () => {
+
     if (
       document.hidden
     ) {
-      /*
-        Don't automatically stop the camera.
-        Browser controls the actual stream lifecycle.
-      */
+
       return;
     }
+
 
     if (
       cameraRunning &&
       currentBackgroundMode !==
         "original"
     ) {
+
       startAIProcessing();
+
     }
+
   }
 );
 
@@ -3406,29 +4516,53 @@ document.addEventListener(
 window.addEventListener(
   "beforeunload",
   () => {
+
     stopAIProcessing();
 
+
     if (cameraStream) {
+
       cameraStream
         .getTracks()
         .forEach(
           track => {
+
             track.stop();
+
           }
         );
     }
 
-    if (
-      recordingStream
-    ) {
+
+    if (recordingStream) {
+
       recordingStream
         .getTracks()
         .forEach(
           track => {
+
             track.stop();
+
           }
         );
     }
+
+
+    if (
+      recordingAudioStream
+    ) {
+
+      recordingAudioStream
+        .getTracks()
+        .forEach(
+          track => {
+
+            track.stop();
+
+          }
+        );
+    }
+
   }
 );
 
@@ -3438,26 +4572,34 @@ window.addEventListener(
    ========================================================= */
 
 function initializeMentorStudio() {
+
   renderStudents();
+
 
   loadSettings();
 
+
   initializeMentorDrag();
+
 
   updateCameraButtons();
 
+
   updateBackgroundButtons();
+
 
   setCameraStatus(
     "Camera offline"
   );
 
+
   setStatus(
     "Ready"
   );
 
+
   console.log(
-    "SNK Mentor Studio initialized."
+    "SNK Mentor Studio — Step 3.3 ready."
   );
 }
 
@@ -3466,8 +4608,7 @@ initializeMentorStudio();
 
 
 /* =========================================================
-   GLOBAL FUNCTIONS
-   Useful if existing HTML buttons use onclick=""
+   GLOBAL API
    ========================================================= */
 
 window.startCamera =
