@@ -1,1302 +1,1105 @@
 /* =========================================================
    SNK MENTOR STUDIO
-   Personal Course Studio
+   PERSONAL COURSE STUDIO
+   Step 3.9 — Professional Recording & Preview
    File: mentor/script.js
 
-   STEP 3.9 — PROFESSIONAL RECORDING SYSTEM
-
-   Features:
-   - Main image upload
-   - Main video upload
-   - Mentor video upload
-   - Live camera
-   - Camera device selection
-   - Camera quality
-   - Camera FPS
-   - AI background
-   - Original / Remove / Blur / Image / Color
-   - Person segmentation
-   - Draggable mentor card
-   - Resizable mentor card
-   - Screen capture
-   - Main video audio
-   - Microphone
-   - Audio meters
-   - Microphone waveform
-   - Teleprompter
-   - Students
-   - Recording
-   - Pause / Resume / Stop
-   - 720p / 1080p / 1440p
-   - 24 / 30 / 60 FPS
-   - WebM VP9 / VP8 / MP4 detection
-   - Recording preview
-   - Recording history
-   - IndexedDB recording storage
-   - Rename
-   - Download
-   - Keyboard shortcuts
-   - Fullscreen
-   - Continuous composition rendering
-
-   IMPORTANT:
-   Browser MediaRecorder support for MP4 varies.
-   The code automatically detects supported formats.
-========================================================= */
-
-"use strict";
-
-
-/* =========================================================
-   GLOBAL STATE
-========================================================= */
-
-const state = {
-
-  /* ---------------------------------------------
-     Main media
-  --------------------------------------------- */
-  mainImageURL: "",
-  mainVideoURL: "",
-  mentorVideoURL: "",
-
-  mainMode: "none",
-  mentorMode: "none",
-
-  /* ---------------------------------------------
-     Camera
-  --------------------------------------------- */
-  cameraStream: null,
-  cameraDeviceId: "",
-  cameraFacingMode: "user",
-  cameraWidth: 1280,
-  cameraHeight: 720,
-  cameraFps: 30,
-
-  /* ---------------------------------------------
-     AI
-  --------------------------------------------- */
-  aiEnabled: false,
-  aiBackgroundMode: "original",
-  backgroundImage: null,
-  selfieSegmentation: null,
-  aiProcessing: false,
-
-  /* ---------------------------------------------
-     Screen capture
-  --------------------------------------------- */
-  screenStream: null,
-  screenCaptureActive: false,
-
-  /* ---------------------------------------------
-     Audio
-  --------------------------------------------- */
-  audioContext: null,
-  audioDestination: null,
-
-  micStream: null,
-  micSourceNode: null,
-  micGainNode: null,
-  micAnalyser: null,
-
-  mainSourceNode: null,
-  mainGainNode: null,
-  mainAnalyser: null,
-
-  micEnabled: true,
-  micVolume: 1,
-  micMonitor: false,
-  mainVolume: 1,
-  mainAudioEnabled: true,
-
-  /* ---------------------------------------------
-     Recording
-  --------------------------------------------- */
-  mediaRecorder: null,
-  recordingChunks: [],
-  recordingStream: null,
-  recordingCanvasStream: null,
-
-  recordingActive: false,
-  recordingPaused: false,
-
-  recordingStartedAt: 0,
-  recordingPausedAt: 0,
-  recordingAccumulatedPause: 0,
-
-  recordingTimerInterval: null,
-  recordingAnimationFrame: null,
-
-  recordingWidth: 1920,
-  recordingHeight: 1080,
-  recordingFps: 30,
-
-  recordingMimeType: "",
-  recordingExtension: "webm",
-  recordingFileName: "SNK-Course-Recording",
-
-  lastRecordingBlob: null,
-  lastRecordingURL: "",
-  lastRecordingMimeType: "",
-
-  currentRecordingId: null,
-
-  /* ---------------------------------------------
-     Composition
-  --------------------------------------------- */
-  compositionCanvas: null,
-  compositionContext: null,
-
-  compositionRunning: false,
-
-  /* ---------------------------------------------
-     Mentor position
-  --------------------------------------------- */
-  mentorX: 0.73,
-  mentorY: 0.70,
-  mentorWidth: 0.22,
-  mentorHeight: 0.12375,
-
-  mentorDragging: false,
-  mentorResizing: false,
-
-  dragStartX: 0,
-  dragStartY: 0,
-  dragOriginX: 0,
-  dragOriginY: 0,
-
-  resizeStartX: 0,
-  resizeStartY: 0,
-  resizeOriginWidth: 0,
-  resizeOriginHeight: 0,
-
-  /* ---------------------------------------------
-     Teleprompter
-  --------------------------------------------- */
-  teleprompterText: "",
-  teleprompterSpeed: 4,
-  teleprompterFontSize: 36,
-  teleprompterOpacity: 90,
-  teleprompterPlaying: false,
-  teleprompterAnimationFrame: null,
-
-  includeTeleprompterInRecording: false,
-
-  /* ---------------------------------------------
-     Settings
-  --------------------------------------------- */
-  brandName: "SNK Institute",
-  autoStartTeleprompter: false,
-  showTeleprompterRecording: true,
-
-  /* ---------------------------------------------
-     Students
-  --------------------------------------------- */
-  students: [],
-
-  /* ---------------------------------------------
-     Render
-  --------------------------------------------- */
-  lastRenderTime: 0,
-
-  /* ---------------------------------------------
-     Trim
-  --------------------------------------------- */
-  trimStart: 0,
-  trimEnd: 0,
-
-  /* ---------------------------------------------
-     IndexedDB
-  --------------------------------------------- */
-  db: null
-
-};
-
-
-/* =========================================================
-   DOM HELPER
-========================================================= */
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-
-function qs(selector) {
-  return document.querySelector(selector);
-}
-
-
-function qsa(selector) {
-  return [...document.querySelectorAll(selector)];
-}
-
-
-/* =========================================================
-   DOM REFERENCES
-========================================================= */
-
-const mainImage = $("mainImage");
-const mainVideo = $("mainVideo");
-const screenCaptureVideo = $("screenCaptureVideo");
-
-const welcomeContent = $("welcomeContent");
-
-const mentorCard = $("mentorCard");
-const mentorVideo = $("mentorVideo");
-const mentorCameraVideo = $("mentorCameraVideo");
-const mentorAICanvas = $("mentorAICanvas");
-const mentorPlaceholder = $("mentorPlaceholder");
-const mentorSourceLabel = $("mentorSourceLabel");
-const mentorResize = $("mentorResize");
-
-const brandBadgeText = $("brandBadgeText");
-
-const recordingOverlay = $("recordingOverlay");
-const recordingOverlayTimer = $("recordingOverlayTimer");
-
-const stage = $("stage");
-const stageShell = $("stageShell");
-
-const toastContainer = $("toastContainer");
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-  initializeCompositionCanvas();
-
-  initializeUI();
-
-  initializeCameraControls();
-
-  initializeAudioControls();
-
-  initializeTeleprompter();
-
-  initializeStudentSystem();
-
-  initializeRecordingSystem();
-
-  initializeFullscreen();
-
-  initializeKeyboardShortcuts();
-
-  initializeMentorInteraction();
-
-  initializeMediaEvents();
-
-  initializeSettings();
-
-  initializeAI();
-
-  initializeScreenCapture();
-
-  initializeFileButtons();
-
-  initializeAudioEngine();
-
-  await initializeDatabase();
-
-  await loadRecordingHistory();
-
-  loadSavedSettings();
-
-  loadStudents();
-
-  enumerateCameras();
-
-  updateStageBadges();
-
-  renderCompositionFrame();
-
-  showToast(
-    "Mentor Studio is ready.",
-    "success"
-  );
-
-});
-
-
-/* =========================================================
-   BASIC UI
-========================================================= */
-
-function initializeUI() {
-
-  bindClick(
-    "uploadMainBtn",
-    () => $("mainFileInput")?.click()
-  );
-
-  bindClick(
-    "uploadVideoBtn",
-    () => $("mainVideoInput")?.click()
-  );
-
-  bindClick(
-    "uploadMentorBtn",
-    () => $("mentorFileInput")?.click()
-  );
-
-  bindClick(
-    "uploadMainSideBtn",
-    () => $("mainFileInput")?.click()
-  );
-
-  bindClick(
-    "uploadVideoSideBtn",
-    () => $("mainVideoInput")?.click()
-  );
-
-  bindClick(
-    "uploadMentorFileSideBtn",
-    () => $("mentorFileInput")?.click()
-  );
-
-  bindClick(
-    "uploadBackgroundSideBtn",
-    () => $("backgroundImageUpload")?.click()
-  );
-
-  bindClick(
-    "backgroundUploadBox",
-    () => $("backgroundImageUpload")?.click()
-  );
-
-  bindClick(
-    "welcomeUploadBtn",
-    () => $("mainFileInput")?.click()
-  );
-
-  bindClick(
-    "welcomeCameraBtn",
-    startCamera
-  );
-
-
-  /* Main controls */
-
-  bindClick(
-    "mainPlayBtn",
-    playMainMedia
-  );
-
-  bindClick(
-    "mainPauseBtn",
-    pauseMainMedia
-  );
-
+   FEATURES
+   ---------------------------------------------------------
+   01. Main image upload
+   02. Main video upload
+   03. Main video controls
+   04. Mentor video upload
+   05. Real webcam
+   06. Camera device selection
+   07. Camera quality 360/480/720/1080
+   08. Camera FPS 24/30/60
+   09. MediaPipe person segmentation
+   10. Original background
+   11. Remove background
+   12. Blur background
+   13. Custom background image
+   14. Solid background
+   15. Mentor drag
+   16. Mentor resize
+   17. Screen/window/tab capture
+   18. Teleprompter
+   19. Microphone
+   20. Main-video audio
+   21. Audio level meters
+   22. Microphone waveform
+   23. Recording 720/1080/1440
+   24. Recording FPS
+   25. WebM VP9 / VP8 / MP4 detection
+   26. Pause / Resume / Stop
+   27. Recording timer
+   28. Recording status
+   29. Continuous composition rendering
+   30. Recording preview
+   31. Rename recording
+   32. Download recording
+   33. Delete recording
+   34. Recording history
+   35. IndexedDB Blob storage
+   36. Keyboard shortcuts
+   37. Stage fullscreen
+   38. Studio fullscreen
+   39. Screen-share stop detection
+   40. Student management
+   41. Settings
+   42. Toast notifications
+   ========================================================= */
+
+(() => {
+  "use strict";
+
+  /* =======================================================
+     HELPERS
+     ======================================================= */
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+
+  const $$ = (selector, root = document) =>
+    Array.from(root.querySelectorAll(selector));
+
+  const clamp = (value, min, max) =>
+    Math.min(Math.max(value, min), max);
+
+  const safeNumber = (value, fallback = 0) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  const formatTime = (seconds) => {
+    seconds = Math.max(0, Number(seconds) || 0);
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+      return [
+        String(hours).padStart(2, "0"),
+        String(minutes).padStart(2, "0"),
+        String(secs).padStart(2, "0")
+      ].join(":");
+    }
+
+    return [
+      String(minutes).padStart(2, "0"),
+      String(secs).padStart(2, "0")
+    ].join(":");
+  };
+
+  const formatBytes = (bytes) => {
+    bytes = Number(bytes) || 0;
+
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+
+    if (bytes < 1024 * 1024 * 1024) {
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
+
+  const timestampName = () => {
+    const now = new Date();
+
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const h = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    const s = String(now.getSeconds()).padStart(2, "0");
+
+    return `mentor-recording-${y}${m}${d}-${h}${min}${s}`;
+  };
+
+  const sanitizeFilename = (name) => {
+    return String(name || "mentor-recording")
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 100) || "mentor-recording";
+  };
+
+  /* =======================================================
+     DOM
+     ======================================================= */
+
+  const mainImage = $("#mainImage");
+  const mainVideo = $("#mainVideo");
+  const screenCaptureVideo = $("#screenCaptureVideo");
+
+  const mentorCard = $("#mentorCard");
+  const mentorVideo = $("#mentorVideo");
+  const mentorCameraVideo = $("#mentorCameraVideo");
+  const mentorAICanvas = $("#mentorAICanvas");
+  const mentorPlaceholder = $("#mentorPlaceholder");
+  const mentorSourceLabel = $("#mentorSourceLabel");
+  const mentorResize = $("#mentorResize");
+
+  const stage = $("#stage");
+  const stageShell = $("#stageShell");
+
+  const recordingOverlay = $("#recordingOverlay");
+  const recordingOverlayTimer = $("#recordingOverlayTimer");
+
+  const stageResolutionBadge = $("#stageResolutionBadge");
+  const stageFpsBadge = $("#stageFpsBadge");
+  const stageSourceBadge = $("#stageSourceBadge");
+
+  /* Buttons */
+
+  const uploadMainBtn = $("#uploadMainBtn");
+  const uploadVideoBtn = $("#uploadVideoBtn");
+  const mainPlayBtn = $("#mainPlayBtn");
+  const mainPauseBtn = $("#mainPauseBtn");
+
+  const uploadMentorBtn = $("#uploadMentorBtn");
+  const startCameraBtn = $("#startCameraBtn");
+  const stopCameraBtn = $("#stopCameraBtn");
+
+  const recordToolbarBtn = $("#recordToolbarBtn");
+
+  const openTeleprompterBtn = $("#openTeleprompterBtn");
+  const openTeleprompterTopBtn = $("#openTeleprompterTopBtn");
+
+  const openShortcutsBtn = $("#openShortcutsBtn");
+  const startScreenCaptureBtn = $("#startScreenCaptureBtn");
+
+  const fullscreenStageBtn = $("#fullscreenStageBtn");
+  const fullscreenStudioBtn = $("#fullscreenStudioBtn");
+
+  const settingsBtn = $("#settingsBtn");
+  const recordBtn = $("#recordBtn");
+
+  /* Recording controls */
+
+  const recordingStatusBar = $("#recordingStatusBar");
+  const recordingStatusDot = $("#recordingStatusDot");
+  const recordingStatusText = $("#recordingStatusText");
+  const recordingTimer = $("#recordingTimer");
+
+  const recordingQuality = $("#recordingQuality");
+  const recordingFps = $("#recordingFps");
+  const recordingFormat = $("#recordingFormat");
+
+  const pauseRecordingBtn = $("#pauseRecordingBtn");
+  const resumeRecordingBtn = $("#resumeRecordingBtn");
+  const stopRecordingBtn = $("#stopRecordingBtn");
+
+  const cameraIndicator = $("#cameraIndicator");
+  const micIndicator = $("#micIndicator");
+  const audioIndicator = $("#audioIndicator");
+  const screenIndicator = $("#screenIndicator");
 
   /* Camera */
 
-  bindClick(
-    "startCameraBtn",
-    startCamera
-  );
+  const startCameraSideBtn = $("#startCameraSideBtn");
+  const stopCameraSideBtn = $("#stopCameraSideBtn");
+  const switchCameraSideBtn = $("#switchCameraSideBtn");
+  const uploadMentorSideBtn = $("#uploadMentorSideBtn");
+  const cameraStatus = $("#cameraStatus");
 
-  bindClick(
-    "startCameraSideBtn",
-    startCamera
-  );
+  const cameraDeviceSelect = $("#cameraDeviceSelect");
+  const cameraQuality = $("#cameraQuality");
+  const cameraFps = $("#cameraFps");
 
-  bindClick(
-    "stopCameraBtn",
-    stopCamera
-  );
+  /* AI background */
 
-  bindClick(
-    "stopCameraSideBtn",
-    stopCamera
-  );
+  const bgOriginalBtn = $("#bgOriginalBtn");
+  const bgRemoveBtn = $("#bgRemoveBtn");
+  const bgBlurBtn = $("#bgBlurBtn");
+  const bgImageBtn = $("#bgImageBtn");
+  const bgColorBtn = $("#bgColorBtn");
 
-  bindClick(
-    "switchCameraSideBtn",
-    switchCamera
-  );
-
-
-  /* Mentor */
-
-  bindClick(
-    "uploadMentorSideBtn",
-    () => $("mentorFileInput")?.click()
-  );
-
-
-  /* Recording */
-
-  bindClick(
-    "recordBtn",
-    handleRecordButton
-  );
-
-  bindClick(
-    "recordToolbarBtn",
-    handleRecordButton
-  );
-
-
-  /* Teleprompter */
-
-  bindClick(
-    "openTeleprompterTopBtn",
-    openTeleprompter
-  );
-
-  bindClick(
-    "openTeleprompterBtn",
-    openTeleprompter
-  );
-
-  bindClick(
-    "openTeleprompterSide",
-    openTeleprompter
-  );
-
-  bindClick(
-    "uploadTeleprompterBtn",
-    () => $("teleprompterFileInput")?.click()
-  );
-
-
-  /* Settings */
-
-  bindClick(
-    "settingsBtn",
-    openSettings
-  );
-
-
-  /* Shortcuts */
-
-  bindClick(
-    "openShortcutsBtn",
-    openShortcuts
-  );
-
+  const backgroundColor = $("#backgroundColor");
+  const backgroundUploadBox = $("#backgroundUploadBox");
 
   /* Screen */
 
-  bindClick(
-    "startScreenCaptureBtn",
-    startScreenCapture
-  );
+  const startScreenCaptureSideBtn = $("#startScreenCaptureSideBtn");
+  const stopScreenCaptureBtn = $("#stopScreenCaptureBtn");
+  const screenCaptureStatus = $("#screenCaptureStatus");
+  const screenCaptureStatusLight = $("#screenCaptureStatusLight");
 
-  bindClick(
-    "startScreenCaptureSideBtn",
-    startScreenCapture
-  );
+  /* Audio */
 
-  bindClick(
-    "stopScreenCaptureBtn",
-    stopScreenCapture
-  );
+  const mainVideoAudioCheckbox = $("#mainVideoAudioCheckbox");
+  const mainVideoVolume = $("#mainVideoVolume");
+  const mainVolumeValue = $("#mainVolumeValue");
 
-}
+  const micVolume = $("#micVolume");
+  const micVolumeValue = $("#micVolumeValue");
 
+  const micEnabled = $("#micEnabled");
+  const micMonitor = $("#micMonitor");
 
-/* =========================================================
-   CLICK BINDER
-========================================================= */
+  const micLevelValue = $("#micLevelValue");
+  const micLevelBar = $("#micLevelBar");
 
-function bindClick(id, callback) {
+  const mainAudioLevelValue = $("#mainAudioLevelValue");
+  const mainAudioLevelBar = $("#mainAudioLevelBar");
 
-  const element = $(id);
+  const micWaveformCanvas = $("#micWaveformCanvas");
 
-  if (!element) {
-    return;
-  }
+  /* Teleprompter */
 
-  element.addEventListener("click", callback);
+  const teleprompterMiniPreview = $("#teleprompterMiniPreview");
+  const openTeleprompterSide = $("#openTeleprompterSide");
+  const uploadTeleprompterBtn = $("#uploadTeleprompterBtn");
+  const teleprompterFileInput = $("#teleprompterFileInput");
 
-}
+  /* Students */
 
+  const studentsList = $("#studentsList");
+  const addStudentBtn = $("#addStudentBtn");
 
-/* =========================================================
-   FILE INPUTS
-========================================================= */
+  /* Recording settings */
 
-function initializeFileButtons() {
+  const recordingQualitySide = $("#recordingQualitySide");
+  const recordingFpsSide = $("#recordingFpsSide");
+  const recordingFormatSide = $("#recordingFormatSide");
+  const recordingFileNameSide = $("#recordingFileNameSide");
+  const includeTeleprompterInRecording =
+    $("#includeTeleprompterInRecording");
 
-  const mainFileInput = $("mainFileInput");
-  const mainVideoInput = $("mainVideoInput");
-  const mentorFileInput = $("mentorFileInput");
-  const backgroundInput = $("backgroundImageUpload");
-  const teleprompterInput = $("teleprompterFileInput");
+  /* Files */
 
+  const uploadMainSideBtn = $("#uploadMainSideBtn");
+  const uploadVideoSideBtn = $("#uploadVideoSideBtn");
+  const uploadMentorFileSideBtn = $("#uploadMentorFileSideBtn");
+  const uploadBackgroundSideBtn = $("#uploadBackgroundSideBtn");
 
-  if (mainFileInput) {
+  /* Hidden inputs */
 
-    mainFileInput.addEventListener(
-      "change",
-      event => {
+  const mainFileInput = $("#mainFileInput");
+  const mainVideoInput = $("#mainVideoInput");
+  const mentorFileInput = $("#mentorFileInput");
+  const backgroundImageUpload = $("#backgroundImageUpload");
 
-        const file = event.target.files?.[0];
+  /* AI canvases */
 
-        if (!file) {
-          return;
-        }
+  const aiCanvas = $("#aiCanvas");
+  const aiSourceCanvas = $("#aiSourceCanvas");
+  const aiMaskCanvas = $("#aiMaskCanvas");
 
-        loadMainImage(file);
+  /* Settings */
 
-        event.target.value = "";
+  const settingsModal = $("#settingsModal");
+  const brandNameInput = $("#brandNameInput");
+  const settingsRecordingQuality = $("#settingsRecordingQuality");
+  const settingsRecordingFps = $("#settingsRecordingFps");
+  const settingsAutoStartTeleprompter =
+    $("#settingsAutoStartTeleprompter");
+  const settingsShowTeleprompterRecording =
+    $("#settingsShowTeleprompterRecording");
 
-      }
-    );
+  const closeSettingsBtn = $("#closeSettingsBtn");
+  const closeSettingsFooterBtn = $("#closeSettingsFooterBtn");
+  const saveSettingsBtn = $("#saveSettingsBtn");
 
-  }
+  const brandBadgeText = $("#brandBadgeText");
 
+  /* Shortcuts */
 
-  if (mainVideoInput) {
+  const shortcutsModal = $("#shortcutsModal");
+  const closeShortcutsModalBtn = $("#closeShortcutsBtn");
 
-    mainVideoInput.addEventListener(
-      "change",
-      event => {
+  /* Teleprompter */
 
-        const file = event.target.files?.[0];
+  const teleprompterModal = $("#teleprompterModal");
+  const closeTeleprompterBtn = $("#closeTeleprompterBtn");
 
-        if (!file) {
-          return;
-        }
+  const teleprompterText = $("#teleprompterText");
+  const teleprompterSpeed = $("#teleprompterSpeed");
+  const teleprompterFontSize = $("#teleprompterFontSize");
+  const teleprompterOpacity = $("#teleprompterOpacity");
 
-        loadMainVideo(file);
+  const teleprompterPreview = $("#teleprompterPreview");
 
-        event.target.value = "";
+  const teleprompterResetBtn = $("#teleprompterResetBtn");
+  const teleprompterPauseBtn = $("#teleprompterPauseBtn");
+  const teleprompterPlayBtn = $("#teleprompterPlayBtn");
+  const teleprompterSaveBtn = $("#teleprompterSaveBtn");
 
-      }
-    );
+  /* Recording preview */
 
-  }
+  const recordingPreviewModal = $("#recordingPreviewModal");
+  const recordingPreviewVideo = $("#recordingPreviewVideo");
 
+  const recordingFileInfo = $("#recordingFileInfo");
 
-  if (mentorFileInput) {
+  const closeRecordingPreviewBtn =
+    $("#closeRecordingPreviewBtn");
 
-    mentorFileInput.addEventListener(
-      "change",
-      event => {
+  const recordingCurrentTime = $("#recordingCurrentTime");
+  const recordingDuration = $("#recordingDuration");
 
-        const file = event.target.files?.[0];
+  const recordingPreviewPlayBtn =
+    $("#recordingPreviewPlayBtn");
 
-        if (!file) {
-          return;
-        }
+  const recordingPreviewPauseBtn =
+    $("#recordingPreviewPauseBtn");
 
-        loadMentorVideo(file);
+  const recordingFileName = $("#recordingFileName");
 
-        event.target.value = "";
+  const recordingTrimStart = $("#recordingTrimStart");
+  const recordingTrimEnd = $("#recordingTrimEnd");
 
-      }
-    );
+  const recordingTrimStartTime =
+    $("#recordingTrimStartTime");
 
-  }
+  const recordingTrimEndTime =
+    $("#recordingTrimEndTime");
 
+  const applyTrimBtn = $("#applyTrimBtn");
+  const resetTrimBtn = $("#resetTrimBtn");
+  const renameRecordingBtn = $("#renameRecordingBtn");
 
-  if (backgroundInput) {
+  const deleteRecordingBtn = $("#deleteRecordingBtn");
+  const recordAgainBtn = $("#recordAgainBtn");
+  const downloadRecordingBtn = $("#downloadRecordingBtn");
 
-    backgroundInput.addEventListener(
-      "change",
-      event => {
+  const recordingHistoryList = $("#recordingHistoryList");
+  const clearRecordingHistoryBtn =
+    $("#clearRecordingHistoryBtn");
 
-        const file = event.target.files?.[0];
+  /* Student modal */
 
-        if (!file) {
-          return;
-        }
+  const studentModal = $("#studentModal");
+  const studentNameInput = $("#studentNameInput");
 
-        loadBackgroundImage(file);
+  const closeStudentModalBtn = $("#closeStudentModalBtn");
+  const cancelStudentBtn = $("#cancelStudentBtn");
+  const saveStudentBtn = $("#saveStudentBtn");
 
-        event.target.value = "";
-
-      }
-    );
-
-  }
-
-
-  if (teleprompterInput) {
-
-    teleprompterInput.addEventListener(
-      "change",
-      loadTeleprompterFile
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   MAIN IMAGE
-========================================================= */
-
-function loadMainImage(file) {
-
-  if (!file.type.startsWith("image/")) {
-
-    showToast(
-      "Please select an image file.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  const url = URL.createObjectURL(file);
-
-  if (state.mainImageURL) {
-    URL.revokeObjectURL(state.mainImageURL);
-  }
-
-  state.mainImageURL = url;
-
-  mainImage.src = url;
-
-  state.mainMode = "image";
-
-  mainImage.style.display = "block";
-  mainVideo.style.display = "none";
-  screenCaptureVideo.style.display = "none";
-
-  welcomeContent.style.display = "none";
-
-  updateStageSource("Image");
-
-  renderCompositionFrame();
-
-  showToast(
-    "Main image loaded.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   MAIN VIDEO
-========================================================= */
-
-function loadMainVideo(file) {
-
-  if (!file.type.startsWith("video/")) {
-
-    showToast(
-      "Please select a video file.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  const url = URL.createObjectURL(file);
-
-  if (state.mainVideoURL) {
-    URL.revokeObjectURL(state.mainVideoURL);
-  }
-
-  state.mainVideoURL = url;
-
-  mainVideo.src = url;
-
-  mainVideo.load();
-
-  state.mainMode = "video";
-
-  mainImage.style.display = "none";
-  mainVideo.style.display = "block";
-  screenCaptureVideo.style.display = "none";
-
-  welcomeContent.style.display = "none";
-
-  updateStageSource("Main Video");
-
-  ensureMainAudioNode();
-
-  renderCompositionFrame();
-
-  showToast(
-    "Main video loaded.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   MAIN MEDIA PLAY
-========================================================= */
-
-async function playMainMedia() {
-
-  if (state.mainMode !== "video") {
-
-    showToast(
-      "Load a main video first.",
-      "info"
-    );
-
-    return;
-  }
-
-
-  try {
-
-    await mainVideo.play();
-
-    renderCompositionFrame();
-
-  } catch (error) {
-
-    console.error(error);
-
-    showToast(
-      "Unable to play the video.",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   MAIN MEDIA PAUSE
-========================================================= */
-
-function pauseMainMedia() {
-
-  if (state.mainMode === "video") {
-
-    mainVideo.pause();
-
-  }
-
-}
-
-
-/* =========================================================
-   MENTOR VIDEO
-========================================================= */
-
-function loadMentorVideo(file) {
-
-  if (!file.type.startsWith("video/")) {
-
-    showToast(
-      "Please select a video file.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  stopCamera(false);
-
-  const url = URL.createObjectURL(file);
-
-  if (state.mentorVideoURL) {
-    URL.revokeObjectURL(state.mentorVideoURL);
-  }
-
-  state.mentorVideoURL = url;
-
-  mentorVideo.src = url;
-
-  mentorVideo.load();
-
-  state.mentorMode = "video";
-
-  mentorVideo.style.display = "block";
-  mentorCameraVideo.style.display = "none";
-  mentorAICanvas.style.display = "none";
-
-  mentorPlaceholder.style.display = "none";
-
-  mentorSourceLabel.textContent =
-    "Mentor Video";
-
-
-  mentorVideo.play().catch(() => {});
-
-  renderCompositionFrame();
-
-  showToast(
-    "Mentor video loaded.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   CAMERA CONTROLS
-========================================================= */
-
-function initializeCameraControls() {
-
-  const deviceSelect = $("cameraDeviceSelect");
-  const qualitySelect = $("cameraQuality");
-  const fpsSelect = $("cameraFps");
-
-
-  if (deviceSelect) {
-
-    deviceSelect.addEventListener(
-      "change",
-      async event => {
-
-        state.cameraDeviceId =
-          event.target.value || "";
-
-        if (state.cameraStream) {
-          await startCamera();
-        }
-
-      }
-    );
-
-  }
-
-
-  if (qualitySelect) {
-
-    qualitySelect.addEventListener(
-      "change",
-      async event => {
-
-        setCameraResolution(
-          event.target.value
-        );
-
-        if (state.cameraStream) {
-          await startCamera();
-        }
-
-      }
-    );
-
-  }
-
-
-  if (fpsSelect) {
-
-    fpsSelect.addEventListener(
-      "change",
-      async event => {
-
-        state.cameraFps =
-          Number(event.target.value) || 30;
-
-        if (state.cameraStream) {
-          await startCamera();
-        }
-
-      }
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   CAMERA RESOLUTION
-========================================================= */
-
-function setCameraResolution(value) {
-
-  const parts = value.split("x");
-
-  state.cameraWidth =
-    Number(parts[0]) || 1280;
-
-  state.cameraHeight =
-    Number(parts[1]) || 720;
-
-}
-
-
-/* =========================================================
-   START CAMERA
-========================================================= */
-
-async function startCamera() {
-
-  try {
-
-    stopCamera(false);
-
-    const quality =
-      $("cameraQuality")?.value ||
-      "1280x720";
-
-    setCameraResolution(quality);
-
-    state.cameraFps =
-      Number(
-        $("cameraFps")?.value || 30
-      );
-
-
-    const constraints = {
-
-      video: {
-
-        width: {
-          ideal: state.cameraWidth
-        },
-
-        height: {
-          ideal: state.cameraHeight
-        },
-
-        frameRate: {
-          ideal: state.cameraFps
-        },
-
-        facingMode:
-          state.cameraDeviceId
-            ? undefined
-            : state.cameraFacingMode
-
-      },
-
-      audio: false
-
-    };
-
-
-    if (state.cameraDeviceId) {
-
-      constraints.video.deviceId = {
-        exact: state.cameraDeviceId
-      };
-
-    }
-
-
-    const stream =
-      await navigator.mediaDevices.getUserMedia(
-        constraints
-      );
-
-
-    state.cameraStream = stream;
-
-    mentorCameraVideo.srcObject = stream;
-
-    mentorCameraVideo.muted = true;
-
-    mentorCameraVideo.playsInline = true;
-
-    await mentorCameraVideo.play();
-
-
-    state.mentorMode = "camera";
-
-
-    mentorVideo.style.display = "none";
-    mentorCameraVideo.style.display = "block";
-
-
-    if (state.aiBackgroundMode === "original") {
-
-      mentorAICanvas.style.display = "none";
-
-    } else {
-
-      mentorAICanvas.style.display = "block";
-
-      initializeSegmentation();
-
-    }
-
-
-    mentorPlaceholder.style.display = "none";
-
-    mentorSourceLabel.textContent =
-      state.aiBackgroundMode === "original"
-        ? "Live Camera"
-        : "AI Camera";
-
-
-    updateCameraStatus(true);
-
-    await enumerateCameras();
-
-    initializeMic();
-
-    renderCompositionFrame();
-
-
-    showToast(
-      "Camera started.",
-      "success"
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Camera error:",
-      error
-    );
-
-    updateCameraStatus(false);
-
-    showToast(
-      getCameraErrorMessage(error),
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   CAMERA ERROR MESSAGE
-========================================================= */
-
-function getCameraErrorMessage(error) {
-
-  if (!error) {
-    return "Camera could not be started.";
-  }
-
-
-  if (error.name === "NotAllowedError") {
-
-    return "Camera permission was denied.";
-
-  }
-
-
-  if (error.name === "NotFoundError") {
-
-    return "No camera device was found.";
-
-  }
-
-
-  if (error.name === "NotReadableError") {
-
-    return "Camera is already being used by another app.";
-
-  }
-
-
-  if (error.name === "OverconstrainedError") {
-
-    return "Selected camera settings are not supported.";
-
-  }
-
-
-  return "Unable to start camera.";
-
-}
-
-
-/* =========================================================
-   STOP CAMERA
-========================================================= */
-
-function stopCamera(showMessage = true) {
-
-  if (state.cameraStream) {
-
-    state.cameraStream
-      .getTracks()
-      .forEach(track => track.stop());
-
-  }
-
-
-  state.cameraStream = null;
-
-  mentorCameraVideo.srcObject = null;
-
-  mentorCameraVideo.style.display = "none";
-
-
-  if (state.mentorMode === "camera") {
-
-    state.mentorMode = "none";
-
-  }
-
-
-  if (
-    state.mentorMode === "none"
-  ) {
-
-    mentorPlaceholder.style.display =
-      "flex";
-
-    mentorSourceLabel.textContent =
-      "Mentor";
-
-  }
-
-
-  updateCameraStatus(false);
-
-  renderCompositionFrame();
-
-
-  if (showMessage) {
-
-    showToast(
-      "Camera stopped.",
-      "info"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SWITCH CAMERA
-========================================================= */
-
-async function switchCamera() {
-
-  state.cameraFacingMode =
-    state.cameraFacingMode === "user"
-      ? "environment"
-      : "user";
-
-
-  state.cameraDeviceId = "";
-
-  const select = $("cameraDeviceSelect");
-
-  if (select) {
-    select.value = "";
-  }
-
-
-  await startCamera();
-
-}
-
-
-/* =========================================================
-   CAMERA STATUS
-========================================================= */
-
-function updateCameraStatus(active) {
-
-  const status = $("cameraStatus");
-  const light = $("cameraStatusLight");
-  const indicator = $("cameraIndicator");
-
-
-  if (status) {
-
-    status.textContent =
-      active
-        ? "Camera active"
-        : "Camera inactive";
-
-  }
-
-
-  if (light) {
-
-    light.classList.toggle(
-      "active",
-      active
-    );
-
-  }
-
-
-  if (indicator) {
-
-    indicator.classList.toggle(
-      "active",
-      active
-    );
-
-    indicator.textContent =
-      active
-        ? "Camera"
-        : "Camera Off";
-
-  }
-
-}
-
-
-/* =========================================================
-   ENUMERATE CAMERAS
-========================================================= */
-
-async function enumerateCameras() {
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.enumerateDevices
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    const devices =
-      await navigator.mediaDevices.enumerateDevices();
-
-
-    const cameras =
-      devices.filter(
-        device =>
-          device.kind === "videoinput"
-      );
-
-
-    const select =
-      $("cameraDeviceSelect");
-
-
-    if (!select) {
+  const toastContainer = $("#toastContainer");
+
+  /* =======================================================
+     STATE
+     ======================================================= */
+
+  const state = {
+    /* Main */
+    mainSource: "welcome",
+    mainImageUrl: "",
+    mainVideoUrl: "",
+
+    /* Mentor */
+    mentorSource: "placeholder",
+    mentorVideoUrl: "",
+    mentorCameraStream: null,
+    mentorCameraWidth: 1280,
+    mentorCameraHeight: 720,
+
+    /* AI */
+    segmentation: null,
+    segmentationReady: false,
+    segmentationBusy: false,
+    backgroundMode: "original",
+    backgroundImage: null,
+    backgroundImageUrl: "",
+
+    /* Camera */
+    cameraDeviceId: "",
+    cameraFacingMode: "user",
+
+    /* Screen */
+    screenStream: null,
+    screenCaptureActive: false,
+
+    /* Audio */
+    audioContext: null,
+    mediaDestination: null,
+
+    mainSourceNode: null,
+    mainGainNode: null,
+
+    micSourceNode: null,
+    micGainNode: null,
+
+    micAnalyser: null,
+    mainAnalyser: null,
+
+    micStream: null,
+
+    audioReady: false,
+    micReady: false,
+
+    /* Recording */
+    recording: false,
+    paused: false,
+    mediaRecorder: null,
+    recordingChunks: [],
+    recordingBlob: null,
+    recordingUrl: "",
+    recordingMimeType: "",
+    recordingStartedAt: 0,
+    recordingElapsedBeforePause: 0,
+    recordingTimerInterval: null,
+
+    recordingCanvas: null,
+    recordingCanvasContext: null,
+    recordingRenderFrame: 0,
+    recordingRenderActive: false,
+
+    recordingWidth: 1920,
+    recordingHeight: 1080,
+    recordingFps: 30,
+
+    /* Preview */
+    previewRecordingId: null,
+    previewObjectUrl: "",
+    previewDuration: 0,
+    previewTrimStart: 0,
+    previewTrimEnd: 0,
+
+    /* History */
+    history: [],
+
+    /* Teleprompter */
+    teleprompterPlaying: false,
+    teleprompterOffset: 0,
+    teleprompterLastTime: 0,
+
+    /* Students */
+    students: [],
+
+    /* Settings */
+    brandName: "SNK Mentor Studio",
+    autoStartTeleprompter: false,
+    showTeleprompterRecording: true,
+
+    /* Mentor position */
+    mentorPosition: {
+      left: null,
+      top: null,
+      right: 0.03,
+      bottom: 0.04,
+      width: 0.22,
+      height: 0.12375
+    },
+
+    mentorDragging: false,
+    mentorDragStartX: 0,
+    mentorDragStartY: 0,
+    mentorDragStartLeft: 0,
+    mentorDragStartTop: 0,
+
+    /* Resize */
+    resizingMentor: false,
+    resizeStartX: 0,
+    resizeStartY: 0,
+    resizeStartWidth: 0,
+    resizeStartHeight: 0,
+
+    /* UI */
+    toastTimer: null,
+    studentEditingId: null
+  };
+
+  /* =======================================================
+     CONFIG
+     ======================================================= */
+
+  const DB_NAME = "SNKMentorStudioDB";
+  const DB_VERSION = 1;
+  const STORE_NAME = "recordings";
+
+  const HISTORY_STORAGE_KEY =
+    "snkMentorStudioRecordingHistory";
+
+  const SETTINGS_STORAGE_KEY =
+    "snkMentorStudioSettings";
+
+  const STUDENTS_STORAGE_KEY =
+    "snkMentorStudioStudents";
+
+  /* =======================================================
+     TOAST
+     ======================================================= */
+
+  function toast(message, type = "info", duration = 2800) {
+    if (!toastContainer) {
       return;
     }
 
+    const item = document.createElement("div");
 
-    const currentValue =
-      state.cameraDeviceId;
+    item.className = `toast toast-${type}`;
 
+    item.innerHTML = `
+      <div class="toast-dot"></div>
+      <div class="toast-message"></div>
+    `;
 
-    select.innerHTML = "";
+    const textNode = $(".toast-message", item);
 
+    if (textNode) {
+      textNode.textContent = message;
+    }
 
-    const defaultOption =
-      document.createElement("option");
+    toastContainer.appendChild(item);
 
-    defaultOption.value = "";
+    requestAnimationFrame(() => {
+      item.classList.add("show");
+    });
 
-    defaultOption.textContent =
-      "Default Camera";
+    setTimeout(() => {
+      item.classList.remove("show");
 
-    select.appendChild(
-      defaultOption
+      setTimeout(() => {
+        item.remove();
+      }, 250);
+    }, duration);
+  }
+
+  /* =======================================================
+     LOCAL STORAGE
+     ======================================================= */
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify({
+          brandName: state.brandName,
+          autoStartTeleprompter:
+            state.autoStartTeleprompter,
+          showTeleprompterRecording:
+            state.showTeleprompterRecording,
+
+          recordingQuality:
+            recordingQualitySide?.value ||
+            recordingQuality?.value ||
+            "1080",
+
+          recordingFps:
+            recordingFpsSide?.value ||
+            recordingFps?.value ||
+            "30"
+        })
+      );
+    } catch (error) {
+      console.warn("Settings save failed:", error);
+    }
+  }
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(
+        SETTINGS_STORAGE_KEY
+      );
+
+      if (!raw) {
+        return;
+      }
+
+      const settings = JSON.parse(raw);
+
+      if (settings.brandName) {
+        state.brandName = settings.brandName;
+      }
+
+      state.autoStartTeleprompter =
+        Boolean(settings.autoStartTeleprompter);
+
+      state.showTeleprompterRecording =
+        settings.showTeleprompterRecording !== false;
+
+      if (
+        recordingQualitySide &&
+        settings.recordingQuality
+      ) {
+        recordingQualitySide.value =
+          String(settings.recordingQuality);
+      }
+
+      if (
+        recordingQuality &&
+        settings.recordingQuality
+      ) {
+        recordingQuality.value =
+          String(settings.recordingQuality);
+      }
+
+      if (
+        recordingFpsSide &&
+        settings.recordingFps
+      ) {
+        recordingFpsSide.value =
+          String(settings.recordingFps);
+      }
+
+      if (
+        recordingFps &&
+        settings.recordingFps
+      ) {
+        recordingFps.value =
+          String(settings.recordingFps);
+      }
+    } catch (error) {
+      console.warn("Settings load failed:", error);
+    }
+  }
+
+  function saveStudents() {
+    try {
+      localStorage.setItem(
+        STUDENTS_STORAGE_KEY,
+        JSON.stringify(state.students)
+      );
+    } catch (error) {
+      console.warn("Student save failed:", error);
+    }
+  }
+
+  function loadStudents() {
+    try {
+      const raw = localStorage.getItem(
+        STUDENTS_STORAGE_KEY
+      );
+
+      if (!raw) {
+        return;
+      }
+
+      const parsed = JSON.parse(raw);
+
+      if (Array.isArray(parsed)) {
+        state.students = parsed;
+      }
+    } catch (error) {
+      console.warn("Student load failed:", error);
+    }
+  }
+
+  function applySettingsToUI() {
+    if (brandNameInput) {
+      brandNameInput.value = state.brandName;
+    }
+
+    if (settingsRecordingQuality) {
+      settingsRecordingQuality.value =
+        recordingQualitySide?.value ||
+        recordingQuality?.value ||
+        "1080";
+    }
+
+    if (settingsRecordingFps) {
+      settingsRecordingFps.value =
+        recordingFpsSide?.value ||
+        recordingFps?.value ||
+        "30";
+    }
+
+    if (settingsAutoStartTeleprompter) {
+      settingsAutoStartTeleprompter.checked =
+        state.autoStartTeleprompter;
+    }
+
+    if (settingsShowTeleprompterRecording) {
+      settingsShowTeleprompterRecording.checked =
+        state.showTeleprompterRecording;
+    }
+
+    if (brandBadgeText) {
+      brandBadgeText.textContent =
+        state.brandName;
+    }
+  }
+
+  /* =======================================================
+     MODALS
+     ======================================================= */
+
+  function openModal(modal) {
+    if (!modal) {
+      return;
+    }
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeModal(modal) {
+    if (!modal) {
+      return;
+    }
+
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  /* =======================================================
+     MAIN SOURCE
+     ======================================================= */
+
+  function hideMainSources() {
+    if (mainImage) {
+      mainImage.classList.remove("active");
+      mainImage.style.display = "none";
+    }
+
+    if (mainVideo) {
+      mainVideo.classList.remove("active");
+      mainVideo.style.display = "none";
+    }
+
+    if (screenCaptureVideo) {
+      screenCaptureVideo.classList.remove("active");
+      screenCaptureVideo.style.display = "none";
+    }
+  }
+
+  function showMainImage(url) {
+    if (!mainImage) {
+      return;
+    }
+
+    hideMainSources();
+
+    mainImage.src = url;
+    mainImage.style.display = "block";
+    mainImage.classList.add("active");
+
+    state.mainSource = "image";
+
+    updateStageSourceBadge("IMAGE");
+    renderCompositionFrame();
+  }
+
+  function showMainVideo(url) {
+    if (!mainVideo) {
+      return;
+    }
+
+    hideMainSources();
+
+    mainVideo.src = url;
+    mainVideo.style.display = "block";
+    mainVideo.classList.add("active");
+
+    mainVideo.controls = false;
+    mainVideo.volume = 1;
+
+    state.mainSource = "video";
+
+    updateStageSourceBadge("VIDEO");
+
+    mainVideo.load();
+
+    renderCompositionFrame();
+  }
+
+  function showWelcome() {
+    hideMainSources();
+
+    state.mainSource = "welcome";
+
+    updateStageSourceBadge("WELCOME");
+
+    renderCompositionFrame();
+  }
+
+  function loadImageFile(file) {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast("Please select an image file.", "error");
+      return;
+    }
+
+    if (state.mainImageUrl) {
+      URL.revokeObjectURL(state.mainImageUrl);
+    }
+
+    state.mainImageUrl = URL.createObjectURL(file);
+
+    showMainImage(state.mainImageUrl);
+
+    toast("Main image loaded.", "success");
+  }
+
+  function loadMainVideoFile(file) {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("video/")) {
+      toast("Please select a video file.", "error");
+      return;
+    }
+
+    if (state.mainVideoUrl) {
+      URL.revokeObjectURL(state.mainVideoUrl);
+    }
+
+    state.mainVideoUrl = URL.createObjectURL(file);
+
+    showMainVideo(state.mainVideoUrl);
+
+    toast("Main video loaded.", "success");
+  }
+
+  /* =======================================================
+     MAIN VIDEO CONTROLS
+     ======================================================= */
+
+  function playMainVideo() {
+    if (!mainVideo) {
+      return;
+    }
+
+    if (state.mainSource !== "video") {
+      toast("Upload a main video first.", "info");
+      return;
+    }
+
+    mainVideo
+      .play()
+      .then(() => {
+        renderCompositionFrame();
+      })
+      .catch((error) => {
+        console.warn("Video play failed:", error);
+      });
+  }
+
+  function pauseMainVideo() {
+    if (!mainVideo) {
+      return;
+    }
+
+    mainVideo.pause();
+    renderCompositionFrame();
+  }
+
+  function updateMainAudioUI() {
+    const enabled =
+      mainVideoAudioCheckbox?.checked !== false;
+
+    const volume = clamp(
+      safeNumber(mainVideoVolume?.value, 100),
+      0,
+      100
     );
 
+    if (mainVideo) {
+      mainVideo.muted = !enabled;
+      mainVideo.volume = volume / 100;
+    }
 
-    cameras.forEach(
-      (camera, index) => {
+    if (mainVolumeValue) {
+      mainVolumeValue.textContent =
+        `${Math.round(volume)}%`;
+    }
+  }
 
+  /* =======================================================
+     MENTOR VIDEO
+     ======================================================= */
+
+  function hideMentorSources() {
+    if (mentorVideo) {
+      mentorVideo.style.display = "none";
+      mentorVideo.classList.remove("active");
+    }
+
+    if (mentorCameraVideo) {
+      mentorCameraVideo.style.display = "none";
+      mentorCameraVideo.classList.remove("active");
+    }
+
+    if (mentorAICanvas) {
+      mentorAICanvas.style.display = "none";
+      mentorAICanvas.classList.remove("active");
+    }
+  }
+
+  function showMentorPlaceholder() {
+    hideMentorSources();
+
+    if (mentorPlaceholder) {
+      mentorPlaceholder.style.display = "flex";
+    }
+
+    if (mentorSourceLabel) {
+      mentorSourceLabel.textContent = "MENTOR";
+    }
+
+    state.mentorSource = "placeholder";
+
+    updateCameraIndicator(false);
+
+    renderCompositionFrame();
+  }
+
+  function showMentorVideo(url) {
+    if (!mentorVideo) {
+      return;
+    }
+
+    hideMentorSources();
+
+    mentorVideo.src = url;
+    mentorVideo.style.display = "block";
+    mentorVideo.classList.add("active");
+
+    mentorVideo.muted = true;
+    mentorVideo.loop = true;
+
+    state.mentorSource = "video";
+
+    if (mentorPlaceholder) {
+      mentorPlaceholder.style.display = "none";
+    }
+
+    if (mentorSourceLabel) {
+      mentorSourceLabel.textContent = "VIDEO";
+    }
+
+    mentorVideo
+      .play()
+      .catch(() => {});
+
+    updateCameraIndicator(false);
+
+    renderCompositionFrame();
+  }
+
+  function loadMentorFile(file) {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("video/")) {
+      toast("Mentor file must be a video.", "error");
+      return;
+    }
+
+    if (state.mentorVideoUrl) {
+      URL.revokeObjectURL(state.mentorVideoUrl);
+    }
+
+    state.mentorVideoUrl =
+      URL.createObjectURL(file);
+
+    stopCamera(false);
+
+    showMentorVideo(state.mentorVideoUrl);
+
+    toast("Mentor video loaded.", "success");
+  }
+
+  /* =======================================================
+     CAMERA
+     ======================================================= */
+
+  function getSelectedCameraConstraints() {
+    const quality =
+      String(cameraQuality?.value || "720");
+
+    const fps =
+      clamp(
+        safeNumber(cameraFps?.value, 30),
+        24,
+        60
+      );
+
+    const qualityMap = {
+      "360": {
+        width: 640,
+        height: 360
+      },
+      "480": {
+        width: 854,
+        height: 480
+      },
+      "720": {
+        width: 1280,
+        height: 720
+      },
+      "1080": {
+        width: 1920,
+        height: 1080
+      }
+    };
+
+    const selected =
+      qualityMap[quality] ||
+      qualityMap["720"];
+
+    const video = {
+      width: {
+        ideal: selected.width
+      },
+      height: {
+        ideal: selected.height
+      },
+      frameRate: {
+        ideal: fps,
+        max: fps
+      },
+      facingMode:
+        state.cameraFacingMode
+    };
+
+    if (state.cameraDeviceId) {
+      video.deviceId = {
+        exact: state.cameraDeviceId
+      };
+
+      delete video.facingMode;
+    }
+
+    return {
+      video,
+      audio: false
+    };
+  }
+
+  async function enumerateCameras() {
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.enumerateDevices
+    ) {
+      return;
+    }
+
+    try {
+      const devices =
+        await navigator.mediaDevices.enumerateDevices();
+
+      const cameras =
+        devices.filter(
+          (device) =>
+            device.kind === "videoinput"
+        );
+
+      if (!cameraDeviceSelect) {
+        return;
+      }
+
+      const current =
+        cameraDeviceSelect.value;
+
+      cameraDeviceSelect.innerHTML =
+        `<option value="">Default camera</option>`;
+
+      cameras.forEach((camera, index) => {
         const option =
           document.createElement("option");
 
@@ -1307,467 +1110,574 @@ async function enumerateCameras() {
           camera.label ||
           `Camera ${index + 1}`;
 
-        select.appendChild(
-          option
-        );
-
-      }
-    );
-
-
-    select.value =
-      currentValue;
-
-  } catch (error) {
-
-    console.warn(
-      "Could not enumerate cameras:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   AI INITIALIZATION
-========================================================= */
-
-function initializeAI() {
-
-  const buttons = {
-
-    bgOriginalBtn: "original",
-    bgRemoveBtn: "remove",
-    bgBlurBtn: "blur",
-    bgImageBtn: "image",
-    bgColorBtn: "color"
-
-  };
-
-
-  Object.entries(buttons)
-    .forEach(
-      ([id, mode]) => {
-
-        const button = $(id);
-
-        if (!button) {
-          return;
-        }
-
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            setAIBackgroundMode(
-              mode
-            );
-
-          }
-        );
-
-      }
-    );
-
-
-  const colorInput =
-    $("backgroundColor");
-
-
-  if (colorInput) {
-
-    colorInput.addEventListener(
-      "input",
-      () => {
-
-        if (
-          state.aiBackgroundMode ===
-          "color"
-        ) {
-
-          renderCompositionFrame();
-
-        }
-
-      }
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SET AI BACKGROUND MODE
-========================================================= */
-
-function setAIBackgroundMode(mode) {
-
-  state.aiBackgroundMode = mode;
-
-
-  qsa(".ai-btn")
-    .forEach(
-      button =>
-        button.classList.remove(
-          "active"
-        )
-    );
-
-
-  const buttonMap = {
-
-    original: "bgOriginalBtn",
-    remove: "bgRemoveBtn",
-    blur: "bgBlurBtn",
-    image: "bgImageBtn",
-    color: "bgColorBtn"
-
-  };
-
-
-  $(buttonMap[mode])
-    ?.classList.add("active");
-
-
-  if (mode === "image") {
-
-    if (!state.backgroundImage) {
-
-      $("backgroundImageUpload")?.click();
-
-      return;
-
-    }
-
-  }
-
-
-  if (mode !== "original") {
-
-    initializeSegmentation();
-
-    mentorAICanvas.style.display =
-      "block";
-
-  } else {
-
-    mentorAICanvas.style.display =
-      "none";
-
-  }
-
-
-  if (state.cameraStream) {
-
-    mentorSourceLabel.textContent =
-      mode === "original"
-        ? "Live Camera"
-        : "AI Camera";
-
-  }
-
-
-  renderCompositionFrame();
-
-}
-
-
-/* =========================================================
-   MEDIAPIPE SEGMENTATION
-========================================================= */
-
-function initializeSegmentation() {
-
-  if (state.selfieSegmentation) {
-    return;
-  }
-
-
-  if (
-    typeof SelfieSegmentation ===
-    "undefined"
-  ) {
-
-    showToast(
-      "AI background engine is unavailable.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    state.selfieSegmentation =
-      new SelfieSegmentation({
-
-        locateFile: file =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-
+        cameraDeviceSelect.appendChild(option);
       });
 
-
-    state.selfieSegmentation.setOptions({
-
-      modelSelection: 1
-
-    });
-
-
-    state.selfieSegmentation.onResults(
-      handleSegmentationResults
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    showToast(
-      "Could not initialize AI background.",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SEGMENTATION LOOP
-========================================================= */
-
-async function processSegmentation() {
-
-  if (
-    !state.selfieSegmentation ||
-    state.aiProcessing ||
-    !state.cameraStream ||
-    mentorCameraVideo.readyState < 2
-  ) {
-
-    return;
-
-  }
-
-
-  state.aiProcessing = true;
-
-
-  try {
-
-    await state.selfieSegmentation.send({
-      image: mentorCameraVideo
-    });
-
-  } catch (error) {
-
-    console.warn(
-      "Segmentation error:",
-      error
-    );
-
-  }
-
-
-  state.aiProcessing = false;
-
-}
-
-
-/* =========================================================
-   SEGMENTATION RESULTS
-========================================================= */
-
-function handleSegmentationResults(results) {
-
-  if (
-    !results ||
-    !results.image
-  ) {
-
-    return;
-
-  }
-
-
-  const width =
-    results.image.videoWidth ||
-    results.image.width ||
-    640;
-
-  const height =
-    results.image.videoHeight ||
-    results.image.height ||
-    360;
-
-
-  if (
-    mentorAICanvas.width !== width ||
-    mentorAICanvas.height !== height
-  ) {
-
-    mentorAICanvas.width = width;
-    mentorAICanvas.height = height;
-
-  }
-
-
-  const ctx =
-    mentorAICanvas.getContext(
-      "2d",
-      {
-        willReadFrequently: true
+      if (
+        current &&
+        cameras.some(
+          (camera) =>
+            camera.deviceId === current
+        )
+      ) {
+        cameraDeviceSelect.value =
+          current;
+      } else if (
+        state.cameraDeviceId &&
+        cameras.some(
+          (camera) =>
+            camera.deviceId ===
+            state.cameraDeviceId
+        )
+      ) {
+        cameraDeviceSelect.value =
+          state.cameraDeviceId;
       }
-    );
-
-
-  if (!ctx) {
-    return;
+    } catch (error) {
+      console.warn(
+        "Camera enumeration failed:",
+        error
+      );
+    }
   }
 
+  async function startCamera() {
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      toast(
+        "Camera API is not available in this browser.",
+        "error"
+      );
+      return;
+    }
 
-  const mode =
-    state.aiBackgroundMode;
+    try {
+      stopCamera(false);
 
+      const constraints =
+        getSelectedCameraConstraints();
 
-  /* ---------------------------------------------
-     ORIGINAL
-  --------------------------------------------- */
+      const stream =
+        await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
 
-  if (mode === "original") {
+      state.mentorCameraStream =
+        stream;
 
-    ctx.clearRect(
-      0,
-      0,
-      width,
-      height
+      if (mentorCameraVideo) {
+        mentorCameraVideo.srcObject =
+          stream;
+
+        mentorCameraVideo.muted = true;
+        mentorCameraVideo.playsInline = true;
+
+        hideMentorSources();
+
+        mentorCameraVideo.style.display =
+          "block";
+
+        mentorCameraVideo.classList.add(
+          "active"
+        );
+
+        if (mentorPlaceholder) {
+          mentorPlaceholder.style.display =
+            "none";
+        }
+
+        await mentorCameraVideo.play();
+
+        const track =
+          stream.getVideoTracks()[0];
+
+        if (track) {
+          const settings =
+            track.getSettings();
+
+          state.mentorCameraWidth =
+            settings.width ||
+            1280;
+
+          state.mentorCameraHeight =
+            settings.height ||
+            720;
+        }
+      }
+
+      state.mentorSource = "camera";
+
+      if (mentorSourceLabel) {
+        mentorSourceLabel.textContent =
+          "CAMERA";
+      }
+
+      updateCameraIndicator(true);
+
+      if (cameraStatus) {
+        cameraStatus.textContent =
+          "Camera connected";
+      }
+
+      await enumerateCameras();
+
+      toast(
+        "Camera started.",
+        "success"
+      );
+
+      initializeSegmentation();
+
+      renderCompositionFrame();
+    } catch (error) {
+      console.error(
+        "Camera start failed:",
+        error
+      );
+
+      if (cameraStatus) {
+        cameraStatus.textContent =
+          "Camera unavailable";
+      }
+
+      updateCameraIndicator(false);
+
+      toast(
+        `Camera error: ${error.message || "Unable to access camera."}`,
+        "error",
+        4500
+      );
+    }
+  }
+
+  function stopCamera(showToast = true) {
+    if (state.mentorCameraStream) {
+      state.mentorCameraStream
+        .getTracks()
+        .forEach((track) => {
+          try {
+            track.stop();
+          } catch (_) {}
+        });
+    }
+
+    state.mentorCameraStream = null;
+
+    if (mentorCameraVideo) {
+      mentorCameraVideo.pause();
+      mentorCameraVideo.srcObject = null;
+      mentorCameraVideo.style.display =
+        "none";
+      mentorCameraVideo.classList.remove(
+        "active"
+      );
+    }
+
+    if (
+      state.mentorSource === "camera"
+    ) {
+      showMentorPlaceholder();
+    }
+
+    updateCameraIndicator(false);
+
+    if (cameraStatus) {
+      cameraStatus.textContent =
+        "Camera stopped";
+    }
+
+    if (showToast) {
+      toast(
+        "Camera stopped.",
+        "info"
+      );
+    }
+  }
+
+  async function switchCamera() {
+    state.cameraFacingMode =
+      state.cameraFacingMode === "user"
+        ? "environment"
+        : "user";
+
+    await startCamera();
+  }
+
+  function updateCameraIndicator(active) {
+    if (!cameraIndicator) {
+      return;
+    }
+
+    cameraIndicator.classList.toggle(
+      "active",
+      Boolean(active)
     );
 
-    ctx.drawImage(
+    const text =
+      $(".indicator-text", cameraIndicator);
+
+    if (text) {
+      text.textContent = active
+        ? "Camera"
+        : "Camera Off";
+    }
+  }
+
+  /* =======================================================
+     MEDIA PIPE SELFIE SEGMENTATION
+     ======================================================= */
+
+  function initializeSegmentation() {
+    if (
+      state.segmentation ||
+      typeof SelfieSegmentation ===
+        "undefined"
+    ) {
+      return;
+    }
+
+    try {
+      state.segmentation =
+        new SelfieSegmentation({
+          locateFile: (file) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+        });
+
+      state.segmentation.setOptions({
+        modelSelection: 1
+      });
+
+      state.segmentation.onResults(
+        handleSegmentationResults
+      );
+
+      state.segmentationReady = true;
+    } catch (error) {
+      console.error(
+        "MediaPipe initialization failed:",
+        error
+      );
+
+      state.segmentation = null;
+      state.segmentationReady = false;
+    }
+  }
+
+  async function processCameraSegmentation() {
+    if (
+      !state.segmentation ||
+      !state.segmentationReady ||
+      state.segmentationBusy ||
+      !mentorCameraVideo ||
+      mentorCameraVideo.readyState <
+        2 ||
+      state.mentorSource !== "camera"
+    ) {
+      return;
+    }
+
+    state.segmentationBusy = true;
+
+    try {
+      await state.segmentation.send({
+        image: mentorCameraVideo
+      });
+    } catch (error) {
+      console.warn(
+        "Segmentation frame failed:",
+        error
+      );
+    } finally {
+      state.segmentationBusy = false;
+    }
+  }
+
+  function ensureCanvasSize(
+    canvas,
+    width,
+    height
+  ) {
+    if (!canvas) {
+      return;
+    }
+
+    if (
+      canvas.width !== width ||
+      canvas.height !== height
+    ) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+  }
+
+  function handleSegmentationResults(results) {
+    if (
+      !results ||
+      !results.image ||
+      !results.segmentationMask
+    ) {
+      return;
+    }
+
+    if (!mentorAICanvas) {
+      return;
+    }
+
+    const sourceWidth =
+      results.image.videoWidth ||
+      results.image.width ||
+      1280;
+
+    const sourceHeight =
+      results.image.videoHeight ||
+      results.image.height ||
+      720;
+
+    ensureCanvasSize(
+      mentorAICanvas,
+      sourceWidth,
+      sourceHeight
+    );
+
+    ensureCanvasSize(
+      aiSourceCanvas,
+      sourceWidth,
+      sourceHeight
+    );
+
+    ensureCanvasSize(
+      aiMaskCanvas,
+      sourceWidth,
+      sourceHeight
+    );
+
+    const sourceCtx =
+      aiSourceCanvas?.getContext(
+        "2d",
+        { willReadFrequently: true }
+      );
+
+    const maskCtx =
+      aiMaskCanvas?.getContext(
+        "2d",
+        { willReadFrequently: true }
+      );
+
+    const outputCtx =
+      mentorAICanvas?.getContext(
+        "2d"
+      );
+
+    if (
+      !sourceCtx ||
+      !maskCtx ||
+      !outputCtx
+    ) {
+      return;
+    }
+
+    sourceCtx.clearRect(
+      0,
+      0,
+      sourceWidth,
+      sourceHeight
+    );
+
+    sourceCtx.drawImage(
       results.image,
       0,
       0,
-      width,
-      height
+      sourceWidth,
+      sourceHeight
     );
 
-    return;
+    maskCtx.clearRect(
+      0,
+      0,
+      sourceWidth,
+      sourceHeight
+    );
 
+    maskCtx.drawImage(
+      results.segmentationMask,
+      0,
+      0,
+      sourceWidth,
+      sourceHeight
+    );
+
+    const sourceData =
+      sourceCtx.getImageData(
+        0,
+        0,
+        sourceWidth,
+        sourceHeight
+      );
+
+    const maskData =
+      maskCtx.getImageData(
+        0,
+        0,
+        sourceWidth,
+        sourceHeight
+      );
+
+    const outputData =
+      outputCtx.createImageData(
+        sourceWidth,
+        sourceHeight
+      );
+
+    const src =
+      sourceData.data;
+
+    const mask =
+      maskData.data;
+
+    const out =
+      outputData.data;
+
+    /*
+      MediaPipe foreground confidence
+      is normally available in mask red.
+
+      We use a soft alpha edge:
+      confidence 0.15 -> alpha 0
+      confidence 0.80 -> alpha 255
+    */
+
+    for (
+      let i = 0;
+      i < src.length;
+      i += 4
+    ) {
+      const confidence =
+        mask[i] / 255;
+
+      const alpha =
+        clamp(
+          (confidence - 0.15) /
+            0.65,
+          0,
+          1
+        );
+
+      out[i] =
+        src[i];
+
+      out[i + 1] =
+        src[i + 1];
+
+      out[i + 2] =
+        src[i + 2];
+
+      out[i + 3] =
+        Math.round(
+          alpha * 255
+        );
+    }
+
+    outputCtx.putImageData(
+      outputData,
+      0,
+      0
+    );
+
+    drawMentorAIBackground(
+      outputCtx,
+      sourceWidth,
+      sourceHeight
+    );
+
+    if (mentorAICanvas) {
+      mentorAICanvas.style.display =
+        "block";
+
+      mentorAICanvas.classList.add(
+        "active"
+      );
+    }
+
+    if (mentorPlaceholder) {
+      mentorPlaceholder.style.display =
+        "none";
+    }
+
+    renderCompositionFrame();
   }
 
-
-  /* ---------------------------------------------
-     Temporary source canvas
-  --------------------------------------------- */
-
-  const sourceCanvas =
-    $("aiSourceCanvas");
-
-  const maskCanvas =
-    $("aiMaskCanvas");
-
-
-  sourceCanvas.width = width;
-  sourceCanvas.height = height;
-
-  maskCanvas.width = width;
-  maskCanvas.height = height;
-
-
-  const sourceCtx =
-    sourceCanvas.getContext(
-      "2d",
-      {
-        willReadFrequently: true
-      }
-    );
-
-  const maskCtx =
-    maskCanvas.getContext(
-      "2d",
-      {
-        willReadFrequently: true
-      }
-    );
-
-
-  sourceCtx.clearRect(
-    0,
-    0,
+  function drawMentorAIBackground(
+    ctx,
     width,
     height
-  );
+  ) {
+    /*
+      Important:
+      The background is drawn BEFORE
+      the isolated person.
+    */
 
-
-  maskCtx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  sourceCtx.drawImage(
-    results.image,
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  maskCtx.drawImage(
-    results.segmentationMask,
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /* ---------------------------------------------
-     Background first
-  --------------------------------------------- */
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  if (mode === "blur") {
-
-    ctx.save();
-
-    ctx.filter =
-      "blur(14px)";
-
-    ctx.drawImage(
-      sourceCanvas,
-      -14,
-      -14,
-      width + 28,
-      height + 28
-    );
-
-    ctx.restore();
-
-  }
-
-
-  if (mode === "image") {
-
-    if (state.backgroundImage) {
+    if (
+      state.backgroundMode ===
+      "original"
+    ) {
+      ctx.globalCompositeOperation =
+        "destination-over";
 
       ctx.drawImage(
+        mentorCameraVideo,
+        0,
+        0,
+        width,
+        height
+      );
+
+      ctx.globalCompositeOperation =
+        "source-over";
+
+      return;
+    }
+
+    if (
+      state.backgroundMode ===
+      "blur"
+    ) {
+      ctx.save();
+
+      ctx.globalCompositeOperation =
+        "destination-over";
+
+      ctx.filter = "blur(18px)";
+
+      ctx.drawImage(
+        mentorCameraVideo,
+        0,
+        0,
+        width,
+        height
+      );
+
+      ctx.filter = "none";
+
+      ctx.restore();
+
+      return;
+    }
+
+    if (
+      state.backgroundMode ===
+      "custom" &&
+      state.backgroundImage
+    ) {
+      ctx.save();
+
+      ctx.globalCompositeOperation =
+        "destination-over";
+
+      drawCoverImage(
+        ctx,
         state.backgroundImage,
         0,
         0,
@@ -1775,10 +1685,23 @@ function handleSegmentationResults(results) {
         height
       );
 
-    } else {
+      ctx.restore();
+
+      return;
+    }
+
+    if (
+      state.backgroundMode ===
+      "solid"
+    ) {
+      ctx.save();
+
+      ctx.globalCompositeOperation =
+        "destination-over";
 
       ctx.fillStyle =
-        "#111827";
+        backgroundColor?.value ||
+        "#101827";
 
       ctx.fillRect(
         0,
@@ -1787,16 +1710,1489 @@ function handleSegmentationResults(results) {
         height
       );
 
+      ctx.restore();
+
+      return;
     }
 
+    if (
+      state.backgroundMode ===
+      "remove"
+    ) {
+      /*
+        Transparent background.
+        No destination-over background.
+      */
+
+      return;
+    }
   }
 
+  function drawCoverImage(
+    ctx,
+    image,
+    x,
+    y,
+    width,
+    height
+  ) {
+    const iw =
+      image.naturalWidth ||
+      image.videoWidth ||
+      image.width;
 
-  if (mode === "color") {
+    const ih =
+      image.naturalHeight ||
+      image.videoHeight ||
+      image.height;
 
-    ctx.fillStyle =
-      $("backgroundColor")?.value ||
-      "#111827";
+    if (!iw || !ih) {
+      return;
+    }
+
+    const imageRatio =
+      iw / ih;
+
+    const targetRatio =
+      width / height;
+
+    let drawWidth = width;
+    let drawHeight = height;
+    let dx = x;
+    let dy = y;
+
+    if (imageRatio > targetRatio) {
+      drawHeight = height;
+      drawWidth =
+        height * imageRatio;
+      dx =
+        x +
+        (width - drawWidth) / 2;
+    } else {
+      drawWidth = width;
+      drawHeight =
+        width / imageRatio;
+      dy =
+        y +
+        (height - drawHeight) / 2;
+    }
+
+    ctx.drawImage(
+      image,
+      dx,
+      dy,
+      drawWidth,
+      drawHeight
+    );
+  }
+
+  /* =======================================================
+     BACKGROUND MODE
+     ======================================================= */
+
+  function setBackgroundMode(mode) {
+    state.backgroundMode = mode;
+
+    [
+      bgOriginalBtn,
+      bgRemoveBtn,
+      bgBlurBtn,
+      bgImageBtn,
+      bgColorBtn
+    ].forEach((button) => {
+      if (button) {
+        button.classList.remove(
+          "active"
+        );
+      }
+    });
+
+    const map = {
+      original: bgOriginalBtn,
+      remove: bgRemoveBtn,
+      blur: bgBlurBtn,
+      custom: bgImageBtn,
+      solid: bgColorBtn
+    };
+
+    if (map[mode]) {
+      map[mode].classList.add(
+        "active"
+      );
+    }
+
+    if (
+      backgroundUploadBox
+    ) {
+      backgroundUploadBox.style.display =
+        mode === "custom"
+          ? ""
+          : "none";
+    }
+
+    if (
+      backgroundColor
+    ) {
+      backgroundColor.style.display =
+        mode === "solid"
+          ? ""
+          : "";
+    }
+
+    renderCompositionFrame();
+  }
+
+  function loadBackgroundImage(file) {
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith(
+        "image/"
+      )
+    ) {
+      toast(
+        "Background must be an image.",
+        "error"
+      );
+      return;
+    }
+
+    if (state.backgroundImageUrl) {
+      URL.revokeObjectURL(
+        state.backgroundImageUrl
+      );
+    }
+
+    state.backgroundImageUrl =
+      URL.createObjectURL(file);
+
+    const image =
+      new Image();
+
+    image.onload = () => {
+      state.backgroundImage =
+        image;
+
+      setBackgroundMode(
+        "custom"
+      );
+
+      toast(
+        "Custom background loaded.",
+        "success"
+      );
+
+      renderCompositionFrame();
+    };
+
+    image.src =
+      state.backgroundImageUrl;
+  }
+
+  /* =======================================================
+     MENTOR DRAG
+     ======================================================= */
+
+  function initializeMentorPosition() {
+    if (!mentorCard) {
+      return;
+    }
+
+    mentorCard.style.right =
+      "3%";
+
+    mentorCard.style.bottom =
+      "4%";
+
+    mentorCard.style.left =
+      "auto";
+
+    mentorCard.style.top =
+      "auto";
+
+    state.mentorPosition.left =
+      null;
+
+    state.mentorPosition.top =
+      null;
+  }
+
+  function startMentorDrag(event) {
+    if (
+      event.target ===
+      mentorResize
+    ) {
+      return;
+    }
+
+    if (!mentorCard) {
+      return;
+    }
+
+    const point =
+      getPointerPosition(event);
+
+    const rect =
+      mentorCard.getBoundingClientRect();
+
+    state.mentorDragging = true;
+
+    state.mentorDragStartX =
+      point.x;
+
+    state.mentorDragStartY =
+      point.y;
+
+    state.mentorDragStartLeft =
+      rect.left;
+
+    state.mentorDragStartTop =
+      rect.top;
+
+    mentorCard.classList.add(
+      "dragging"
+    );
+
+    event.preventDefault();
+  }
+
+  function moveMentorDrag(event) {
+    if (
+      !state.mentorDragging ||
+      !mentorCard ||
+      !stage
+    ) {
+      return;
+    }
+
+    const point =
+      getPointerPosition(event);
+
+    const stageRect =
+      stage.getBoundingClientRect();
+
+    const cardRect =
+      mentorCard.getBoundingClientRect();
+
+    let newLeft =
+      state.mentorDragStartLeft +
+      (point.x -
+        state.mentorDragStartX);
+
+    let newTop =
+      state.mentorDragStartTop +
+      (point.y -
+        state.mentorDragStartY);
+
+    const minLeft =
+      stageRect.left;
+
+    const minTop =
+      stageRect.top;
+
+    const maxLeft =
+      stageRect.right -
+      cardRect.width;
+
+    const maxTop =
+      stageRect.bottom -
+      cardRect.height;
+
+    newLeft =
+      clamp(
+        newLeft,
+        minLeft,
+        maxLeft
+      );
+
+    newTop =
+      clamp(
+        newTop,
+        minTop,
+        maxTop
+      );
+
+    const relativeLeft =
+      newLeft -
+      stageRect.left;
+
+    const relativeTop =
+      newTop -
+      stageRect.top;
+
+    mentorCard.style.left =
+      `${relativeLeft}px`;
+
+    mentorCard.style.top =
+      `${relativeTop}px`;
+
+    mentorCard.style.right =
+      "auto";
+
+    mentorCard.style.bottom =
+      "auto";
+
+    state.mentorPosition.left =
+      relativeLeft /
+      stageRect.width;
+
+    state.mentorPosition.top =
+      relativeTop /
+      stageRect.height;
+
+    renderCompositionFrame();
+  }
+
+  function stopMentorDrag() {
+    if (!state.mentorDragging) {
+      return;
+    }
+
+    state.mentorDragging = false;
+
+    if (mentorCard) {
+      mentorCard.classList.remove(
+        "dragging"
+      );
+    }
+  }
+
+  function getPointerPosition(event) {
+    if (
+      event.touches &&
+      event.touches.length
+    ) {
+      return {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      };
+    }
+
+    return {
+      x: event.clientX,
+      y: event.clientY
+    };
+  }
+
+  /* =======================================================
+     MENTOR RESIZE
+     ======================================================= */
+
+  function startMentorResize(event) {
+    if (
+      !mentorCard ||
+      !stage
+    ) {
+      return;
+    }
+
+    state.resizingMentor = true;
+
+    const point =
+      getPointerPosition(event);
+
+    const rect =
+      mentorCard.getBoundingClientRect();
+
+    state.resizeStartX =
+      point.x;
+
+    state.resizeStartY =
+      point.y;
+
+    state.resizeStartWidth =
+      rect.width;
+
+    state.resizeStartHeight =
+      rect.height;
+
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function moveMentorResize(event) {
+    if (
+      !state.resizingMentor ||
+      !mentorCard ||
+      !stage
+    ) {
+      return;
+    }
+
+    const point =
+      getPointerPosition(event);
+
+    const dx =
+      point.x -
+      state.resizeStartX;
+
+    const stageRect =
+      stage.getBoundingClientRect();
+
+    let newWidth =
+      state.resizeStartWidth +
+      dx;
+
+    const minWidth =
+      130;
+
+    const maxWidth =
+      stageRect.width *
+      0.45;
+
+    newWidth =
+      clamp(
+        newWidth,
+        minWidth,
+        maxWidth
+      );
+
+    const ratio =
+      16 / 9;
+
+    const newHeight =
+      newWidth / ratio;
+
+    mentorCard.style.width =
+      `${newWidth}px`;
+
+    mentorCard.style.height =
+      `${newHeight}px`;
+
+    state.mentorPosition.width =
+      newWidth /
+      stageRect.width;
+
+    state.mentorPosition.height =
+      newHeight /
+      stageRect.height;
+
+    renderCompositionFrame();
+  }
+
+  function stopMentorResize() {
+    state.resizingMentor =
+      false;
+  }
+
+  /* =======================================================
+     SCREEN CAPTURE
+     ======================================================= */
+
+  async function startScreenCapture() {
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getDisplayMedia
+    ) {
+      toast(
+        "Screen capture is not supported here.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      stopScreenCapture(false);
+
+      const stream =
+        await navigator.mediaDevices.getDisplayMedia(
+          {
+            video: {
+              frameRate: {
+                ideal: 30,
+                max: 60
+              }
+            },
+            audio: true
+          }
+        );
+
+      state.screenStream =
+        stream;
+
+      state.screenCaptureActive =
+        true;
+
+      if (screenCaptureVideo) {
+        screenCaptureVideo.srcObject =
+          stream;
+
+        screenCaptureVideo.muted =
+          true;
+
+        screenCaptureVideo.playsInline =
+          true;
+
+        await screenCaptureVideo.play();
+      }
+
+      const videoTrack =
+        stream.getVideoTracks()[0];
+
+      if (videoTrack) {
+        videoTrack.addEventListener(
+          "ended",
+          () => {
+            stopScreenCapture(true);
+          }
+        );
+      }
+
+      updateScreenIndicator(true);
+
+      if (screenCaptureStatus) {
+        screenCaptureStatus.textContent =
+          "Screen capture active";
+      }
+
+      if (screenCaptureStatusLight) {
+        screenCaptureStatusLight.classList.add(
+          "active"
+        );
+      }
+
+      if (stageSourceBadge) {
+        updateStageSourceBadge(
+          "SCREEN"
+        );
+      }
+
+      toast(
+        "Screen capture started.",
+        "success"
+      );
+
+      renderCompositionFrame();
+    } catch (error) {
+      console.warn(
+        "Screen capture cancelled:",
+        error
+      );
+
+      state.screenStream = null;
+      state.screenCaptureActive =
+        false;
+
+      updateScreenIndicator(false);
+
+      toast(
+        "Screen capture cancelled.",
+        "info"
+      );
+    }
+  }
+
+  function stopScreenCapture(
+    showToast = true
+  ) {
+    if (state.screenStream) {
+      state.screenStream
+        .getTracks()
+        .forEach((track) => {
+          try {
+            track.stop();
+          } catch (_) {}
+        });
+    }
+
+    state.screenStream = null;
+    state.screenCaptureActive =
+      false;
+
+    if (screenCaptureVideo) {
+      screenCaptureVideo.pause();
+      screenCaptureVideo.srcObject =
+        null;
+    }
+
+    updateScreenIndicator(false);
+
+    if (screenCaptureStatus) {
+      screenCaptureStatus.textContent =
+        "Screen capture stopped";
+    }
+
+    if (screenCaptureStatusLight) {
+      screenCaptureStatusLight.classList.remove(
+        "active"
+      );
+    }
+
+    if (showToast) {
+      toast(
+        "Screen capture stopped.",
+        "info"
+      );
+    }
+
+    updateStageSourceBadge(
+      state.mainSource === "video"
+        ? "VIDEO"
+        : state.mainSource === "image"
+          ? "IMAGE"
+          : "WELCOME"
+    );
+
+    renderCompositionFrame();
+  }
+
+  function updateScreenIndicator(
+    active
+  ) {
+    if (!screenIndicator) {
+      return;
+    }
+
+    screenIndicator.classList.toggle(
+      "active",
+      Boolean(active)
+    );
+
+    const text =
+      $(".indicator-text", screenIndicator);
+
+    if (text) {
+      text.textContent = active
+        ? "Screen"
+        : "Screen Off";
+    }
+  }
+
+  /* =======================================================
+     AUDIO ENGINE
+     ======================================================= */
+
+  async function ensureAudioContext() {
+    if (
+      state.audioContext &&
+      state.audioContext.state !==
+        "closed"
+    ) {
+      if (
+        state.audioContext.state ===
+        "suspended"
+      ) {
+        await state.audioContext.resume();
+      }
+
+      return state.audioContext;
+    }
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if (!AudioContextClass) {
+      toast(
+        "Web Audio is not supported.",
+        "error"
+      );
+      return null;
+    }
+
+    state.audioContext =
+      new AudioContextClass();
+
+    state.mediaDestination =
+      state.audioContext.createMediaStreamDestination();
+
+    return state.audioContext;
+  }
+
+  async function setupMainVideoAudio() {
+    if (!mainVideo) {
+      return;
+    }
+
+    const ctx =
+      await ensureAudioContext();
+
+    if (!ctx) {
+      return;
+    }
+
+    if (!state.mainSourceNode) {
+      try {
+        state.mainSourceNode =
+          ctx.createMediaElementSource(
+            mainVideo
+          );
+
+        state.mainGainNode =
+          ctx.createGain();
+
+        state.mainAnalyser =
+          ctx.createAnalyser();
+
+        state.mainAnalyser.fftSize =
+          256;
+
+        state.mainSourceNode.connect(
+          state.mainGainNode
+        );
+
+        state.mainGainNode.connect(
+          state.mainAnalyser
+        );
+
+        state.mainAnalyser.connect(
+          ctx.destination
+        );
+
+        state.mainGainNode.connect(
+          state.mediaDestination
+        );
+      } catch (error) {
+        console.warn(
+          "Main audio setup failed:",
+          error
+        );
+      }
+    }
+
+    updateMainAudioGraph();
+  }
+
+  function updateMainAudioGraph() {
+    if (!state.mainGainNode) {
+      return;
+    }
+
+    const enabled =
+      mainVideoAudioCheckbox?.checked !==
+      false;
+
+    const volume =
+      clamp(
+        safeNumber(
+          mainVideoVolume?.value,
+          100
+        ),
+        0,
+        100
+      );
+
+    state.mainGainNode.gain.value =
+      enabled
+        ? volume / 100
+        : 0;
+
+    if (mainVideo) {
+      /*
+        Once routed through Web Audio,
+        mute the HTML element to avoid
+        duplicate direct playback.
+      */
+      mainVideo.muted = true;
+    }
+
+    if (mainVolumeValue) {
+      mainVolumeValue.textContent =
+        `${Math.round(volume)}%`;
+    }
+  }
+
+  async function enableMicrophone() {
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      toast(
+        "Microphone API unavailable.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const ctx =
+        await ensureAudioContext();
+
+      if (!ctx) {
+        return;
+      }
+
+      if (state.micStream) {
+        stopMicrophone(false);
+      }
+
+      state.micStream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            },
+            video: false
+          }
+        );
+
+      state.micSourceNode =
+        ctx.createMediaStreamSource(
+          state.micStream
+        );
+
+      state.micGainNode =
+        ctx.createGain();
+
+      state.micAnalyser =
+        ctx.createAnalyser();
+
+      state.micAnalyser.fftSize =
+        2048;
+
+      state.micSourceNode.connect(
+        state.micGainNode
+      );
+
+      state.micGainNode.connect(
+        state.micAnalyser
+      );
+
+      state.micAnalyser.connect(
+        state.mediaDestination
+      );
+
+      state.micReady = true;
+
+      updateMicGraph();
+
+      updateMicIndicator(true);
+
+      if (micEnabled) {
+        micEnabled.checked = true;
+      }
+
+      toast(
+        "Microphone enabled.",
+        "success"
+      );
+
+      startAudioMeterLoop();
+    } catch (error) {
+      console.error(
+        "Microphone error:",
+        error
+      );
+
+      state.micReady = false;
+
+      updateMicIndicator(false);
+
+      toast(
+        `Microphone error: ${error.message || "Unable to access microphone."}`,
+        "error",
+        4500
+      );
+    }
+  }
+
+  function stopMicrophone(
+    showToast = true
+  ) {
+    if (state.micStream) {
+      state.micStream
+        .getTracks()
+        .forEach((track) => {
+          try {
+            track.stop();
+          } catch (_) {}
+        });
+    }
+
+    state.micStream = null;
+
+    if (state.micSourceNode) {
+      try {
+        state.micSourceNode.disconnect();
+      } catch (_) {}
+    }
+
+    if (state.micGainNode) {
+      try {
+        state.micGainNode.disconnect();
+      } catch (_) {}
+    }
+
+    state.micSourceNode = null;
+    state.micGainNode = null;
+    state.micReady = false;
+
+    updateMicIndicator(false);
+
+    if (micEnabled) {
+      micEnabled.checked = false;
+    }
+
+    if (showToast) {
+      toast(
+        "Microphone disabled.",
+        "info"
+      );
+    }
+  }
+
+  function updateMicGraph() {
+    if (!state.micGainNode) {
+      return;
+    }
+
+    const enabled =
+      micEnabled?.checked !== false;
+
+    const volume =
+      clamp(
+        safeNumber(
+          micVolume?.value,
+          100
+        ),
+        0,
+        100
+      );
+
+    state.micGainNode.gain.value =
+      enabled
+        ? volume / 100
+        : 0;
+
+    if (micVolumeValue) {
+      micVolumeValue.textContent =
+        `${Math.round(volume)}%`;
+    }
+
+    if (state.micSourceNode) {
+      /*
+        Optional monitoring to local speakers.
+        We deliberately do NOT connect the
+        mic directly unless monitor is enabled.
+      */
+
+      updateMicMonitoring();
+    }
+  }
+
+  function updateMicMonitoring() {
+    if (
+      !state.micGainNode ||
+      !state.audioContext
+    ) {
+      return;
+    }
+
+    const enabled =
+      micMonitor?.checked === true;
+
+    /*
+      Disconnecting/reconnecting a gain
+      node is safe here.
+    */
+
+    try {
+      state.micGainNode.disconnect(
+        state.audioContext.destination
+      );
+    } catch (_) {}
+
+    if (enabled) {
+      try {
+        state.micGainNode.connect(
+          state.audioContext.destination
+        );
+      } catch (_) {}
+    }
+  }
+
+  function updateMicIndicator(active) {
+    if (!micIndicator) {
+      return;
+    }
+
+    micIndicator.classList.toggle(
+      "active",
+      Boolean(active)
+    );
+
+    const text =
+      $(".indicator-text", micIndicator);
+
+    if (text) {
+      text.textContent = active
+        ? "Mic"
+        : "Mic Off";
+    }
+  }
+
+  function updateAudioIndicator() {
+    if (!audioIndicator) {
+      return;
+    }
+
+    const active =
+      Boolean(
+        state.mainSourceNode ||
+        state.micReady
+      );
+
+    audioIndicator.classList.toggle(
+      "active",
+      active
+    );
+
+    const text =
+      $(".indicator-text", audioIndicator);
+
+    if (text) {
+      text.textContent = active
+        ? "Audio"
+        : "Audio Off";
+    }
+  }
+
+  /* =======================================================
+     AUDIO METERS
+     ======================================================= */
+
+  let audioMeterAnimation =
+    null;
+
+  function startAudioMeterLoop() {
+    if (audioMeterAnimation) {
+      return;
+    }
+
+    const draw = () => {
+      audioMeterAnimation =
+        requestAnimationFrame(draw);
+
+      updateAudioMeters();
+    };
+
+    draw();
+  }
+
+  function stopAudioMeterLoop() {
+    if (audioMeterAnimation) {
+      cancelAnimationFrame(
+        audioMeterAnimation
+      );
+
+      audioMeterAnimation = null;
+    }
+  }
+
+  function getAnalyserLevel(
+    analyser
+  ) {
+    if (!analyser) {
+      return 0;
+    }
+
+    const buffer =
+      new Uint8Array(
+        analyser.fftSize
+      );
+
+    analyser.getByteTimeDomainData(
+      buffer
+    );
+
+    let sum = 0;
+
+    for (let i = 0; i < buffer.length; i++) {
+      const normalized =
+        (buffer[i] - 128) / 128;
+
+      sum +=
+        normalized *
+        normalized;
+    }
+
+    const rms =
+      Math.sqrt(
+        sum / buffer.length
+      );
+
+    return clamp(
+      rms * 4,
+      0,
+      1
+    );
+  }
+
+  function updateAudioMeters() {
+    const micLevel =
+      getAnalyserLevel(
+        state.micAnalyser
+      );
+
+    const mainLevel =
+      getAnalyserLevel(
+        state.mainAnalyser
+      );
+
+    const micPercent =
+      Math.round(
+        micLevel * 100
+      );
+
+    const mainPercent =
+      Math.round(
+        mainLevel * 100
+      );
+
+    if (micLevelBar) {
+      micLevelBar.style.width =
+        `${micPercent}%`;
+    }
+
+    if (micLevelValue) {
+      micLevelValue.textContent =
+        `${micPercent}%`;
+    }
+
+    if (mainAudioLevelBar) {
+      mainAudioLevelBar.style.width =
+        `${mainPercent}%`;
+    }
+
+    if (mainAudioLevelValue) {
+      mainAudioLevelValue.textContent =
+        `${mainPercent}%`;
+    }
+
+    drawMicWaveform();
+  }
+
+  function drawMicWaveform() {
+    if (!micWaveformCanvas) {
+      return;
+    }
+
+    const ctx =
+      micWaveformCanvas.getContext(
+        "2d"
+      );
+
+    if (!ctx) {
+      return;
+    }
+
+    const rect =
+      micWaveformCanvas.getBoundingClientRect();
+
+    const width =
+      Math.max(
+        1,
+        Math.floor(rect.width)
+      );
+
+    const height =
+      Math.max(
+        1,
+        Math.floor(rect.height)
+      );
+
+    if (
+      micWaveformCanvas.width !==
+        width ||
+      micWaveformCanvas.height !==
+        height
+    ) {
+      micWaveformCanvas.width =
+        width;
+
+      micWaveformCanvas.height =
+        height;
+    }
+
+    ctx.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+    if (!state.micAnalyser) {
+      return;
+    }
+
+    const buffer =
+      new Uint8Array(
+        state.micAnalyser.fftSize
+      );
+
+    state.micAnalyser.getByteTimeDomainData(
+      buffer
+    );
+
+    ctx.beginPath();
+
+    const sliceWidth =
+      width /
+      buffer.length;
+
+    let x = 0;
+
+    for (
+      let i = 0;
+      i < buffer.length;
+      i++
+    ) {
+      const value =
+        buffer[i] / 128;
+
+      const y =
+        (value * height) / 2;
+
+      if (i === 0) {
+        ctx.moveTo(
+          x,
+          y
+        );
+      } else {
+        ctx.lineTo(
+          x,
+          y
+        );
+      }
+
+      x += sliceWidth;
+    }
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle =
+      getComputedStyle(
+        document.documentElement
+      ).getPropertyValue(
+        "--blue-strong"
+      ) ||
+      "#8cc7ff";
+
+    ctx.stroke();
+  }
+
+  /* =======================================================
+     RECORDING QUALITY
+     ======================================================= */
+
+  function getRecordingSettings() {
+    let quality =
+      recordingQualitySide?.value ||
+      recordingQuality?.value ||
+      "1080";
+
+    let fps =
+      recordingFpsSide?.value ||
+      recordingFps?.value ||
+      "30";
+
+    const qualityMap = {
+      "720": {
+        width: 1280,
+        height: 720
+      },
+
+      "1080": {
+        width: 1920,
+        height: 1080
+      },
+
+      "1440": {
+        width: 2560,
+        height: 1440
+      }
+    };
+
+    const resolution =
+      qualityMap[String(quality)] ||
+      qualityMap["1080"];
+
+    return {
+      width: resolution.width,
+      height: resolution.height,
+      fps: clamp(
+        safeNumber(fps, 30),
+        24,
+        60
+      )
+    };
+  }
+
+  function syncRecordingSettings() {
+    const settings =
+      getRecordingSettings();
+
+    state.recordingWidth =
+      settings.width;
+
+    state.recordingHeight =
+      settings.height;
+
+    state.recordingFps =
+      settings.fps;
+
+    if (recordingQuality) {
+      recordingQuality.value =
+        String(
+          settings.width === 1280
+            ? "720"
+            : settings.width === 2560
+              ? "1440"
+              : "1080"
+        );
+    }
+
+    if (recordingFps) {
+      recordingFps.value =
+        String(settings.fps);
+    }
+
+    if (recordingQualitySide) {
+      recordingQualitySide.value =
+        String(
+          settings.width === 1280
+            ? "720"
+            : settings.width === 2560
+              ? "1440"
+              : "1080"
+        );
+    }
+
+    if (recordingFpsSide) {
+      recordingFpsSide.value =
+        String(settings.fps);
+    }
+
+    updateStageBadges();
+  }
+
+  function updateStageBadges() {
+    if (stageResolutionBadge) {
+      stageResolutionBadge.textContent =
+        `${state.recordingWidth} × ${state.recordingHeight}`;
+    }
+
+    if (stageFpsBadge) {
+      stageFpsBadge.textContent =
+        `${state.recordingFps} FPS`;
+    }
+  }
+
+  /* =======================================================
+     MEDIA RECORDER MIME
+     ======================================================= */
+
+  function getSelectedRecordingMime() {
+    const requested =
+      recordingFormatSide?.value ||
+      recordingFormat?.value ||
+      "webm-vp9";
+
+    const candidates = [];
+
+    if (requested === "mp4") {
+      candidates.push(
+        'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+        "video/mp4"
+      );
+    }
+
+    if (
+      requested === "webm-vp8"
+    ) {
+      candidates.push(
+        "video/webm;codecs=vp8,opus",
+        "video/webm"
+      );
+    }
+
+    if (
+      requested === "webm-vp9" ||
+      requested === "webm"
+    ) {
+      candidates.push(
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm"
+      );
+    }
+
+    candidates.push(
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4"
+    );
+
+    if (
+      typeof MediaRecorder ===
+      "undefined"
+    ) {
+      return "";
+    }
+
+    for (const mime of candidates) {
+      try {
+        if (
+          MediaRecorder.isTypeSupported(
+            mime
+          )
+        ) {
+          return mime;
+        }
+      } catch (_) {}
+    }
+
+    return "";
+  }
+
+  function getExtensionFromMime(
+    mime
+  ) {
+    return mime.includes(
+      "mp4"
+    )
+      ? "mp4"
+      : "webm";
+  }
+
+  /* =======================================================
+     COMPOSITION CANVAS
+     ======================================================= */
+
+  function createRecordingCanvas() {
+    if (!state.recordingCanvas) {
+      state.recordingCanvas =
+        document.createElement(
+          "canvas"
+        );
+
+      state.recordingCanvasContext =
+        state.recordingCanvas.getContext(
+          "2d"
+        );
+    }
+
+    state.recordingCanvas.width =
+      state.recordingWidth;
+
+    state.recordingCanvas.height =
+      state.recordingHeight;
+
+    return state.recordingCanvas;
+  }
+
+  function drawMainComposition(
+    ctx,
+    width,
+    height
+  ) {
+    ctx.save();
+
+    ctx.fillStyle = "#05070a";
 
     ctx.fillRect(
       0,
@@ -1805,7133 +3201,4810 @@ function handleSegmentationResults(results) {
       height
     );
 
-  }
-
-
-  if (mode === "remove") {
-
-    /*
-      Transparent background.
-      Canvas is already clear.
-    */
-
-  }
-
-
-  /* ---------------------------------------------
-     Isolate person using mask
-  --------------------------------------------- */
-
-  const sourceData =
-    sourceCtx.getImageData(
-      0,
-      0,
-      width,
-      height
-    );
-
-
-  const maskData =
-    maskCtx.getImageData(
-      0,
-      0,
-      width,
-      height
-    );
-
-
-  const isolated =
-    new ImageData(
-      width,
-      height
-    );
-
-
-  for (
-    let i = 0;
-    i < sourceData.data.length;
-    i += 4
-  ) {
-
-    const maskValue =
-      maskData.data[i] / 255;
-
-
-    /*
-      Soft threshold.
-
-      This prevents hard jagged edges
-      and keeps the person visible.
-    */
-
-    let alpha =
-      (maskValue - 0.15) / 0.65;
-
-
-    alpha =
-      Math.max(
+    if (
+      state.screenCaptureActive &&
+      screenCaptureVideo &&
+      screenCaptureVideo.readyState >=
+        2
+    ) {
+      drawCoverImage(
+        ctx,
+        screenCaptureVideo,
         0,
-        Math.min(
-          1,
-          alpha
-        )
+        0,
+        width,
+        height
       );
 
-
-    isolated.data[i] =
-      sourceData.data[i];
-
-    isolated.data[i + 1] =
-      sourceData.data[i + 1];
-
-    isolated.data[i + 2] =
-      sourceData.data[i + 2];
-
-    isolated.data[i + 3] =
-      Math.round(
-        alpha * 255
-      );
-
-  }
-
-
-  /*
-    Draw isolated person over background.
-  */
-
-  ctx.putImageData(
-    isolated,
-    0,
-    0
-  );
-
-}
-
-
-/* =========================================================
-   BACKGROUND IMAGE
-========================================================= */
-
-function loadBackgroundImage(file) {
-
-  if (!file.type.startsWith("image/")) {
-
-    showToast(
-      "Please select an image.",
-      "error"
-    );
-
-    return;
-  }
-
-
-  const url =
-    URL.createObjectURL(file);
-
-
-  const image =
-    new Image();
-
-
-  image.onload = () => {
-
-    state.backgroundImage =
-      image;
-
-    setAIBackgroundMode(
-      "image"
-    );
-
-    URL.revokeObjectURL(url);
-
-    showToast(
-      "Background image loaded.",
-      "success"
-    );
-
-  };
-
-
-  image.onerror = () => {
-
-    URL.revokeObjectURL(url);
-
-    showToast(
-      "Could not load background image.",
-      "error"
-    );
-
-  };
-
-
-  image.src = url;
-
-}
-
-
-/* =========================================================
-   CONTINUOUS AI LOOP
-========================================================= */
-
-function aiLoop() {
-
-  if (
-    state.cameraStream &&
-    state.aiBackgroundMode !== "original"
-  ) {
-
-    processSegmentation();
-
-  }
-
-
-  requestAnimationFrame(
-    aiLoop
-  );
-
-}
-
-
-aiLoop();
-
-
-/* =========================================================
-   MEDIA EVENTS
-========================================================= */
-
-function initializeMediaEvents() {
-
-  mainVideo.addEventListener(
-    "play",
-    () => {
-
-      renderCompositionFrame();
-
+      ctx.restore();
+      return;
     }
-  );
-
-
-  mainVideo.addEventListener(
-    "pause",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  mainVideo.addEventListener(
-    "timeupdate",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  mainVideo.addEventListener(
-    "loadedmetadata",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  mentorVideo.addEventListener(
-    "play",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  mentorVideo.addEventListener(
-    "timeupdate",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  mentorCameraVideo.addEventListener(
-    "loadedmetadata",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  screenCaptureVideo.addEventListener(
-    "play",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-
-  screenCaptureVideo.addEventListener(
-    "timeupdate",
-    () => {
-
-      renderCompositionFrame();
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   COMPOSITION CANVAS
-========================================================= */
-
-function initializeCompositionCanvas() {
-
-  state.compositionCanvas =
-    document.createElement(
-      "canvas"
-    );
-
-
-  state.compositionCanvas.width =
-    1920;
-
-  state.compositionCanvas.height =
-    1080;
-
-
-  state.compositionContext =
-    state.compositionCanvas.getContext(
-      "2d"
-    );
-
-}
-
-
-/* =========================================================
-   RESIZE COMPOSITION
-========================================================= */
-
-function setCompositionResolution(
-  width,
-  height
-) {
-
-  state.compositionCanvas.width =
-    width;
-
-  state.compositionCanvas.height =
-    height;
-
-}
-
-
-/* =========================================================
-   DRAW MAIN MEDIA
-========================================================= */
-
-function drawMainMedia(
-  ctx,
-  width,
-  height
-) {
-
-  ctx.fillStyle =
-    "#05080d";
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  let source = null;
-
-
-  if (
-    state.screenCaptureActive &&
-    screenCaptureVideo.readyState >= 2
-  ) {
-
-    source =
-      screenCaptureVideo;
-
-  } else if (
-    state.mainMode === "video" &&
-    mainVideo.readyState >= 2
-  ) {
-
-    source =
-      mainVideo;
-
-  } else if (
-    state.mainMode === "image" &&
-    mainImage.complete &&
-    mainImage.naturalWidth
-  ) {
-
-    source =
-      mainImage;
-
-  }
-
-
-  if (!source) {
-    return;
-  }
-
-
-  drawContain(
-    ctx,
-    source,
-    0,
-    0,
-    width,
-    height
-  );
-
-}
-
-
-/* =========================================================
-   DRAW CONTAIN
-========================================================= */
-
-function drawContain(
-  ctx,
-  source,
-  x,
-  y,
-  width,
-  height
-) {
-
-  const sourceWidth =
-    source.videoWidth ||
-    source.naturalWidth ||
-    source.width;
-
-  const sourceHeight =
-    source.videoHeight ||
-    source.naturalHeight ||
-    source.height;
-
-
-  if (
-    !sourceWidth ||
-    !sourceHeight
-  ) {
-
-    return;
-
-  }
-
-
-  const sourceRatio =
-    sourceWidth /
-    sourceHeight;
-
-
-  const targetRatio =
-    width /
-    height;
-
-
-  let drawWidth;
-  let drawHeight;
-  let drawX;
-  let drawY;
-
-
-  if (
-    sourceRatio >
-    targetRatio
-  ) {
-
-    drawWidth =
-      width;
-
-    drawHeight =
-      width /
-      sourceRatio;
-
-    drawX =
-      x;
-
-    drawY =
-      y +
-      (
-        height -
-        drawHeight
-      ) / 2;
-
-  } else {
-
-    drawHeight =
-      height;
-
-    drawWidth =
-      height *
-      sourceRatio;
-
-    drawX =
-      x +
-      (
-        width -
-        drawWidth
-      ) / 2;
-
-    drawY =
-      y;
-
-  }
-
-
-  ctx.drawImage(
-    source,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
-  );
-
-}
-
-
-/* =========================================================
-   DRAW MENTOR
-========================================================= */
-
-function drawMentorOverlay(
-  ctx,
-  width,
-  height
-) {
-
-  if (
-    state.mentorMode ===
-    "none"
-  ) {
-
-    return;
-
-  }
-
-
-  let source = null;
-
-
-  if (
-    state.mentorMode === "camera"
-  ) {
 
     if (
-      state.aiBackgroundMode ===
-      "original"
+      state.mainSource ===
+        "image" &&
+      mainImage &&
+      mainImage.complete &&
+      mainImage.naturalWidth
     ) {
-
-      source =
-        mentorCameraVideo;
-
+      drawContainImage(
+        ctx,
+        mainImage,
+        0,
+        0,
+        width,
+        height
+      );
+    } else if (
+      state.mainSource ===
+        "video" &&
+      mainVideo &&
+      mainVideo.readyState >=
+        2
+    ) {
+      drawContainImage(
+        ctx,
+        mainVideo,
+        0,
+        0,
+        width,
+        height
+      );
     } else {
-
-      source =
-        mentorAICanvas;
-
+      drawWelcomeComposition(
+        ctx,
+        width,
+        height
+      );
     }
 
+    ctx.restore();
   }
 
-
-  if (
-    state.mentorMode === "video"
-  ) {
-
-    source =
-      mentorVideo;
-
-  }
-
-
-  if (!source) {
-    return;
-  }
-
-
-  const x =
-    state.mentorX *
-    width;
-
-  const y =
-    state.mentorY *
-    height;
-
-  const w =
-    state.mentorWidth *
-    width;
-
-  const h =
-    state.mentorHeight *
-    height;
-
-
-  ctx.save();
-
-  ctx.beginPath();
-
-  roundRectPath(
-    ctx,
-    x,
-    y,
-    w,
-    h,
-    18
-  );
-
-  ctx.clip();
-
-
-  ctx.fillStyle =
-    "#000";
-
-  ctx.fillRect(
-    x,
-    y,
-    w,
-    h
-  );
-
-
-  drawCover(
+  function drawContainImage(
     ctx,
     source,
     x,
     y,
-    w,
-    h
-  );
-
-
-  ctx.restore();
-
-
-  /* Border */
-
-  ctx.save();
-
-  ctx.strokeStyle =
-    "rgba(255,255,255,.22)";
-
-  ctx.lineWidth =
-    Math.max(
-      2,
-      width / 960
-    );
-
-
-  roundRectPath(
-    ctx,
-    x,
-    y,
-    w,
-    h,
-    18
-  );
-
-
-  ctx.stroke();
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   DRAW COVER
-========================================================= */
-
-function drawCover(
-  ctx,
-  source,
-  x,
-  y,
-  width,
-  height
-) {
-
-  const sourceWidth =
-    source.videoWidth ||
-    source.naturalWidth ||
-    source.width;
-
-  const sourceHeight =
-    source.videoHeight ||
-    source.naturalHeight ||
-    source.height;
-
-
-  if (
-    !sourceWidth ||
-    !sourceHeight
+    width,
+    height
   ) {
+    const sw =
+      source.videoWidth ||
+      source.naturalWidth ||
+      source.width;
 
-    return;
+    const sh =
+      source.videoHeight ||
+      source.naturalHeight ||
+      source.height;
 
+    if (!sw || !sh) {
+      return;
+    }
+
+    const sourceRatio =
+      sw / sh;
+
+    const targetRatio =
+      width / height;
+
+    let drawWidth;
+    let drawHeight;
+    let dx;
+    let dy;
+
+    if (
+      sourceRatio >
+      targetRatio
+    ) {
+      drawWidth = width;
+      drawHeight =
+        width / sourceRatio;
+      dx = x;
+      dy =
+        y +
+        (height -
+          drawHeight) /
+          2;
+    } else {
+      drawHeight = height;
+      drawWidth =
+        height *
+        sourceRatio;
+      dx =
+        x +
+        (width -
+          drawWidth) /
+          2;
+      dy = y;
+    }
+
+    ctx.drawImage(
+      source,
+      dx,
+      dy,
+      drawWidth,
+      drawHeight
+    );
   }
 
-
-  const sourceRatio =
-    sourceWidth /
-    sourceHeight;
-
-  const targetRatio =
-    width /
-    height;
-
-
-  let drawWidth;
-  let drawHeight;
-  let drawX;
-  let drawY;
-
-
-  if (
-    sourceRatio >
-    targetRatio
+  function drawWelcomeComposition(
+    ctx,
+    width,
+    height
   ) {
+    ctx.save();
 
-    drawHeight =
-      height;
+    const gradient =
+      ctx.createLinearGradient(
+        0,
+        0,
+        width,
+        height
+      );
 
-    drawWidth =
-      height *
-      sourceRatio;
+    gradient.addColorStop(
+      0,
+      "#0b111a"
+    );
 
-    drawX =
-      x +
-      (
-        width -
-        drawWidth
-      ) / 2;
+    gradient.addColorStop(
+      1,
+      "#101c2a"
+    );
 
-    drawY =
-      y;
+    ctx.fillStyle =
+      gradient;
 
-  } else {
+    ctx.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
 
-    drawWidth =
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "middle";
+
+    ctx.fillStyle =
+      "rgba(255,255,255,.94)";
+
+    ctx.font =
+      "700 64px Arial";
+
+    ctx.fillText(
+      "SNK Mentor Studio",
+      width / 2,
+      height / 2 - 35
+    );
+
+    ctx.fillStyle =
+      "rgba(190,215,240,.72)";
+
+    ctx.font =
+      "400 28px Arial";
+
+    ctx.fillText(
+      "Upload a slide, image or video to begin",
+      width / 2,
+      height / 2 + 45
+    );
+
+    ctx.restore();
+  }
+
+  function getMentorDrawRect(
+    width,
+    height
+  ) {
+    if (!mentorCard) {
+      return null;
+    }
+
+    const stageRect =
+      stage?.getBoundingClientRect();
+
+    const cardRect =
+      mentorCard.getBoundingClientRect();
+
+    if (
+      !stageRect ||
+      !cardRect
+    ) {
+      return null;
+    }
+
+    const left =
+      ((cardRect.left -
+        stageRect.left) /
+        stageRect.width) *
       width;
 
-    drawHeight =
-      width /
-      sourceRatio;
+    const top =
+      ((cardRect.top -
+        stageRect.top) /
+        stageRect.height) *
+      height;
 
-    drawX =
-      x;
+    const drawWidth =
+      (cardRect.width /
+        stageRect.width) *
+      width;
 
-    drawY =
-      y +
-      (
-        height -
-        drawHeight
-      ) / 2;
+    const drawHeight =
+      (cardRect.height /
+        stageRect.height) *
+      height;
 
+    return {
+      x: left,
+      y: top,
+      width: drawWidth,
+      height: drawHeight
+    };
   }
 
-
-  ctx.drawImage(
-    source,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
-  );
-
-}
-
-
-/* =========================================================
-   ROUND RECT
-========================================================= */
-
-function roundRectPath(
-  ctx,
-  x,
-  y,
-  width,
-  height,
-  radius
-) {
-
-  const r =
-    Math.min(
-      radius,
-      width / 2,
-      height / 2
-    );
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    x + r,
-    y
-  );
-
-  ctx.arcTo(
-    x + width,
-    y,
-    x + width,
-    y + height,
-    r
-  );
-
-  ctx.arcTo(
-    x + width,
-    y + height,
-    x,
-    y + height,
-    r
-  );
-
-  ctx.arcTo(
-    x,
-    y + height,
-    x,
-    y,
-    r
-  );
-
-  ctx.arcTo(
-    x,
-    y,
-    x + width,
-    y,
-    r
-  );
-
-  ctx.closePath();
-
-}
-
-
-/* =========================================================
-   RECORDING TELEPROMPTER
-========================================================= */
-
-function drawRecordingTeleprompter(
-  ctx,
-  width,
-  height
-) {
-
-  if (
-    !state.includeTeleprompterInRecording
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !state.showTeleprompterRecording
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    !state.teleprompterText.trim()
-  ) {
-
-    return;
-
-  }
-
-
-  const padding =
-    width * 0.035;
-
-  const boxHeight =
-    height * 0.20;
-
-
-  ctx.save();
-
-
-  ctx.fillStyle =
-    `rgba(0,0,0,${
-      state.teleprompterOpacity /
-      100
-    })`;
-
-
-  roundRectPath(
+  function drawMentorComposition(
     ctx,
-    padding,
-    height -
+    width,
+    height
+  ) {
+    const rect =
+      getMentorDrawRect(
+        width,
+        height
+      );
+
+    if (!rect) {
+      return;
+    }
+
+    if (
+      state.mentorSource ===
+        "camera" &&
+      mentorAICanvas &&
+      mentorAICanvas.style.display !==
+        "none" &&
+      mentorAICanvas.width
+    ) {
+      ctx.drawImage(
+        mentorAICanvas,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height
+      );
+
+      return;
+    }
+
+    if (
+      state.mentorSource ===
+        "camera" &&
+      mentorCameraVideo &&
+      mentorCameraVideo.readyState >=
+        2
+    ) {
+      ctx.drawImage(
+        mentorCameraVideo,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height
+      );
+
+      return;
+    }
+
+    if (
+      state.mentorSource ===
+        "video" &&
+      mentorVideo &&
+      mentorVideo.readyState >=
+        2
+    ) {
+      ctx.drawImage(
+        mentorVideo,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height
+      );
+
+      return;
+    }
+
+    /*
+      Placeholder.
+    */
+
+    ctx.save();
+
+    ctx.fillStyle =
+      "rgba(16,24,36,.94)";
+
+    ctx.fillRect(
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height
+    );
+
+    ctx.strokeStyle =
+      "rgba(255,255,255,.12)";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height
+    );
+
+    ctx.fillStyle =
+      "rgba(255,255,255,.72)";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "middle";
+
+    ctx.font =
+      `${Math.max(
+        20,
+        rect.width * 0.08
+      )}px Arial`;
+
+    ctx.fillText(
+      "MENTOR",
+      rect.x +
+        rect.width / 2,
+      rect.y +
+        rect.height / 2
+    );
+
+    ctx.restore();
+  }
+
+  function drawBrandBadgeComposition(
+    ctx,
+    width,
+    height
+  ) {
+    ctx.save();
+
+    const padding =
+      Math.max(
+        20,
+        width * 0.018
+      );
+
+    const text =
+      state.brandName ||
+      "SNK Mentor Studio";
+
+    ctx.font =
+      `600 ${Math.max(
+        18,
+        width * 0.013
+      )}px Arial`;
+
+    const textWidth =
+      ctx.measureText(
+        text
+      ).width;
+
+    const boxWidth =
+      textWidth +
+      padding * 2;
+
+    const boxHeight =
+      Math.max(
+        46,
+        width * 0.032
+      );
+
+    const x = padding;
+    const y =
+      height -
       boxHeight -
-      padding,
-    width -
-      padding * 2,
-    boxHeight,
-    18
-  );
+      padding;
 
+    ctx.fillStyle =
+      "rgba(4,8,13,.72)";
 
-  ctx.fill();
-
-
-  ctx.clip();
-
-
-  ctx.fillStyle =
-    "#ffffff";
-
-
-  ctx.font =
-    `${state.teleprompterFontSize *
-      (width / 1920)}px Arial`;
-
-
-  ctx.textAlign =
-    "center";
-
-
-  ctx.textBaseline =
-    "middle";
-
-
-  const text =
-    state.teleprompterText;
-
-
-  const maxWidth =
-    width -
-    padding * 3;
-
-
-  const lines =
-    wrapText(
+    roundRect(
       ctx,
+      x,
+      y,
+      boxWidth,
+      boxHeight,
+      boxHeight / 2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle =
+      "#ffffff";
+
+    ctx.textAlign =
+      "left";
+
+    ctx.textBaseline =
+      "middle";
+
+    ctx.fillText(
       text,
-      maxWidth
+      x + padding,
+      y +
+        boxHeight / 2
     );
 
+    ctx.restore();
+  }
 
-  const lineHeight =
-    state.teleprompterFontSize *
-    (width / 1920) *
-    1.4;
+  function roundRect(
+    ctx,
+    x,
+    y,
+    width,
+    height,
+    radius
+  ) {
+    const r =
+      Math.min(
+        radius,
+        width / 2,
+        height / 2
+      );
 
+    ctx.beginPath();
 
-  let startY =
-    height -
-    boxHeight -
-    padding +
-    35;
-
-
-  lines
-    .slice(0, 6)
-    .forEach(
-      line => {
-
-        ctx.fillText(
-          line,
-          width / 2,
-          startY
-        );
-
-        startY +=
-          lineHeight;
-
-      }
+    ctx.moveTo(
+      x + r,
+      y
     );
 
+    ctx.arcTo(
+      x + width,
+      y,
+      x + width,
+      y + height,
+      r
+    );
 
-  ctx.restore();
+    ctx.arcTo(
+      x + width,
+      y + height,
+      x,
+      y + height,
+      r
+    );
 
-}
+    ctx.arcTo(
+      x,
+      y + height,
+      x,
+      y,
+      r
+    );
 
+    ctx.arcTo(
+      x,
+      y,
+      x + width,
+      y,
+      r
+    );
 
-/* =========================================================
-   WRAP TEXT
-========================================================= */
+    ctx.closePath();
+  }
 
-function wrapText(
-  ctx,
-  text,
-  maxWidth
-) {
+  function drawRecordingOverlayComposition(
+    ctx,
+    width,
+    height
+  ) {
+    if (!state.recording) {
+      return;
+    }
 
-  const words =
-    text.split(/\s+/);
+    ctx.save();
 
-  const lines = [];
+    const x =
+      width * 0.025;
 
-  let current =
-    "";
+    const y =
+      height * 0.035;
 
+    const radius =
+      Math.max(
+        6,
+        width * 0.004
+      );
 
-  words.forEach(
-    word => {
+    ctx.fillStyle =
+      "rgba(0,0,0,.65)";
 
+    roundRect(
+      ctx,
+      x,
+      y,
+      width * 0.16,
+      height * 0.055,
+      height * 0.027
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle =
+      "#ff4d67";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x + height * 0.027,
+      y +
+        height * 0.027,
+      radius,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle =
+      "#ffffff";
+
+    ctx.font =
+      `700 ${Math.max(
+        18,
+        width * 0.014
+      )}px Arial`;
+
+    ctx.textBaseline =
+      "middle";
+
+    ctx.textAlign =
+      "left";
+
+    ctx.fillText(
+      formatTime(
+        getCurrentRecordingElapsed()
+      ),
+      x +
+        height * 0.055,
+      y +
+        height * 0.027
+    );
+
+    ctx.restore();
+  }
+
+  function drawTeleprompterComposition(
+    ctx,
+    width,
+    height
+  ) {
+    if (
+      !includeTeleprompterInRecording ||
+      !includeTeleprompterInRecording.checked
+    ) {
+      return;
+    }
+
+    if (
+      !state.showTeleprompterRecording
+    ) {
+      return;
+    }
+
+    const text =
+      teleprompterText?.value ||
+      "";
+
+    if (!text.trim()) {
+      return;
+    }
+
+    const boxWidth =
+      width * 0.88;
+
+    const boxHeight =
+      height * 0.17;
+
+    const x =
+      (width -
+        boxWidth) /
+      2;
+
+    const y =
+      height -
+      boxHeight -
+      height * 0.045;
+
+    ctx.save();
+
+    ctx.fillStyle =
+      "rgba(0,0,0,.62)";
+
+    roundRect(
+      ctx,
+      x,
+      y,
+      boxWidth,
+      boxHeight,
+      22
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.rect(
+      x,
+      y,
+      boxWidth,
+      boxHeight
+    );
+
+    ctx.clip();
+
+    const fontSize =
+      clamp(
+        safeNumber(
+          teleprompterFontSize?.value,
+          38
+        ),
+        20,
+        90
+      );
+
+    ctx.font =
+      `600 ${fontSize}px Arial`;
+
+    ctx.fillStyle =
+      "rgba(255,255,255,.96)";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "top";
+
+    const words =
+      text.trim().split(/\s+/);
+
+    const lines = [];
+
+    let line = "";
+
+    const maxWidth =
+      boxWidth -
+      50;
+
+    words.forEach((word) => {
       const test =
-        current
-          ? `${current} ${word}`
+        line
+          ? `${line} ${word}`
           : word;
 
+      if (
+        ctx.measureText(test)
+          .width >
+        maxWidth
+      ) {
+        if (line) {
+          lines.push(line);
+        }
 
-      const measurement =
-        ctx.measureText(test);
+        line = word;
+      } else {
+        line = test;
+      }
+    });
 
+    if (line) {
+      lines.push(line);
+    }
+
+    const lineHeight =
+      fontSize * 1.3;
+
+    let startY =
+      y +
+      boxHeight / 2 -
+      (lines.length *
+        lineHeight) /
+        2;
+
+    for (
+      let i = 0;
+      i < lines.length;
+      i++
+    ) {
+      ctx.fillText(
+        lines[i],
+        width / 2,
+        startY
+      );
+
+      startY += lineHeight;
 
       if (
-        measurement.width >
-        maxWidth &&
-        current
+        startY >
+        y + boxHeight
       ) {
+        break;
+      }
+    }
 
-        lines.push(
-          current
-        );
+    ctx.restore();
+  }
 
-        current =
-          word;
+  function renderCompositionFrame() {
+    if (
+      !state.recordingCanvasContext
+    ) {
+      createRecordingCanvas();
+    }
 
-      } else {
+    const canvas =
+      state.recordingCanvas;
 
-        current =
-          test;
+    const ctx =
+      state.recordingCanvasContext;
 
+    if (!canvas || !ctx) {
+      return;
+    }
+
+    const width =
+      state.recordingWidth;
+
+    const height =
+      state.recordingHeight;
+
+    drawMainComposition(
+      ctx,
+      width,
+      height
+    );
+
+    drawMentorComposition(
+      ctx,
+      width,
+      height
+    );
+
+    drawBrandBadgeComposition(
+      ctx,
+      width,
+      height
+    );
+
+    drawTeleprompterComposition(
+      ctx,
+      width,
+      height
+    );
+
+    drawRecordingOverlayComposition(
+      ctx,
+      width,
+      height
+    );
+  }
+
+  /* =======================================================
+     CONTINUOUS RECORDING RENDER LOOP
+     ======================================================= */
+
+  function startRecordingRenderLoop() {
+    if (
+      state.recordingRenderActive
+    ) {
+      return;
+    }
+
+    state.recordingRenderActive =
+      true;
+
+    const loop = () => {
+      if (
+        !state.recordingRenderActive
+      ) {
+        return;
       }
 
-    }
-  );
+      renderCompositionFrame();
 
+      if (
+        state.mentorSource ===
+        "camera"
+      ) {
+        processCameraSegmentation();
+      }
 
-  if (current) {
-    lines.push(current);
+      state.recordingRenderFrame =
+        requestAnimationFrame(
+          loop
+        );
+    };
+
+    loop();
   }
 
-
-  return lines;
-
-}
-
-
-/* =========================================================
-   RECORDING OVERLAY
-========================================================= */
-
-function drawRecordingOverlay(
-  ctx,
-  width,
-  height
-) {
-
-  if (
-    !state.recordingActive
-  ) {
-
-    return;
-
-  }
-
-
-  const x =
-    width * 0.03;
-
-  const y =
-    height * 0.035;
-
-
-  ctx.save();
-
-
-  ctx.fillStyle =
-    "rgba(0,0,0,.68)";
-
-
-  roundRectPath(
-    ctx,
-    x,
-    y,
-    width * 0.15,
-    height * 0.05,
-    12
-  );
-
-
-  ctx.fill();
-
-
-  ctx.fillStyle =
-    "#ff3b30";
-
-
-  ctx.beginPath();
-
-  ctx.arc(
-    x + width * 0.02,
-    y + height * 0.025,
-    width * 0.006,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fill();
-
-
-  ctx.fillStyle =
-    "#ffffff";
-
-
-  ctx.font =
-    `600 ${width * 0.013}px Arial`;
-
-  ctx.textBaseline =
-    "middle";
-
-
-  ctx.fillText(
-    "REC",
-    x + width * 0.035,
-    y + height * 0.025
-  );
-
-
-  ctx.fillText(
-    formatRecordingTime(
-      getRecordingElapsed()
-    ),
-    x + width * 0.085,
-    y + height * 0.025
-  );
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   RENDER COMPOSITION FRAME
-========================================================= */
-
-function renderCompositionFrame() {
-
-  const canvas =
-    state.compositionCanvas;
-
-  const ctx =
-    state.compositionContext;
-
-
-  if (!canvas || !ctx) {
-    return;
-  }
-
-
-  const width =
-    canvas.width;
-
-  const height =
-    canvas.height;
-
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  drawMainMedia(
-    ctx,
-    width,
-    height
-  );
-
-
-  drawMentorOverlay(
-    ctx,
-    width,
-    height
-  );
-
-
-  drawRecordingTeleprompter(
-    ctx,
-    width,
-    height
-  );
-
-
-  drawRecordingOverlay(
-    ctx,
-    width,
-    height
-  );
-
-
-  state.lastRenderTime =
-    performance.now();
-
-}
-
-
-/* =========================================================
-   CONTINUOUS COMPOSITION LOOP
-========================================================= */
-
-function startCompositionLoop() {
-
-  if (state.compositionRunning) {
-    return;
-  }
-
-
-  state.compositionRunning =
-    true;
-
-
-  function loop() {
-
-    if (
-      !state.compositionRunning
-    ) {
-
-      return;
-
-    }
-
-
-    renderCompositionFrame();
-
-
-    state.recordingAnimationFrame =
-      requestAnimationFrame(
-        loop
+  function stopRecordingRenderLoop() {
+    state.recordingRenderActive =
+      false;
+
+    if (state.recordingRenderFrame) {
+      cancelAnimationFrame(
+        state.recordingRenderFrame
       );
 
+      state.recordingRenderFrame =
+        0;
+    }
   }
 
+  /* =======================================================
+     RECORDING TIMER
+     ======================================================= */
 
-  loop();
+  function getCurrentRecordingElapsed() {
+    if (!state.recording) {
+      return 0;
+    }
 
-}
+    if (state.paused) {
+      return (
+        state.recordingElapsedBeforePause
+      );
+    }
 
-
-/* =========================================================
-   STOP COMPOSITION LOOP
-========================================================= */
-
-function stopCompositionLoop() {
-
-  state.compositionRunning =
-    false;
-
-
-  if (
-    state.recordingAnimationFrame
-  ) {
-
-    cancelAnimationFrame(
-      state.recordingAnimationFrame
+    return (
+      state.recordingElapsedBeforePause +
+      (
+        performance.now() -
+        state.recordingStartedAt
+      ) /
+        1000
     );
-
   }
 
-}
+  function startRecordingTimer() {
+    stopRecordingTimer();
 
+    state.recordingTimerInterval =
+      setInterval(() => {
+        const elapsed =
+          getCurrentRecordingElapsed();
 
-/* =========================================================
-   MENTOR DRAG + RESIZE
-========================================================= */
+        const formatted =
+          formatTime(elapsed);
 
-function initializeMentorInteraction() {
+        if (recordingTimer) {
+          recordingTimer.textContent =
+            formatted;
+        }
 
-  if (!mentorCard) {
-    return;
+        if (
+          recordingOverlayTimer
+        ) {
+          recordingOverlayTimer.textContent =
+            formatted;
+        }
+
+        if (
+          recordingCurrentTime &&
+          recordingPreviewVideo
+        ) {
+          recordingCurrentTime.textContent =
+            formatTime(
+              recordingPreviewVideo.currentTime
+            );
+        }
+      }, 200);
   }
 
-
-  mentorCard.addEventListener(
-    "pointerdown",
-    handleMentorPointerDown
-  );
-
-
-  mentorResize?.addEventListener(
-    "pointerdown",
-    handleMentorResizeDown
-  );
-
-
-  window.addEventListener(
-    "pointermove",
-    handleMentorPointerMove
-  );
-
-
-  window.addEventListener(
-    "pointerup",
-    handleMentorPointerUp
-  );
-
-}
-
-
-/* =========================================================
-   MENTOR DRAG START
-========================================================= */
-
-function handleMentorPointerDown(event) {
-
-  if (
-    event.target ===
-    mentorResize
-  ) {
-
-    return;
-
-  }
-
-
-  state.mentorDragging =
-    true;
-
-
-  mentorCard.setPointerCapture?.(
-    event.pointerId
-  );
-
-
-  state.dragStartX =
-    event.clientX;
-
-  state.dragStartY =
-    event.clientY;
-
-  state.dragOriginX =
-    state.mentorX;
-
-  state.dragOriginY =
-    state.mentorY;
-
-
-  mentorCard.classList.add(
-    "dragging"
-  );
-
-}
-
-
-/* =========================================================
-   MENTOR RESIZE START
-========================================================= */
-
-function handleMentorResizeDown(event) {
-
-  event.preventDefault();
-
-  event.stopPropagation();
-
-
-  state.mentorResizing =
-    true;
-
-
-  state.resizeStartX =
-    event.clientX;
-
-  state.resizeStartY =
-    event.clientY;
-
-
-  state.resizeOriginWidth =
-    state.mentorWidth;
-
-  state.resizeOriginHeight =
-    state.mentorHeight;
-
-
-  mentorCard.classList.add(
-    "resizing"
-  );
-
-}
-
-
-/* =========================================================
-   MENTOR POINTER MOVE
-========================================================= */
-
-function handleMentorPointerMove(event) {
-
-  if (
-    state.mentorDragging
-  ) {
-
-    const stageRect =
-      stage.getBoundingClientRect();
-
-
+  function stopRecordingTimer() {
     if (
-      !stageRect.width ||
-      !stageRect.height
+      state.recordingTimerInterval
     ) {
+      clearInterval(
+        state.recordingTimerInterval
+      );
 
-      return;
+      state.recordingTimerInterval =
+        null;
+    }
+  }
 
+  /* =======================================================
+     RECORDING UI
+     ======================================================= */
+
+  function updateRecordingUI() {
+    const active =
+      state.recording;
+
+    if (recordingStatusBar) {
+      recordingStatusBar.classList.toggle(
+        "active",
+        active
+      );
     }
 
-
-    const deltaX =
-      (
-        event.clientX -
-        state.dragStartX
-      ) /
-      stageRect.width;
-
-
-    const deltaY =
-      (
-        event.clientY -
-        state.dragStartY
-      ) /
-      stageRect.height;
-
-
-    state.mentorX =
-      clamp(
-        state.dragOriginX +
-        deltaX,
-        0,
-        1 -
-        state.mentorWidth
+    if (recordingStatusDot) {
+      recordingStatusDot.classList.toggle(
+        "active",
+        active
       );
-
-
-    state.mentorY =
-      clamp(
-        state.dragOriginY +
-        deltaY,
-        0,
-        1 -
-        state.mentorHeight
-      );
-
-
-    applyMentorDOMPosition();
-
-    renderCompositionFrame();
-
-  }
-
-
-  if (
-    state.mentorResizing
-  ) {
-
-    const stageRect =
-      stage.getBoundingClientRect();
-
-
-    if (
-      !stageRect.width ||
-      !stageRect.height
-    ) {
-
-      return;
-
     }
 
+    if (recordingOverlay) {
+      recordingOverlay.style.display =
+        active
+          ? ""
+          : "none";
+    }
 
-    const deltaX =
-      (
-        event.clientX -
-        state.resizeStartX
-      ) /
-      stageRect.width;
+    if (recordingStatusText) {
+      if (!active) {
+        recordingStatusText.textContent =
+          "Ready";
+      } else if (
+        state.paused
+      ) {
+        recordingStatusText.textContent =
+          "Paused";
+      } else {
+        recordingStatusText.textContent =
+          "Recording";
+      }
+    }
 
+    if (pauseRecordingBtn) {
+      pauseRecordingBtn.disabled =
+        !active ||
+        state.paused;
+    }
 
-    let newWidth =
-      state.resizeOriginWidth +
-      deltaX;
+    if (resumeRecordingBtn) {
+      resumeRecordingBtn.disabled =
+        !active ||
+        !state.paused;
+    }
 
+    if (stopRecordingBtn) {
+      stopRecordingBtn.disabled =
+        !active;
+    }
 
-    newWidth =
-      clamp(
-        newWidth,
-        0.10,
-        0.45
+    if (recordBtn) {
+      recordBtn.classList.toggle(
+        "recording",
+        active
       );
+    }
 
-
-    state.mentorWidth =
-      newWidth;
-
-
-    state.mentorHeight =
-      newWidth *
-      (9 / 16);
-
-
-    state.mentorX =
-      clamp(
-        state.mentorX,
-        0,
-        1 -
-        state.mentorWidth
+    if (recordToolbarBtn) {
+      recordToolbarBtn.classList.toggle(
+        "recording",
+        active
       );
+    }
+  }
 
+  /* =======================================================
+     START RECORDING
+     ======================================================= */
 
-    state.mentorY =
-      clamp(
-        state.mentorY,
-        0,
-        1 -
-        state.mentorHeight
+  async function startRecording() {
+    if (state.recording) {
+      return;
+    }
+
+    if (
+      typeof MediaRecorder ===
+      "undefined"
+    ) {
+      toast(
+        "MediaRecorder is not supported.",
+        "error"
       );
-
-
-    applyMentorDOMPosition();
-
-    renderCompositionFrame();
-
-  }
-
-}
-
-
-/* =========================================================
-   MENTOR POINTER UP
-========================================================= */
-
-function handleMentorPointerUp() {
-
-  state.mentorDragging =
-    false;
-
-  state.mentorResizing =
-    false;
-
-
-  mentorCard.classList.remove(
-    "dragging",
-    "resizing"
-  );
-
-}
-
-
-/* =========================================================
-   APPLY MENTOR DOM POSITION
-========================================================= */
-
-function applyMentorDOMPosition() {
-
-  if (!stage) {
-    return;
-  }
-
-
-  mentorCard.style.left =
-    `${state.mentorX * 100}%`;
-
-  mentorCard.style.top =
-    `${state.mentorY * 100}%`;
-
-  mentorCard.style.right =
-    "auto";
-
-  mentorCard.style.bottom =
-    "auto";
-
-  mentorCard.style.width =
-    `${state.mentorWidth * 100}%`;
-
-  mentorCard.style.height =
-    `${state.mentorHeight * 100}%`;
-
-}
-
-
-/* =========================================================
-   AUDIO ENGINE
-========================================================= */
-
-function initializeAudioEngine() {
-
-  const AudioContextClass =
-    window.AudioContext ||
-    window.webkitAudioContext;
-
-
-  if (!AudioContextClass) {
-
-    console.warn(
-      "Web Audio API unavailable."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    state.audioContext =
-      new AudioContextClass();
-
-
-    state.audioDestination =
-      state.audioContext.createMediaStreamDestination();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-}
-
-
-/* =========================================================
-   ENSURE AUDIO CONTEXT
-========================================================= */
-
-async function ensureAudioContext() {
-
-  if (!state.audioContext) {
-
-    initializeAudioEngine();
-
-  }
-
-
-  if (
-    state.audioContext &&
-    state.audioContext.state ===
-    "suspended"
-  ) {
+      return;
+    }
 
     try {
+      syncRecordingSettings();
 
-      await state.audioContext.resume();
+      const ctx =
+        await ensureAudioContext();
 
+      if (!ctx) {
+        return;
+      }
+
+      /*
+        Main audio setup.
+      */
+
+      if (
+        state.mainSource ===
+        "video"
+      ) {
+        await setupMainVideoAudio();
+      }
+
+      /*
+        Microphone setup if enabled.
+      */
+
+      if (
+        micEnabled?.checked &&
+        !state.micReady
+      ) {
+        await enableMicrophone();
+      }
+
+      const canvas =
+        createRecordingCanvas();
+
+      renderCompositionFrame();
+
+      const canvasStream =
+        canvas.captureStream(
+          state.recordingFps
+        );
+
+      const finalStream =
+        new MediaStream();
+
+      canvasStream
+        .getVideoTracks()
+        .forEach((track) => {
+          finalStream.addTrack(track);
+        });
+
+      if (
+        state.mediaDestination
+      ) {
+        state.mediaDestination.stream
+          .getAudioTracks()
+          .forEach((track) => {
+            finalStream.addTrack(track);
+          });
+      }
+
+      /*
+        Screen capture audio:
+        add display audio only when
+        available and not already routed.
+      */
+
+      if (
+        state.screenStream
+      ) {
+        const screenAudioTracks =
+          state.screenStream.getAudioTracks();
+
+        screenAudioTracks.forEach(
+          (track) => {
+            if (
+              !finalStream
+                .getAudioTracks()
+                .some(
+                  (existing) =>
+                    existing.id ===
+                    track.id
+                )
+            ) {
+              finalStream.addTrack(
+                track
+              );
+            }
+          }
+        );
+      }
+
+      const mime =
+        getSelectedRecordingMime();
+
+      if (!mime) {
+        toast(
+          "No supported recording format found.",
+          "error"
+        );
+        return;
+      }
+
+      const recorderOptions = {
+        mimeType: mime,
+        videoBitsPerSecond:
+          getVideoBitrate(
+            state.recordingWidth,
+            state.recordingHeight,
+            state.recordingFps
+          )
+      };
+
+      let recorder;
+
+      try {
+        recorder =
+          new MediaRecorder(
+            finalStream,
+            recorderOptions
+          );
+      } catch (error) {
+        console.warn(
+          "MediaRecorder options failed:",
+          error
+        );
+
+        recorder =
+          new MediaRecorder(
+            finalStream,
+            {
+              mimeType: mime
+            }
+          );
+      }
+
+      state.mediaRecorder =
+        recorder;
+
+      state.recordingChunks =
+        [];
+
+      state.recordingMimeType =
+        mime;
+
+      recorder.ondataavailable =
+        (event) => {
+          if (
+            event.data &&
+            event.data.size > 0
+          ) {
+            state.recordingChunks.push(
+              event.data
+            );
+          }
+        };
+
+      recorder.onerror =
+        (event) => {
+          console.error(
+            "MediaRecorder error:",
+            event
+          );
+
+          toast(
+            "Recording error occurred.",
+            "error"
+          );
+        };
+
+      recorder.onstop =
+        async () => {
+          await finishRecording();
+        };
+
+      recorder.onpause =
+        () => {
+          updateRecordingUI();
+        };
+
+      recorder.onresume =
+        () => {
+          updateRecordingUI();
+        };
+
+      recorder.start(1000);
+
+      state.recording = true;
+      state.paused = false;
+
+      state.recordingStartedAt =
+        performance.now();
+
+      state.recordingElapsedBeforePause =
+        0;
+
+      state.audioReady = true;
+
+      updateRecordingUI();
+      updateAudioIndicator();
+
+      startRecordingTimer();
+      startRecordingRenderLoop();
+
+      if (
+        state.autoStartTeleprompter
+      ) {
+        startTeleprompter();
+      }
+
+      toast(
+        `Recording started — ${state.recordingWidth}×${state.recordingHeight} @ ${state.recordingFps} FPS`,
+        "success"
+      );
     } catch (error) {
-
-      console.warn(
+      console.error(
+        "Start recording failed:",
         error
       );
 
-    }
+      state.recording = false;
 
-  }
+      updateRecordingUI();
 
-}
-
-
-/* =========================================================
-   AUDIO CONTROLS
-========================================================= */
-
-function initializeAudioControls() {
-
-  const mainCheckbox =
-    $("mainVideoAudioCheckbox");
-
-  const mainVolume =
-    $("mainVideoVolume");
-
-  const micVolume =
-    $("micVolume");
-
-  const micEnabled =
-    $("micEnabled");
-
-  const micMonitor =
-    $("micMonitor");
-
-
-  if (mainCheckbox) {
-
-    mainCheckbox.addEventListener(
-      "change",
-      async event => {
-
-        state.mainAudioEnabled =
-          event.target.checked;
-
-        await ensureMainAudioNode();
-
-      }
-    );
-
-  }
-
-
-  if (mainVolume) {
-
-    mainVolume.addEventListener(
-      "input",
-      async event => {
-
-        state.mainVolume =
-          Number(
-            event.target.value
-          ) / 100;
-
-
-        $("mainVolumeValue").textContent =
-          `${Math.round(
-            state.mainVolume * 100
-          )}%`;
-
-
-        if (
-          state.mainGainNode
-        ) {
-
-          state.mainGainNode.gain.value =
-            state.mainAudioEnabled
-              ? state.mainVolume
-              : 0;
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (micVolume) {
-
-    micVolume.addEventListener(
-      "input",
-      event => {
-
-        state.micVolume =
-          Number(
-            event.target.value
-          ) / 100;
-
-
-        $("micVolumeValue").textContent =
-          `${Math.round(
-            state.micVolume * 100
-          )}%`;
-
-
-        if (
-          state.micGainNode
-        ) {
-
-          state.micGainNode.gain.value =
-            state.micEnabled
-              ? state.micVolume
-              : 0;
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (micEnabled) {
-
-    micEnabled.addEventListener(
-      "change",
-      event => {
-
-        state.micEnabled =
-          event.target.checked;
-
-
-        window.CourseStudioMicEnabled =
-          state.micEnabled;
-
-
-        if (
-          state.micGainNode
-        ) {
-
-          state.micGainNode.gain.value =
-            state.micEnabled
-              ? state.micVolume
-              : 0;
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (micMonitor) {
-
-    micMonitor.addEventListener(
-      "change",
-      event => {
-
-        state.micMonitor =
-          event.target.checked;
-
-
-        window.CourseStudioMicMonitor =
-          state.micMonitor;
-
-
-        updateMicMonitoring();
-
-      }
-    );
-
-  }
-
-
-  window.CourseStudioMicVolume =
-    state.micVolume;
-
-}
-
-
-/* =========================================================
-   MAIN VIDEO AUDIO NODE
-========================================================= */
-
-async function ensureMainAudioNode() {
-
-  if (
-    !mainVideo.src
-  ) {
-
-    return;
-
-  }
-
-
-  await ensureAudioContext();
-
-
-  if (
-    !state.audioContext ||
-    !state.audioDestination
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    state.mainSourceNode
-  ) {
-
-    if (
-      state.mainGainNode
-    ) {
-
-      state.mainGainNode.gain.value =
-        state.mainAudioEnabled
-          ? state.mainVolume
-          : 0;
-
-    }
-
-    return;
-
-  }
-
-
-  try {
-
-    state.mainSourceNode =
-      state.audioContext.createMediaElementSource(
-        mainVideo
+      toast(
+        `Could not start recording: ${error.message || "Unknown error"}`,
+        "error",
+        5000
       );
-
-
-    state.mainGainNode =
-      state.audioContext.createGain();
-
-
-    state.mainAnalyser =
-      state.audioContext.createAnalyser();
-
-
-    state.mainAnalyser.fftSize =
-      2048;
-
-
-    state.mainGainNode.gain.value =
-      state.mainAudioEnabled
-        ? state.mainVolume
-        : 0;
-
-
-    state.mainSourceNode.connect(
-      state.mainGainNode
-    );
-
-
-    state.mainGainNode.connect(
-      state.audioContext.destination
-    );
-
-
-    state.mainGainNode.connect(
-      state.mainAnalyser
-    );
-
-
-    state.mainAnalyser.connect(
-      state.audioDestination
-    );
-
-  } catch (error) {
-
-    console.warn(
-      "Main audio node error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   MICROPHONE
-========================================================= */
-
-async function initializeMic() {
-
-  if (
-    state.micStream
-  ) {
-
-    return state.micStream;
-
-  }
-
-
-  try {
-
-    await ensureAudioContext();
-
-
-    state.micStream =
-      await navigator.mediaDevices.getUserMedia({
-
-        audio: {
-
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-
-        },
-
-        video: false
-
-      });
-
-
-    state.micSourceNode =
-      state.audioContext.createMediaStreamSource(
-        state.micStream
-      );
-
-
-    state.micGainNode =
-      state.audioContext.createGain();
-
-
-    state.micAnalyser =
-      state.audioContext.createAnalyser();
-
-
-    state.micAnalyser.fftSize =
-      2048;
-
-
-    state.micGainNode.gain.value =
-      state.micEnabled
-        ? state.micVolume
-        : 0;
-
-
-    state.micSourceNode.connect(
-      state.micGainNode
-    );
-
-
-    state.micGainNode.connect(
-      state.audioDestination
-    );
-
-
-    state.micGainNode.connect(
-      state.micAnalyser
-    );
-
-
-    updateMicMonitoring();
-
-    updateMicStatus(
-      "Microphone ready"
-    );
-
-
-    return state.micStream;
-
-  } catch (error) {
-
-    console.warn(
-      "Microphone error:",
-      error
-    );
-
-
-    updateMicStatus(
-      "Mic unavailable"
-    );
-
-
-    return null;
-
-  }
-
-}
-
-
-/* =========================================================
-   MIC MONITOR
-========================================================= */
-
-function updateMicMonitoring() {
-
-  if (
-    !state.audioContext ||
-    !state.micGainNode
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    state.micGainNode.disconnect();
-
-  } catch (_) {}
-
-
-  state.micGainNode.connect(
-    state.audioDestination
-  );
-
-
-  if (
-    state.micMonitor
-  ) {
-
-    state.micGainNode.connect(
-      state.audioContext.destination
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   MIC STATUS
-========================================================= */
-
-function updateMicStatus(text) {
-
-  qsa("[data-mic-status]")
-    .forEach(
-      element => {
-
-        element.textContent =
-          text;
-
-      }
-    );
-
-
-  const indicator =
-    $("micIndicator");
-
-
-  if (indicator) {
-
-    indicator.textContent =
-      text === "Microphone ready"
-        ? "Mic"
-        : "Mic Off";
-
-
-    indicator.classList.toggle(
-      "active",
-      text === "Microphone ready"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   AUDIO METERS
-========================================================= */
-
-function updateAudioMeters() {
-
-  updateAnalyserMeter(
-    state.micAnalyser,
-    $("micLevelBar"),
-    $("micLevelValue")
-  );
-
-
-  updateAnalyserMeter(
-    state.mainAnalyser,
-    $("mainAudioLevelBar"),
-    $("mainAudioLevelValue")
-  );
-
-
-  drawMicWaveform();
-
-  requestAnimationFrame(
-    updateAudioMeters
-  );
-
-}
-
-
-function updateAnalyserMeter(
-  analyser,
-  bar,
-  valueElement
-) {
-
-  if (
-    !analyser ||
-    !bar
-  ) {
-
-    if (bar) {
-      bar.style.width = "0%";
     }
-
-    if (valueElement) {
-      valueElement.textContent =
-        "0%";
-    }
-
-    return;
-
   }
 
-
-  const data =
-    new Uint8Array(
-      analyser.fftSize
-    );
-
-
-  analyser.getByteTimeDomainData(
-    data
-  );
-
-
-  let sum = 0;
-
-
-  for (
-    let i = 0;
-    i < data.length;
-    i++
-  ) {
-
-    const normalized =
-      (
-        data[i] -
-        128
-      ) / 128;
-
-
-    sum +=
-      normalized *
-      normalized;
-
-  }
-
-
-  const rms =
-    Math.sqrt(
-      sum /
-      data.length
-    );
-
-
-  const level =
-    clamp(
-      rms * 220,
-      0,
-      100
-    );
-
-
-  bar.style.width =
-    `${level}%`;
-
-
-  if (valueElement) {
-
-    valueElement.textContent =
-      `${Math.round(level)}%`;
-
-  }
-
-}
-
-
-updateAudioMeters();
-
-
-/* =========================================================
-   MICROPHONE WAVEFORM
-========================================================= */
-
-function drawMicWaveform() {
-
-  const canvas =
-    $("micWaveformCanvas");
-
-
-  if (!canvas) {
-    return;
-  }
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-
-  const width =
-    canvas.width;
-
-  const height =
-    canvas.height;
-
-
-  ctx.clearRect(
-    0,
-    0,
+  function getVideoBitrate(
     width,
-    height
-  );
-
-
-  ctx.fillStyle =
-    "rgba(255,255,255,.025)";
-
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  if (
-    !state.micAnalyser
+    height,
+    fps
   ) {
+    const pixels =
+      width * height;
 
-    return;
-
-  }
-
-
-  const data =
-    new Uint8Array(
-      state.micAnalyser.fftSize
-    );
-
-
-  state.micAnalyser.getByteTimeDomainData(
-    data
-  );
-
-
-  ctx.beginPath();
-
-
-  const sliceWidth =
-    width /
-    data.length;
-
-
-  let x = 0;
-
-
-  for (
-    let i = 0;
-    i < data.length;
-    i++
-  ) {
-
-    const v =
-      data[i] / 128;
-
-
-    const y =
-      v *
-      height /
-      2;
-
-
-    if (i === 0) {
-
-      ctx.moveTo(
-        x,
-        y
-      );
-
-    } else {
-
-      ctx.lineTo(
-        x,
-        y
-      );
-
+    if (pixels >= 2560 * 1440) {
+      return 18_000_000;
     }
 
-
-    x += sliceWidth;
-
-  }
-
-
-  ctx.strokeStyle =
-    "rgba(93,173,255,.9)";
-
-  ctx.lineWidth =
-    2;
-
-
-  ctx.stroke();
-
-}
-
-
-/* =========================================================
-   RECORDING SYSTEM
-========================================================= */
-
-function initializeRecordingSystem() {
-
-  bindClick(
-    "pauseRecordingBtn",
-    pauseRecording
-  );
-
-  bindClick(
-    "resumeRecordingBtn",
-    resumeRecording
-  );
-
-  bindClick(
-    "stopRecordingBtn",
-    stopRecording
-  );
-
-
-  const quality =
-    $("recordingQualitySide");
-
-  const fps =
-    $("recordingFpsSide");
-
-  const format =
-    $("recordingFormatSide");
-
-  const filename =
-    $("recordingFileNameSide");
-
-  const teleprompter =
-    $("includeTeleprompterInRecording");
-
-
-  if (quality) {
-
-    quality.addEventListener(
-      "change",
-      () => {
-
-        updateRecordingSettings();
-
-      }
-    );
-
-  }
-
-
-  if (fps) {
-
-    fps.addEventListener(
-      "change",
-      () => {
-
-        updateRecordingSettings();
-
-      }
-    );
-
-  }
-
-
-  if (format) {
-
-    format.addEventListener(
-      "change",
-      () => {
-
-        updateRecordingSettings();
-
-      }
-    );
-
-  }
-
-
-  if (filename) {
-
-    filename.addEventListener(
-      "input",
-      () => {
-
-        state.recordingFileName =
-          sanitizeFileName(
-            filename.value
-          );
-
-      }
-    );
-
-  }
-
-
-  if (teleprompter) {
-
-    teleprompter.addEventListener(
-      "change",
-      event => {
-
-        state.includeTeleprompterInRecording =
-          event.target.checked;
-
-      }
-    );
-
-  }
-
-
-  bindClick(
-    "recordingPreviewPlayBtn",
-    () => {
-      $("recordingPreviewVideo")?.play();
+    if (pixels >= 1920 * 1080) {
+      return 12_000_000;
     }
-  );
 
-
-  bindClick(
-    "recordingPreviewPauseBtn",
-    () => {
-      $("recordingPreviewVideo")?.pause();
-    }
-  );
-
-
-  bindClick(
-    "applyTrimBtn",
-    applyTrimPreview
-  );
-
-
-  bindClick(
-    "resetTrimBtn",
-    resetTrim
-  );
-
-
-  bindClick(
-    "renameRecordingBtn",
-    renameCurrentRecording
-  );
-
-
-  bindClick(
-    "deleteRecordingBtn",
-    deleteCurrentRecording
-  );
-
-
-  bindClick(
-    "recordAgainBtn",
-    recordAgain
-  );
-
-
-  bindClick(
-    "downloadRecordingBtn",
-    downloadCurrentRecording
-  );
-
-
-  bindClick(
-    "clearRecordingHistoryBtn",
-    clearRecordingHistory
-  );
-
-
-  const preview =
-    $("recordingPreviewVideo");
-
-
-  if (preview) {
-
-    preview.addEventListener(
-      "loadedmetadata",
-      setupTrimControls
-    );
-
-
-    preview.addEventListener(
-      "timeupdate",
-      updatePreviewTime
-    );
-
+    return 7_000_000;
   }
 
-}
+  /* =======================================================
+     PAUSE / RESUME
+     ======================================================= */
 
-
-/* =========================================================
-   UPDATE RECORDING SETTINGS
-========================================================= */
-
-function updateRecordingSettings() {
-
-  const quality =
-    $("recordingQualitySide")?.value ||
-    "1920x1080";
-
-
-  const parts =
-    quality.split("x");
-
-
-  state.recordingWidth =
-    Number(parts[0]) || 1920;
-
-
-  state.recordingHeight =
-    Number(parts[1]) || 1080;
-
-
-  state.recordingFps =
-    Number(
-      $("recordingFpsSide")?.value ||
-      30
-    );
-
-
-  state.recordingFileName =
-    sanitizeFileName(
-      $("recordingFileNameSide")?.value ||
-      "SNK-Course-Recording"
-    );
-
-
-  updateStageBadges();
-
-}
-
-
-/* =========================================================
-   HANDLE RECORD BUTTON
-========================================================= */
-
-function handleRecordButton() {
-
-  if (
-    state.recordingActive
-  ) {
+  function pauseRecording() {
+    if (
+      !state.recording ||
+      !state.mediaRecorder ||
+      state.paused
+    ) {
+      return;
+    }
 
     if (
-      state.recordingPaused
+      state.mediaRecorder.state !==
+      "recording"
     ) {
-
-      resumeRecording();
-
-    } else {
-
-      pauseRecording();
-
+      return;
     }
 
+    state.recordingElapsedBeforePause =
+      getCurrentRecordingElapsed();
 
-    return;
+    state.mediaRecorder.pause();
 
+    state.paused = true;
+
+    updateRecordingUI();
+
+    toast(
+      "Recording paused.",
+      "info"
+    );
   }
 
-
-  startRecording();
-
-}
-
-
-/* =========================================================
-   START RECORDING
-========================================================= */
-
-async function startRecording() {
-
-  if (
-    state.recordingActive
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    updateRecordingSettings();
-
-    await ensureAudioContext();
-
-    await initializeMic();
-
+  function resumeRecording() {
+    if (
+      !state.recording ||
+      !state.mediaRecorder ||
+      !state.paused
+    ) {
+      return;
+    }
 
     if (
-      state.mainMode === "video"
+      state.mediaRecorder.state !==
+      "paused"
     ) {
-
-      await ensureMainAudioNode();
-
+      return;
     }
-
-
-    if (
-      state.autoStartTeleprompter
-    ) {
-
-      startTeleprompter();
-
-    }
-
-
-    setCompositionResolution(
-      state.recordingWidth,
-      state.recordingHeight
-    );
-
-
-    renderCompositionFrame();
-
-
-    const canvasStream =
-      state.compositionCanvas.captureStream(
-        state.recordingFps
-      );
-
-
-    state.recordingCanvasStream =
-      canvasStream;
-
-
-    const combinedTracks = [];
-
-
-    canvasStream
-      .getVideoTracks()
-      .forEach(
-        track =>
-          combinedTracks.push(track)
-      );
-
-
-    if (
-      state.audioDestination
-    ) {
-
-      state.audioDestination
-        .stream
-        .getAudioTracks()
-        .forEach(
-          track =>
-            combinedTracks.push(track)
-        );
-
-    }
-
-
-    /*
-      Screen capture audio can be added
-      when browser provides it.
-    */
-
-    if (
-      state.screenStream
-    ) {
-
-      state.screenStream
-        .getAudioTracks()
-        .forEach(
-          track => {
-
-            /*
-              Avoid duplicate audio tracks.
-              The normal audio engine remains primary.
-            */
-
-          }
-        );
-
-    }
-
-
-    state.recordingStream =
-      new MediaStream(
-        combinedTracks
-      );
-
-
-    const mimeInfo =
-      getSupportedRecordingMime();
-
-
-    if (!mimeInfo.mimeType) {
-
-      throw new Error(
-        "No supported recording format found."
-      );
-
-    }
-
-
-    state.recordingMimeType =
-      mimeInfo.mimeType;
-
-    state.recordingExtension =
-      mimeInfo.extension;
-
-
-    state.recordingChunks =
-      [];
-
-
-    state.mediaRecorder =
-      new MediaRecorder(
-        state.recordingStream,
-        {
-          mimeType:
-            mimeInfo.mimeType,
-
-          videoBitsPerSecond:
-            getVideoBitrate(
-              state.recordingWidth,
-              state.recordingHeight,
-              state.recordingFps
-            ),
-
-          audioBitsPerSecond:
-            128000
-
-        }
-      );
-
-
-    state.mediaRecorder.ondataavailable =
-      event => {
-
-        if (
-          event.data &&
-          event.data.size > 0
-        ) {
-
-          state.recordingChunks.push(
-            event.data
-          );
-
-        }
-
-      };
-
-
-    state.mediaRecorder.onerror =
-      event => {
-
-        console.error(
-          "MediaRecorder error:",
-          event.error
-        );
-
-
-        showToast(
-          "Recording error occurred.",
-          "error"
-        );
-
-      };
-
-
-    state.mediaRecorder.onstop =
-      handleRecordingStopped;
-
-
-    state.mediaRecorder.onpause =
-      () => {
-
-        state.recordingPaused =
-          true;
-
-        updateRecordingUI();
-
-      };
-
-
-    state.mediaRecorder.onresume =
-      () => {
-
-        state.recordingPaused =
-          false;
-
-        updateRecordingUI();
-
-      };
-
-
-    state.mediaRecorder.start(
-      1000
-    );
-
-
-    state.recordingActive =
-      true;
-
-    state.recordingPaused =
-      false;
 
     state.recordingStartedAt =
       performance.now();
 
-    state.recordingPausedAt =
-      0;
+    state.mediaRecorder.resume();
 
-    state.recordingAccumulatedPause =
-      0;
-
-
-    startCompositionLoop();
-
-    startRecordingTimer();
+    state.paused = false;
 
     updateRecordingUI();
 
-    showToast(
-      "Recording started.",
+    toast(
+      "Recording resumed.",
       "success"
     );
-
-  } catch (error) {
-
-    console.error(
-      "Start recording error:",
-      error
-    );
-
-
-    cleanupRecordingResources();
-
-
-    showToast(
-      error.message ||
-      "Could not start recording.",
-      "error"
-    );
-
   }
 
-}
+  /* =======================================================
+     STOP RECORDING
+     ======================================================= */
 
-
-/* =========================================================
-   VIDEO BITRATE
-========================================================= */
-
-function getVideoBitrate(
-  width,
-  height,
-  fps
-) {
-
-  const pixels =
-    width *
-    height;
-
-
-  let bitrate;
-
-
-  if (
-    pixels >=
-    2560 * 1440
-  ) {
-
-    bitrate =
-      16000000;
-
-  } else if (
-    pixels >=
-    1920 * 1080
-  ) {
-
-    bitrate =
-      10000000;
-
-  } else {
-
-    bitrate =
-      6000000;
-
-  }
-
-
-  if (fps >= 60) {
-
-    bitrate *= 1.25;
-
-  }
-
-
-  return Math.round(
-    bitrate
-  );
-
-}
-
-
-/* =========================================================
-   MIME DETECTION
-========================================================= */
-
-function getSupportedRecordingMime() {
-
-  const selected =
-    $("recordingFormatSide")?.value ||
-    "webm-vp9";
-
-
-  const mp4Types = [
-
-    "video/mp4;codecs=\"avc1.42E01E,mp4a.40.2\"",
-
-    "video/mp4;codecs=\"avc1.4d401f,mp4a.40.2\"",
-
-    "video/mp4"
-
-  ];
-
-
-  const vp9Types = [
-
-    "video/webm;codecs=vp9,opus",
-
-    "video/webm;codecs=\"vp9,opus\"",
-
-    "video/webm"
-
-  ];
-
-
-  const vp8Types = [
-
-    "video/webm;codecs=vp8,opus",
-
-    "video/webm;codecs=\"vp8,opus\"",
-
-    "video/webm"
-
-  ];
-
-
-  let candidates = [];
-
-
-  if (
-    selected === "mp4"
-  ) {
-
-    candidates =
-      mp4Types.concat(
-        vp9Types
-      );
-
-  } else if (
-    selected === "webm-vp8"
-  ) {
-
-    candidates =
-      vp8Types.concat(
-        vp9Types
-      );
-
-  } else {
-
-    candidates =
-      vp9Types.concat(
-        vp8Types
-      );
-
-  }
-
-
-  for (
-    const mimeType of candidates
-  ) {
-
+  function stopRecording() {
     if (
-      MediaRecorder.isTypeSupported(
-        mimeType
-      )
+      !state.recording ||
+      !state.mediaRecorder
     ) {
-
-      return {
-
-        mimeType,
-
-        extension:
-          mimeType.startsWith(
-            "video/mp4"
-          )
-            ? "mp4"
-            : "webm"
-
-      };
-
+      return;
     }
 
-  }
-
-
-  return {
-
-    mimeType: "",
-    extension: "webm"
-
-  };
-
-}
-
-
-/* =========================================================
-   PAUSE RECORDING
-========================================================= */
-
-function pauseRecording() {
-
-  if (
-    !state.mediaRecorder ||
-    !state.recordingActive ||
-    state.recordingPaused
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    state.mediaRecorder.pause();
-
-    state.recordingPausedAt =
-      performance.now();
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-}
-
-
-/* =========================================================
-   RESUME RECORDING
-========================================================= */
-
-function resumeRecording() {
-
-  if (
-    !state.mediaRecorder ||
-    !state.recordingActive ||
-    !state.recordingPaused
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    if (
-      state.recordingPausedAt
-    ) {
-
-      state.recordingAccumulatedPause +=
-        performance.now() -
-        state.recordingPausedAt;
-
-    }
-
-
-    state.mediaRecorder.resume();
-
-    state.recordingPausedAt =
-      0;
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-}
-
-
-/* =========================================================
-   STOP RECORDING
-========================================================= */
-
-function stopRecording() {
-
-  if (
-    !state.mediaRecorder ||
-    !state.recordingActive
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    state.mediaRecorder.stop();
-
-  } catch (error) {
-
-    console.error(
-      "Stop recording error:",
-      error
-    );
-
-    cleanupRecordingResources();
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING STOPPED
-========================================================= */
-
-async function handleRecordingStopped() {
-
-  const mimeType =
-    state.recordingMimeType ||
-    "video/webm";
-
-
-  const blob =
-    new Blob(
-      state.recordingChunks,
-      {
-        type: mimeType
+    try {
+      if (
+        state.mediaRecorder.state !==
+        "inactive"
+      ) {
+        state.mediaRecorder.stop();
       }
-    );
+    } catch (error) {
+      console.warn(
+        "Stop recording failed:",
+        error
+      );
 
-
-  state.lastRecordingBlob =
-    blob;
-
-
-  if (
-    state.lastRecordingURL
-  ) {
-
-    URL.revokeObjectURL(
-      state.lastRecordingURL
-    );
-
+      finishRecording();
+    }
   }
 
+  async function finishRecording() {
+    stopRecordingTimer();
+    stopRecordingRenderLoop();
 
-  state.lastRecordingURL =
-    URL.createObjectURL(
+    state.recording = false;
+    state.paused = false;
+
+    updateRecordingUI();
+
+    const mime =
+      state.recordingMimeType ||
+      "video/webm";
+
+    const blob =
+      new Blob(
+        state.recordingChunks,
+        {
+          type: mime
+        }
+      );
+
+    state.recordingBlob =
+      blob;
+
+    if (state.recordingUrl) {
+      URL.revokeObjectURL(
+        state.recordingUrl
+      );
+    }
+
+    state.recordingUrl =
+      URL.createObjectURL(
+        blob
+      );
+
+    const duration =
+      getRecordedDurationEstimate();
+
+    const filename =
+      sanitizeFilename(
+        recordingFileNameSide?.value ||
+          recordingFileName?.value ||
+          timestampName()
+      );
+
+    const extension =
+      getExtensionFromMime(
+        mime
+      );
+
+    const finalName =
+      filename.endsWith(
+        `.${extension}`
+      )
+        ? filename
+        : `${filename}.${extension}`;
+
+    const id =
+      `rec-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
+
+    const metadata = {
+      id,
+      name: finalName,
+      createdAt:
+        new Date().toISOString(),
+      duration,
+      size: blob.size,
+      mimeType: mime,
+      width:
+        state.recordingWidth,
+      height:
+        state.recordingHeight,
+      fps:
+        state.recordingFps
+    };
+
+    await saveRecordingBlob(
+      id,
       blob
     );
 
-
-  state.lastRecordingMimeType =
-    mimeType;
-
-
-  const duration =
-    getRecordingElapsed();
-
-
-  const name =
-    sanitizeFileName(
-      state.recordingFileName ||
-      "SNK-Course-Recording"
+    state.history.unshift(
+      metadata
     );
 
+    saveHistoryMetadata();
 
-  const record = {
+    state.previewRecordingId =
+      id;
 
-    id:
-      createId(),
+    await openRecordingPreview(
+      metadata,
+      blob
+    );
 
-    name,
+    toast(
+      "Recording completed.",
+      "success"
+    );
+  }
 
-    createdAt:
-      Date.now(),
+  function getRecordedDurationEstimate() {
+    const elapsed =
+      state.recordingElapsedBeforePause +
+      (
+        state.recordingStartedAt
+          ? (
+              performance.now() -
+              state.recordingStartedAt
+            ) /
+            1000
+          : 0
+      );
 
-    duration,
+    return Math.max(
+      0,
+      elapsed
+    );
+  }
 
-    size:
-      blob.size,
+  /* =======================================================
+     RECORDING PREVIEW
+     ======================================================= */
 
-    mimeType,
-
-    width:
-      state.recordingWidth,
-
-    height:
-      state.recordingHeight,
-
-    fps:
-      state.recordingFps
-
-  };
-
-
-  state.currentRecordingId =
-    record.id;
-
-
-  await saveRecordingToDatabase(
-    record,
+  async function openRecordingPreview(
+    metadata,
     blob
-  );
-
-
-  addRecordingToHistoryUI(
-    record
-  );
-
-
-  state.recordingActive =
-    false;
-
-  state.recordingPaused =
-    false;
-
-
-  stopRecordingTimer();
-
-  stopCompositionLoop();
-
-  updateRecordingUI();
-
-
-  openRecordingPreview(
-    blob,
-    record
-  );
-
-
-  cleanupRecordingResources(
-    false
-  );
-
-
-  showToast(
-    "Recording completed.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   CLEAN RECORDING RESOURCES
-========================================================= */
-
-function cleanupRecordingResources(
-  resetBlob = true
-) {
-
-  if (
-    state.recordingCanvasStream
   ) {
-
-    state.recordingCanvasStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-
-  }
-
-
-  if (
-    resetBlob
-  ) {
-
-    state.recordingChunks =
-      [];
-
-  }
-
-
-  state.recordingCanvasStream =
-    null;
-
-  state.recordingStream =
-    null;
-
-  state.mediaRecorder =
-    null;
-
-
-  if (
-    resetBlob
-  ) {
-
-    state.recordingActive =
-      false;
-
-    state.recordingPaused =
-      false;
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING TIMER
-========================================================= */
-
-function startRecordingTimer() {
-
-  stopRecordingTimer();
-
-
-  state.recordingTimerInterval =
-    setInterval(
-      () => {
-
-        const elapsed =
-          getRecordingElapsed();
-
-
-        const formatted =
-          formatRecordingTime(
-            elapsed
-          );
-
-
-        const timer =
-          $("recordingTimer");
-
-
-        const overlay =
-          $("recordingOverlayTimer");
-
-
-        if (timer) {
-          timer.textContent =
-            formatted;
-        }
-
-
-        if (overlay) {
-          overlay.textContent =
-            formatted;
-        }
-
-      },
-      250
-    );
-
-}
-
-
-function stopRecordingTimer() {
-
-  if (
-    state.recordingTimerInterval
-  ) {
-
-    clearInterval(
-      state.recordingTimerInterval
-    );
-
-  }
-
-
-  state.recordingTimerInterval =
-    null;
-
-}
-
-
-/* =========================================================
-   GET RECORDING ELAPSED
-========================================================= */
-
-function getRecordingElapsed() {
-
-  if (
-    !state.recordingStartedAt
-  ) {
-
-    return 0;
-
-  }
-
-
-  const now =
-    performance.now();
-
-
-  let elapsed =
-    now -
-    state.recordingStartedAt -
-    state.recordingAccumulatedPause;
-
-
-  if (
-    state.recordingPaused &&
-    state.recordingPausedAt
-  ) {
-
-    elapsed -=
-      now -
-      state.recordingPausedAt;
-
-  }
-
-
-  return Math.max(
-    0,
-    elapsed / 1000
-  );
-
-}
-
-
-/* =========================================================
-   RECORDING UI
-========================================================= */
-
-function updateRecordingUI() {
-
-  const statusBar =
-    $("recordingStatusBar");
-
-  const statusText =
-    $("recordingStatusText");
-
-  const statusDot =
-    $("recordingStatusDot");
-
-  const pauseBtn =
-    $("pauseRecordingBtn");
-
-  const resumeBtn =
-    $("resumeRecordingBtn");
-
-  const stopBtn =
-    $("stopRecordingBtn");
-
-
-  if (
-    state.recordingActive
-  ) {
-
-    statusBar?.classList.add(
-      "recording"
-    );
-
-
-    recordingOverlay?.classList.add(
-      "active"
-    );
-
-
-    if (
-      state.recordingPaused
-    ) {
-
-      statusText.textContent =
-        "Paused";
-
-
-      statusDot?.classList.add(
-        "paused"
-      );
-
-
-      pauseBtn?.classList.add(
-        "hidden"
-      );
-
-
-      resumeBtn?.classList.remove(
-        "hidden"
-      );
-
-    } else {
-
-      statusText.textContent =
-        "Recording";
-
-
-      statusDot?.classList.remove(
-        "paused"
-      );
-
-
-      pauseBtn?.classList.remove(
-        "hidden"
-      );
-
-
-      resumeBtn?.classList.add(
-        "hidden"
-      );
-
+    if (!recordingPreviewModal) {
+      return;
     }
 
-
-    stopBtn?.classList.remove(
-      "hidden"
-    );
-
-  } else {
-
-    statusBar?.classList.remove(
-      "recording"
-    );
-
-
-    recordingOverlay?.classList.remove(
-      "active"
-    );
-
-
-    statusText.textContent =
-      "Ready";
-
-
-    statusDot?.classList.remove(
-      "paused"
-    );
-
-
-    pauseBtn?.classList.add(
-      "hidden"
-    );
-
-
-    resumeBtn?.classList.add(
-      "hidden"
-    );
-
-
-    stopBtn?.classList.add(
-      "hidden"
-    );
-
-  }
-
-
-  const indicator =
-    $("audioIndicator");
-
-
-  if (indicator) {
-
-    indicator.classList.toggle(
-      "active",
-      !!state.audioDestination
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING PREVIEW
-========================================================= */
-
-function openRecordingPreview(
-  blob,
-  record
-) {
-
-  const modal =
-    $("recordingPreviewModal");
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (!modal || !video) {
-    return;
-  }
-
-
-  if (
-    video.src
-  ) {
-
-    video.pause();
-
-  }
-
-
-  video.src =
-    state.lastRecordingURL;
-
-
-  video.load();
-
-
-  $("recordingFileName").value =
-    record.name;
-
-
-  $("recordingNameInput").value =
-    record.name;
-
-
-  $("recordingFileInfo").textContent =
-    `${formatBytes(record.size)} • ` +
-    `${record.width}×${record.height} • ` +
-    `${record.fps} FPS • ` +
-    formatRecordingTime(record.duration);
-
-
-  modal.classList.add(
-    "active"
-  );
-
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-
-  state.trimStart =
-    0;
-
-  state.trimEnd =
-    record.duration;
-
-
-  setTimeout(
-    setupTrimControls,
-    100
-  );
-
-}
-
-
-/* =========================================================
-   PREVIEW TIME
-========================================================= */
-
-function updatePreviewTime() {
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (!video) {
-    return;
-  }
-
-
-  const current =
-    video.currentTime || 0;
-
-
-  $("recordingCurrentTime").textContent =
-    formatRecordingTime(
-      current
-    );
-
-
-  if (
-    state.trimEnd > 0 &&
-    current >
-    state.trimEnd
-  ) {
-
-    video.currentTime =
-      state.trimEnd;
-
-  }
-
-}
-
-
-/* =========================================================
-   SETUP TRIM
-========================================================= */
-
-function setupTrimControls() {
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (!video) {
-    return;
-  }
-
-
-  const duration =
-    Number(
-      video.duration
-    );
-
-
-  if (
-    !Number.isFinite(duration)
-  ) {
-
-    return;
-
-  }
-
-
-  state.trimEnd =
-    duration;
-
-
-  const start =
-    $("recordingTrimStart");
-
-  const end =
-    $("recordingTrimEnd");
-
-
-  if (start) {
-
-    start.min =
-      "0";
-
-    start.max =
-      String(duration);
-
-    start.value =
-      String(
-        Math.min(
-          state.trimStart,
-          duration
-        )
+    state.previewRecordingId =
+      metadata.id;
+
+    state.recordingBlob =
+      blob;
+
+    if (
+      state.previewObjectUrl
+    ) {
+      URL.revokeObjectURL(
+        state.previewObjectUrl
+      );
+    }
+
+    state.previewObjectUrl =
+      URL.createObjectURL(
+        blob
       );
 
-  }
+    if (recordingPreviewVideo) {
+      recordingPreviewVideo.src =
+        state.previewObjectUrl;
 
+      recordingPreviewVideo.load();
+    }
 
-  if (end) {
+    if (recordingFileName) {
+      recordingFileName.value =
+        metadata.name;
+    }
 
-    end.min =
-      "0";
+    if (recordingFileInfo) {
+      recordingFileInfo.textContent =
+        `${metadata.name} • ${formatBytes(
+          metadata.size
+        )} • ${metadata.width}×${metadata.height} • ${metadata.fps} FPS`;
+    }
 
-    end.max =
-      String(duration);
+    state.previewDuration =
+      metadata.duration || 0;
 
-    end.value =
-      String(
-        duration
-      );
+    state.previewTrimStart = 0;
+    state.previewTrimEnd =
+      state.previewDuration;
 
-  }
+    if (recordingTrimStart) {
+      recordingTrimStart.min =
+        "0";
 
+      recordingTrimStart.max =
+        String(
+          state.previewDuration
+        );
 
-  updateTrimLabels();
+      recordingTrimStart.value =
+        "0";
+    }
 
-}
+    if (recordingTrimEnd) {
+      recordingTrimEnd.min =
+        "0";
 
+      recordingTrimEnd.max =
+        String(
+          state.previewDuration
+        );
 
-/* =========================================================
-   TRIM SLIDERS
-========================================================= */
+      recordingTrimEnd.value =
+        String(
+          state.previewDuration
+        );
+    }
 
-function initializeTrimEvents() {
+    updateTrimLabels();
 
-  const start =
-    $("recordingTrimStart");
+    if (recordingDuration) {
+      recordingDuration.textContent =
+        formatTime(
+          state.previewDuration
+        );
+    }
 
-  const end =
-    $("recordingTrimEnd");
+    if (recordingCurrentTime) {
+      recordingCurrentTime.textContent =
+        "00:00";
+    }
 
+    openModal(
+      recordingPreviewModal
+    );
 
-  if (start) {
-
-    start.addEventListener(
-      "input",
-      () => {
-
-        let value =
-          Number(
-            start.value
-          );
-
-
-        if (
-          value >=
-          state.trimEnd
-        ) {
-
-          value =
-            Math.max(
-              0,
-              state.trimEnd -
-              0.1
-            );
-
-          start.value =
-            String(value);
-
-        }
-
-
-        state.trimStart =
-          value;
-
-
-        updateTrimLabels();
-
+    setTimeout(() => {
+      if (
+        recordingPreviewVideo
+      ) {
+        recordingPreviewVideo
+          .play()
+          .catch(() => {});
       }
-    );
-
+    }, 150);
   }
 
+  function updateTrimLabels() {
+    if (
+      recordingTrimStartTime
+    ) {
+      recordingTrimStartTime.textContent =
+        formatTime(
+          safeNumber(
+            recordingTrimStart?.value,
+            0
+          )
+        );
+    }
 
-  if (end) {
-
-    end.addEventListener(
-      "input",
-      () => {
-
-        let value =
-          Number(
-            end.value
-          );
-
-
-        if (
-          value <=
-          state.trimStart
-        ) {
-
-          value =
-            Math.min(
-              Number(
-                end.max
-              ),
-              state.trimStart +
-              0.1
-            );
-
-          end.value =
-            String(value);
-
-        }
-
-
-        state.trimEnd =
-          value;
-
-
-        updateTrimLabels();
-
-      }
-    );
-
+    if (
+      recordingTrimEndTime
+    ) {
+      recordingTrimEndTime.textContent =
+        formatTime(
+          safeNumber(
+            recordingTrimEnd?.value,
+            state.previewDuration
+          )
+        );
+    }
   }
 
-}
-
-
-initializeTrimEvents();
-
-
-/* =========================================================
-   UPDATE TRIM LABELS
-========================================================= */
-
-function updateTrimLabels() {
-
-  $("recordingTrimStartTime").textContent =
-    formatRecordingTime(
-      state.trimStart
-    );
-
-
-  $("recordingTrimEndTime").textContent =
-    formatRecordingTime(
-      state.trimEnd
-    );
-
-}
-
-
-/* =========================================================
-   APPLY TRIM PREVIEW
-========================================================= */
-
-function applyTrimPreview() {
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (!video) {
-    return;
+  function previewPlay() {
+    recordingPreviewVideo
+      ?.play()
+      .catch(() => {});
   }
 
-
-  const start =
-    Number(
-      $("recordingTrimStart")?.value ||
-      0
-    );
-
-
-  const end =
-    Number(
-      $("recordingTrimEnd")?.value ||
-      video.duration
-    );
-
-
-  if (
-    end <= start
-  ) {
-
-    showToast(
-      "Trim end must be after trim start.",
-      "error"
-    );
-
-    return;
-
+  function previewPause() {
+    recordingPreviewVideo?.pause();
   }
 
+  function resetTrim() {
+    state.previewTrimStart =
+      0;
 
-  state.trimStart =
-    start;
+    state.previewTrimEnd =
+      state.previewDuration;
 
-  state.trimEnd =
-    end;
+    if (recordingTrimStart) {
+      recordingTrimStart.value =
+        "0";
+    }
 
+    if (recordingTrimEnd) {
+      recordingTrimEnd.value =
+        String(
+          state.previewDuration
+        );
+    }
 
-  video.currentTime =
-    start;
+    updateTrimLabels();
 
+    if (
+      recordingPreviewVideo
+    ) {
+      recordingPreviewVideo.currentTime =
+        0;
+    }
 
-  video.play().catch(
-    () => {}
-  );
-
-
-  showToast(
-    "Trim preview applied.",
-    "success"
-  );
-
+    toast(
+      "Trim selection reset.",
+      "info"
+    );
+  }
 
   /*
     Important:
-    Native MediaRecorder does not physically
-    cut the existing Blob.
+    MediaRecorder cannot physically cut an
+    existing WebM/MP4 Blob without re-encoding.
 
-    This applies the trim range to preview.
-    True exported trimming requires re-encoding.
+    Therefore this function validates the
+    trim range and prepares the selected range.
+    The actual physical trim uses a new
+    MediaRecorder pass where supported.
   */
 
-}
-
-
-/* =========================================================
-   RESET TRIM
-========================================================= */
-
-function resetTrim() {
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (!video) {
-    return;
-  }
-
-
-  state.trimStart =
-    0;
-
-
-  state.trimEnd =
-    Number(
-      video.duration || 0
-    );
-
-
-  setupTrimControls();
-
-
-  video.currentTime =
-    0;
-
-
-  showToast(
-    "Trim reset.",
-    "info"
-  );
-
-}
-
-
-/* =========================================================
-   RENAME CURRENT RECORDING
-========================================================= */
-
-async function renameCurrentRecording() {
-
-  const input =
-    $("recordingNameInput");
-
-
-  const newName =
-    sanitizeFileName(
-      input?.value ||
-      $("recordingFileName")?.value ||
-      ""
-    );
-
-
-  if (!newName) {
-
-    showToast(
-      "Enter a recording name.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  $("recordingFileName").value =
-    newName;
-
-
-  $("recordingFileNameSide").value =
-    newName;
-
-
-  state.recordingFileName =
-    newName;
-
-
-  if (
-    state.currentRecordingId
-  ) {
-
-    await updateRecordingName(
-      state.currentRecordingId,
-      newName
-    );
-
-  }
-
-
-  showToast(
-    "Recording renamed.",
-    "success"
-  );
-
-
-  await loadRecordingHistory();
-
-}
-
-
-/* =========================================================
-   DELETE CURRENT RECORDING
-========================================================= */
-
-async function deleteCurrentRecording() {
-
-  if (
-    !state.currentRecordingId
-  ) {
-
-    closeRecordingPreview();
-
-    return;
-
-  }
-
-
-  const confirmed =
-    window.confirm(
-      "Delete this recording?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  await deleteRecordingFromDatabase(
-    state.currentRecordingId
-  );
-
-
-  state.currentRecordingId =
-    null;
-
-
-  closeRecordingPreview();
-
-  await loadRecordingHistory();
-
-
-  showToast(
-    "Recording deleted.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   RECORD AGAIN
-========================================================= */
-
-function recordAgain() {
-
-  closeRecordingPreview();
-
-  startRecording();
-
-}
-
-
-/* =========================================================
-   DOWNLOAD CURRENT RECORDING
-========================================================= */
-
-function downloadCurrentRecording() {
-
-  if (
-    !state.lastRecordingBlob
-  ) {
-
-    showToast(
-      "No recording available.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const filename =
-    sanitizeFileName(
-      $("recordingFileName")?.value ||
-      state.recordingFileName ||
-      "SNK-Course-Recording"
-    );
-
-
-  downloadBlob(
-    state.lastRecordingBlob,
-    `${filename}.${state.recordingExtension}`
-  );
-
-
-  showToast(
-    "Recording download started.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   CLOSE RECORDING PREVIEW
-========================================================= */
-
-function closeRecordingPreview() {
-
-  const modal =
-    $("recordingPreviewModal");
-
-  const video =
-    $("recordingPreviewVideo");
-
-
-  if (video) {
-
-    video.pause();
-
-  }
-
-
-  if (modal) {
-
-    modal.classList.remove(
-      "active"
-    );
-
-    modal.setAttribute(
-      "aria-hidden",
-      "true"
-    );
-
-  }
-
-}
-
-
-bindClick(
-  "closeRecordingPreviewBtn",
-  closeRecordingPreview
-);
-
-
-/* =========================================================
-   RECORDING HISTORY — INDEXED DB
-========================================================= */
-
-async function initializeDatabase() {
-
-  if (
-    !window.indexedDB
-  ) {
-
-    console.warn(
-      "IndexedDB unavailable."
-    );
-
-    return;
-
-  }
-
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const request =
-        indexedDB.open(
-          "SNKMentorStudioDB",
-          1
-        );
-
-
-      request.onupgradeneeded =
-        event => {
-
-          const db =
-            event.target.result;
-
-
-          if (
-            !db.objectStoreNames.contains(
-              "recordings"
-            )
-          ) {
-
-            const store =
-              db.createObjectStore(
-                "recordings",
-                {
-                  keyPath: "id"
-                }
-              );
-
-
-            store.createIndex(
-              "createdAt",
-              "createdAt",
-              {
-                unique: false
-              }
-            );
-
-          }
-
-        };
-
-
-      request.onsuccess =
-        event => {
-
-          state.db =
-            event.target.result;
-
-          resolve(
-            state.db
-          );
-
-        };
-
-
-      request.onerror =
-        event => {
-
-          reject(
-            event.target.error
-          );
-
-        };
-
+  async function applyTrim() {
+    if (
+      !state.recordingBlob ||
+      !recordingPreviewVideo
+    ) {
+      return;
     }
-  );
 
-}
-
-
-/* =========================================================
-   SAVE RECORDING
-========================================================= */
-
-async function saveRecordingToDatabase(
-  record,
-  blob
-) {
-
-  if (!state.db) {
-    return;
-  }
-
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readwrite"
-        );
-
-
-      const store =
-        transaction.objectStore(
-          "recordings"
-        );
-
-
-      store.put({
-
-        ...record,
-
-        blob
-
-      });
-
-
-      transaction.oncomplete =
-        () => resolve();
-
-
-      transaction.onerror =
-        event =>
-          reject(
-            event.target.error
-          );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   LOAD RECORDING HISTORY
-========================================================= */
-
-async function loadRecordingHistory() {
-
-  const list =
-    $("recordingHistoryList");
-
-
-  if (!list) {
-    return;
-  }
-
-
-  if (!state.db) {
-
-    list.innerHTML =
-      `
-        <div class="empty-history">
-          No recording history.
-        </div>
-      `;
-
-    return;
-
-  }
-
-
-  const records =
-    await getAllRecordingRecords();
-
-
-  records.sort(
-    (a, b) =>
-      b.createdAt -
-      a.createdAt
-  );
-
-
-  list.innerHTML = "";
-
-
-  if (!records.length) {
-
-    list.innerHTML =
-      `
-        <div class="empty-history">
-          No recording history yet.
-        </div>
-      `;
-
-    return;
-
-  }
-
-
-  records.forEach(
-    record => {
-
-      list.appendChild(
-        createHistoryItem(
-          record
-        )
+    const start =
+      safeNumber(
+        recordingTrimStart?.value,
+        0
       );
 
+    const end =
+      safeNumber(
+        recordingTrimEnd?.value,
+        state.previewDuration
+      );
+
+    if (
+      start < 0 ||
+      end <= start ||
+      end > state.previewDuration
+    ) {
+      toast(
+        "Please select a valid trim range.",
+        "error"
+      );
+      return;
     }
-  );
 
-}
+    /*
+      For a professional editor, actual
+      trimming requires re-encoding.
 
+      We implement a browser-side
+      re-recording pipeline for the video
+      canvas. Audio preservation is not
+      guaranteed across all browsers.
+    */
 
-/* =========================================================
-   GET ALL RECORDS
-========================================================= */
-
-function getAllRecordingRecords() {
-
-  if (!state.db) {
-    return Promise.resolve([]);
-  }
-
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readonly"
-        );
-
-
-      const store =
-        transaction.objectStore(
-          "recordings"
-        );
-
-
-      const request =
-        store.getAll();
-
-
-      request.onsuccess =
-        () => {
-
-          resolve(
-            request.result || []
-          );
-
-        };
-
-
-      request.onerror =
-        event => {
-
-          reject(
-            event.target.error
-          );
-
-        };
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   HISTORY ITEM
-========================================================= */
-
-function createHistoryItem(
-  record
-) {
-
-  const wrapper =
-    document.createElement(
-      "div"
+    toast(
+      "Preparing trimmed recording…",
+      "info",
+      4000
     );
 
+    try {
+      const trimmedBlob =
+        await reencodeTrimmedRecording(
+          state.recordingBlob,
+          start,
+          end
+        );
 
-  wrapper.className =
-    "history-item";
+      if (!trimmedBlob) {
+        throw new Error(
+          "Trim re-encoding unavailable."
+        );
+      }
 
+      state.recordingBlob =
+        trimmedBlob;
 
-  wrapper.innerHTML =
-    `
-      <div class="history-item-main">
+      if (
+        state.previewObjectUrl
+      ) {
+        URL.revokeObjectURL(
+          state.previewObjectUrl
+        );
+      }
 
-        <strong>
-          ${escapeHTML(record.name)}
-        </strong>
+      state.previewObjectUrl =
+        URL.createObjectURL(
+          trimmedBlob
+        );
 
-        <small>
-          ${formatRecordingTime(record.duration)}
-          •
-          ${formatBytes(record.size)}
-          •
-          ${record.width}×${record.height}
-        </small>
+      if (
+        recordingPreviewVideo
+      ) {
+        recordingPreviewVideo.src =
+          state.previewObjectUrl;
 
-      </div>
+        recordingPreviewVideo.load();
+      }
 
-      <div class="history-item-actions">
+      const metadata =
+        state.history.find(
+          (item) =>
+            item.id ===
+            state.previewRecordingId
+        );
 
-        <button
-          type="button"
-          data-action="preview"
-        >
-          Preview
-        </button>
+      if (metadata) {
+        metadata.duration =
+          end - start;
 
-        <button
-          type="button"
-          data-action="download"
-        >
-          Download
-        </button>
+        metadata.size =
+          trimmedBlob.size;
 
-        <button
-          type="button"
-          data-action="delete"
-          class="danger"
-        >
-          Delete
-        </button>
+        await saveRecordingBlob(
+          metadata.id,
+          trimmedBlob
+        );
 
-      </div>
-    `;
+        saveHistoryMetadata();
 
-
-  wrapper
-    .querySelector(
-      '[data-action="preview"]'
-    )
-    ?.addEventListener(
-      "click",
-      async () => {
-
-        const full =
-          await getRecording(
-            record.id
-          );
-
-
-        if (!full?.blob) {
-
-          showToast(
-            "Recording file not found.",
-            "error"
-          );
-
-          return;
-
+        if (recordingFileInfo) {
+          recordingFileInfo.textContent =
+            `${metadata.name} • ${formatBytes(
+              metadata.size
+            )} • ${metadata.width}×${metadata.height} • ${metadata.fps} FPS`;
         }
+      }
 
+      state.previewDuration =
+        end - start;
 
-        state.currentRecordingId =
-          record.id;
+      state.previewTrimStart = 0;
+      state.previewTrimEnd =
+        state.previewDuration;
 
-        state.lastRecordingBlob =
-          full.blob;
+      if (recordingTrimStart) {
+        recordingTrimStart.value =
+          "0";
+      }
 
-        state.lastRecordingMimeType =
-          full.mimeType;
-
-        state.lastRecordingURL =
-          URL.createObjectURL(
-            full.blob
+      if (recordingTrimEnd) {
+        recordingTrimEnd.value =
+          String(
+            state.previewDuration
           );
+      }
 
+      updateTrimLabels();
 
-        openRecordingPreview(
-          full.blob,
-          record
-        );
+      if (recordingDuration) {
+        recordingDuration.textContent =
+          formatTime(
+            state.previewDuration
+          );
+      }
 
+      toast(
+        "Trim applied.",
+        "success"
+      );
+    } catch (error) {
+      console.warn(
+        "Trim failed:",
+        error
+      );
+
+      toast(
+        "Browser could not re-encode this recording. The original recording is still safe.",
+        "error",
+        5000
+      );
+    }
+  }
+
+  async function reencodeTrimmedRecording(
+    blob,
+    start,
+    end
+  ) {
+    /*
+      Browser-only fallback.
+
+      We use an offscreen video element,
+      canvas captureStream and MediaRecorder.
+
+      Audio support varies by browser.
+      The original file remains untouched
+      if the operation fails.
+    */
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+    const video =
+      document.createElement(
+        "video"
+      );
+
+    video.src =
+      url;
+
+    video.muted = true;
+    video.playsInline = true;
+
+    await new Promise(
+      (resolve, reject) => {
+        video.onloadedmetadata =
+          resolve;
+
+        video.onerror =
+          () =>
+            reject(
+              new Error(
+                "Video metadata failed."
+              )
+            );
+
+        video.load();
       }
     );
 
-
-  wrapper
-    .querySelector(
-      '[data-action="download"]'
-    )
-    ?.addEventListener(
-      "click",
-      async () => {
-
-        const full =
-          await getRecording(
-            record.id
-          );
-
-
-        if (!full?.blob) {
-
-          showToast(
-            "Recording file not found.",
-            "error"
-          );
-
-          return;
-
-        }
-
-
-        const extension =
-          full.mimeType?.includes(
-            "mp4"
-          )
-            ? "mp4"
-            : "webm";
-
-
-        downloadBlob(
-          full.blob,
-          `${sanitizeFileName(record.name)}.${extension}`
-        );
-
-      }
-    );
-
-
-  wrapper
-    .querySelector(
-      '[data-action="delete"]'
-    )
-    ?.addEventListener(
-      "click",
-      async () => {
-
-        const confirmed =
-          window.confirm(
-            `Delete "${record.name}"?`
-          );
-
-
-        if (!confirmed) {
-          return;
-        }
-
-
-        await deleteRecordingFromDatabase(
-          record.id
-        );
-
-
-        await loadRecordingHistory();
-
-
-        showToast(
-          "Recording deleted.",
-          "success"
-        );
-
-      }
-    );
-
-
-  return wrapper;
-
-}
-
-
-/* =========================================================
-   ADD HISTORY UI
-========================================================= */
-
-function addRecordingToHistoryUI(
-  record
-) {
-
-  loadRecordingHistory();
-
-}
-
-
-/* =========================================================
-   GET RECORDING
-========================================================= */
-
-function getRecording(id) {
-
-  if (!state.db) {
-    return Promise.resolve(null);
-  }
-
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readonly"
-        );
-
-
-      const store =
-        transaction.objectStore(
-          "recordings"
-        );
-
-
-      const request =
-        store.get(id);
-
-
-      request.onsuccess =
-        () => {
-
-          resolve(
-            request.result ||
-            null
-          );
-
-        };
-
-
-      request.onerror =
-        event =>
-          reject(
-            event.target.error
-          );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   UPDATE RECORDING NAME
-========================================================= */
-
-function updateRecordingName(
-  id,
-  name
-) {
-
-  if (!state.db) {
-    return Promise.resolve();
-  }
-
-
-  return new Promise(
-    async (resolve, reject) => {
-
-      const existing =
-        await getRecording(id);
-
-
-      if (!existing) {
-
-        resolve();
-
-        return;
-
-      }
-
-
-      existing.name =
-        name;
-
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readwrite"
-        );
-
-
-      transaction.objectStore(
-        "recordings"
-      ).put(existing);
-
-
-      transaction.oncomplete =
-        () => resolve();
-
-
-      transaction.onerror =
-        event =>
-          reject(
-            event.target.error
-          );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   DELETE RECORDING
-========================================================= */
-
-function deleteRecordingFromDatabase(
-  id
-) {
-
-  if (!state.db) {
-    return Promise.resolve();
-  }
-
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readwrite"
-        );
-
-
-      transaction
-        .objectStore(
-          "recordings"
-        )
-        .delete(id);
-
-
-      transaction.oncomplete =
-        () => resolve();
-
-
-      transaction.onerror =
-        event =>
-          reject(
-            event.target.error
-          );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   CLEAR RECORDING HISTORY
-========================================================= */
-
-async function clearRecordingHistory() {
-
-  const confirmed =
-    window.confirm(
-      "Delete all recording history?"
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  if (!state.db) {
-    return;
-  }
-
-
-  await new Promise(
-    (resolve, reject) => {
-
-      const transaction =
-        state.db.transaction(
-          "recordings",
-          "readwrite"
-        );
-
-
-      transaction
-        .objectStore(
-          "recordings"
-        )
-        .clear();
-
-
-      transaction.oncomplete =
-        () => resolve();
-
-
-      transaction.onerror =
-        event =>
-          reject(
-            event.target.error
-          );
-
-    }
-  );
-
-
-  state.currentRecordingId =
-    null;
-
-
-  await loadRecordingHistory();
-
-
-  showToast(
-    "Recording history cleared.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   DOWNLOAD BLOB
-========================================================= */
-
-function downloadBlob(
-  blob,
-  filename
-) {
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const anchor =
-    document.createElement(
-      "a"
-    );
-
-
-  anchor.href =
-    url;
-
-  anchor.download =
-    filename;
-
-  document.body.appendChild(
-    anchor
-  );
-
-
-  anchor.click();
-
-
-  anchor.remove();
-
-
-  setTimeout(
-    () => {
-
+    const width =
+      video.videoWidth ||
+      state.recordingWidth;
+
+    const height =
+      video.videoHeight ||
+      state.recordingHeight;
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width =
+      width;
+
+    canvas.height =
+      height;
+
+    const ctx =
+      canvas.getContext(
+        "2d"
+      );
+
+    const fps =
+      state.recordingFps ||
+      30;
+
+    const stream =
+      canvas.captureStream(
+        fps
+      );
+
+    const mime =
+      getSelectedRecordingMime();
+
+    if (!mime) {
       URL.revokeObjectURL(
         url
       );
 
-    },
-    1000
-  );
+      return null;
+    }
 
-}
+    let recorder;
 
-
-/* =========================================================
-   SCREEN CAPTURE
-========================================================= */
-
-function initializeScreenCapture() {
-
-  /*
-    Stop automatically when browser ends
-    screen sharing.
-  */
-
-}
-
-
-async function startScreenCapture() {
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getDisplayMedia
-  ) {
-
-    showToast(
-      "Screen capture is not supported in this browser.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    stopScreenCapture();
-
-
-    state.screenStream =
-      await navigator.mediaDevices.getDisplayMedia({
-
-        video: {
-          frameRate: {
-            ideal:
-              state.recordingFps
+    try {
+      recorder =
+        new MediaRecorder(
+          stream,
+          {
+            mimeType: mime,
+            videoBitsPerSecond:
+              getVideoBitrate(
+                width,
+                height,
+                fps
+              )
           }
-        },
+        );
+    } catch (_) {
+      recorder =
+        new MediaRecorder(
+          stream
+        );
+    }
 
-        audio: true
+    const chunks = [];
 
-      });
+    recorder.ondataavailable =
+      (event) => {
+        if (
+          event.data &&
+          event.data.size
+        ) {
+          chunks.push(
+            event.data
+          );
+        }
+      };
 
-
-    screenCaptureVideo.srcObject =
-      state.screenStream;
-
-
-    screenCaptureVideo.muted =
-      true;
-
-
-    await screenCaptureVideo.play();
-
-
-    state.screenCaptureActive =
-      true;
-
-
-    screenCaptureVideo.style.display =
-      "block";
-
-
-    mainImage.style.display =
-      "none";
-
-    mainVideo.style.display =
-      "none";
-
-
-    welcomeContent.style.display =
-      "none";
-
-
-    updateScreenCaptureStatus(
-      true
-    );
-
-
-    const videoTrack =
-      state.screenStream.getVideoTracks()[0];
-
-
-    if (videoTrack) {
-
-      videoTrack.addEventListener(
-        "ended",
-        () => {
-
-          stopScreenCapture();
-
+    const stopped =
+      new Promise(
+        (resolve) => {
+          recorder.onstop =
+            resolve;
         }
       );
 
+    recorder.start(1000);
+
+    video.currentTime =
+      start;
+
+    await video.play();
+
+    await new Promise(
+      (resolve) => {
+        let raf = 0;
+
+        const draw = () => {
+          if (
+            video.currentTime >=
+            end
+          ) {
+            cancelAnimationFrame(
+              raf
+            );
+
+            video.pause();
+
+            try {
+              recorder.stop();
+            } catch (_) {}
+
+            resolve();
+
+            return;
+          }
+
+          ctx.drawImage(
+            video,
+            0,
+            0,
+            width,
+            height
+          );
+
+          raf =
+            requestAnimationFrame(
+              draw
+            );
+        };
+
+        draw();
+      }
+    );
+
+    await stopped;
+
+    URL.revokeObjectURL(
+      url
+    );
+
+    if (!chunks.length) {
+      return null;
     }
 
-
-    updateStageSource(
-      "Screen"
+    return new Blob(
+      chunks,
+      {
+        type: mime
+      }
     );
-
-
-    renderCompositionFrame();
-
-
-    showToast(
-      "Screen sharing started.",
-      "success"
-    );
-
-  } catch (error) {
-
-    console.error(
-      error
-    );
-
-
-    showToast(
-      "Screen sharing was cancelled.",
-      "info"
-    );
-
   }
 
-}
+  /* =======================================================
+     DOWNLOAD
+     ======================================================= */
 
+  async function downloadCurrentRecording() {
+    if (
+      !state.recordingBlob
+    ) {
+      toast(
+        "No recording available.",
+        "error"
+      );
+      return;
+    }
 
-/* =========================================================
-   STOP SCREEN CAPTURE
-========================================================= */
-
-function stopScreenCapture() {
-
-  if (
-    state.screenStream
-  ) {
-
-    state.screenStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
+    const metadata =
+      state.history.find(
+        (item) =>
+          item.id ===
+          state.previewRecordingId
       );
 
-  }
-
-
-  state.screenStream =
-    null;
-
-  state.screenCaptureActive =
-    false;
-
-
-  screenCaptureVideo.srcObject =
-    null;
-
-
-  screenCaptureVideo.style.display =
-    "none";
-
-
-  if (
-    state.mainMode ===
-    "video"
-  ) {
-
-    mainVideo.style.display =
-      "block";
-
-  } else if (
-    state.mainMode ===
-    "image"
-  ) {
-
-    mainImage.style.display =
-      "block";
-
-  } else {
-
-    welcomeContent.style.display =
-      "flex";
-
-  }
-
-
-  updateScreenCaptureStatus(
-    false
-  );
-
-
-  updateStageSource(
-    state.mainMode === "video"
-      ? "Main Video"
-      : state.mainMode === "image"
-        ? "Image"
-        : "Studio"
-  );
-
-
-  renderCompositionFrame();
-
-}
-
-
-/* =========================================================
-   SCREEN STATUS
-========================================================= */
-
-function updateScreenCaptureStatus(
-  active
-) {
-
-  const status =
-    $("screenCaptureStatus");
-
-  const light =
-    $("screenCaptureStatusLight");
-
-  const indicator =
-    $("screenIndicator");
-
-
-  if (status) {
-
-    status.textContent =
-      active
-        ? "Screen sharing active"
-        : "Not sharing";
-
-  }
-
-
-  if (light) {
-
-    light.classList.toggle(
-      "active",
-      active
-    );
-
-  }
-
-
-  if (indicator) {
-
-    indicator.textContent =
-      active
-        ? "Screen"
-        : "Screen Off";
-
-
-    indicator.classList.toggle(
-      "active",
-      active
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER
-========================================================= */
-
-function initializeTeleprompter() {
-
-  const text =
-    $("teleprompterText");
-
-  const speed =
-    $("teleprompterSpeed");
-
-  const fontSize =
-    $("teleprompterFontSize");
-
-  const opacity =
-    $("teleprompterOpacity");
-
-
-  if (text) {
-
-    text.addEventListener(
-      "input",
-      () => {
-
-        state.teleprompterText =
-          text.value;
-
-        updateTeleprompterPreview();
-
-      }
-    );
-
-  }
-
-
-  if (speed) {
-
-    speed.addEventListener(
-      "input",
-      () => {
-
-        state.teleprompterSpeed =
-          Number(
-            speed.value
-          );
-
-        updateTeleprompterPreview();
-
-      }
-    );
-
-  }
-
-
-  if (fontSize) {
-
-    fontSize.addEventListener(
-      "input",
-      () => {
-
-        state.teleprompterFontSize =
-          Number(
-            fontSize.value
-          );
-
-        updateTeleprompterPreview();
-
-      }
-    );
-
-  }
-
-
-  if (opacity) {
-
-    opacity.addEventListener(
-      "input",
-      () => {
-
-        state.teleprompterOpacity =
-          Number(
-            opacity.value
-          );
-
-        updateTeleprompterPreview();
-
-      }
-    );
-
-  }
-
-
-  bindClick(
-    "teleprompterPlayBtn",
-    startTeleprompter
-  );
-
-
-  bindClick(
-    "teleprompterPauseBtn",
-    pauseTeleprompter
-  );
-
-
-  bindClick(
-    "teleprompterResetBtn",
-    resetTeleprompter
-  );
-
-
-  bindClick(
-    "teleprompterSaveBtn",
-    saveTeleprompter
-  );
-
-
-  updateTeleprompterPreview();
-
-}
-
-
-/* =========================================================
-   OPEN TELEPROMPTER
-========================================================= */
-
-function openTeleprompter() {
-
-  const modal =
-    $("teleprompterModal");
-
-
-  if (!modal) {
-    return;
-  }
-
-
-  modal.classList.add(
-    "active"
-  );
-
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-
-  updateTeleprompterPreview();
-
-}
-
-
-/* =========================================================
-   CLOSE TELEPROMPTER
-========================================================= */
-
-function closeTeleprompter() {
-
-  const modal =
-    $("teleprompterModal");
-
-
-  modal?.classList.remove(
-    "active"
-  );
-
-
-  modal?.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-}
-
-
-bindClick(
-  "closeTeleprompterBtn",
-  closeTeleprompter
-);
-
-
-/* =========================================================
-   TELEPROMPTER PREVIEW
-========================================================= */
-
-function updateTeleprompterPreview() {
-
-  const preview =
-    $("teleprompterPreview");
-
-  const mini =
-    $("teleprompterMiniPreview");
-
-
-  if (!preview) {
-    return;
-  }
-
-
-  preview.textContent =
-    state.teleprompterText ||
-    "Your teleprompter preview will appear here.";
-
-
-  preview.style.fontSize =
-    `${state.teleprompterFontSize}px`;
-
-
-  preview.style.opacity =
-    String(
-      state.teleprompterOpacity /
-      100
-    );
-
-
-  if (mini) {
-
-    mini.textContent =
-      state.teleprompterText ||
-      "Upload or write your script.";
-
-  }
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER PLAY
-========================================================= */
-
-function startTeleprompter() {
-
-  if (
-    state.teleprompterPlaying
-  ) {
-
-    return;
-
-  }
-
-
-  state.teleprompterPlaying =
-    true;
-
-
-  const preview =
-    $("teleprompterPreview");
-
-
-  let scrollPosition =
-    preview?.scrollTop || 0;
-
-
-  function animate() {
+    const fallbackName =
+      timestampName();
+
+    let filename =
+      metadata?.name ||
+      recordingFileName?.value ||
+      fallbackName;
+
+    const extension =
+      getExtensionFromMime(
+        state.recordingBlob.type
+      );
+
+    filename =
+      sanitizeFilename(
+        filename
+      );
 
     if (
-      !state.teleprompterPlaying ||
-      !preview
+      !filename.toLowerCase().endsWith(
+        `.${extension}`
+      )
     ) {
-
-      return;
-
+      filename +=
+        `.${extension}`;
     }
 
-
-    scrollPosition +=
-      state.teleprompterSpeed *
-      0.12;
-
-
-    preview.scrollTop =
-      scrollPosition;
-
-
-    state.teleprompterAnimationFrame =
-      requestAnimationFrame(
-        animate
+    const url =
+      URL.createObjectURL(
+        state.recordingBlob
       );
 
-  }
+    const a =
+      document.createElement(
+        "a"
+      );
 
+    a.href = url;
+    a.download =
+      filename;
 
-  animate();
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER PAUSE
-========================================================= */
-
-function pauseTeleprompter() {
-
-  state.teleprompterPlaying =
-    false;
-
-
-  if (
-    state.teleprompterAnimationFrame
-  ) {
-
-    cancelAnimationFrame(
-      state.teleprompterAnimationFrame
+    document.body.appendChild(
+      a
     );
 
-  }
+    a.click();
 
+    a.remove();
 
-  state.teleprompterAnimationFrame =
-    null;
+    setTimeout(() => {
+      URL.revokeObjectURL(
+        url
+      );
+    }, 1000);
 
-}
-
-
-/* =========================================================
-   TELEPROMPTER RESET
-========================================================= */
-
-function resetTeleprompter() {
-
-  pauseTeleprompter();
-
-
-  const preview =
-    $("teleprompterPreview");
-
-
-  if (preview) {
-
-    preview.scrollTop =
-      0;
-
-  }
-
-
-  $("teleprompterText").value =
-    "";
-
-
-  state.teleprompterText =
-    "";
-
-
-  updateTeleprompterPreview();
-
-}
-
-
-/* =========================================================
-   SAVE TELEPROMPTER
-========================================================= */
-
-function saveTeleprompter() {
-
-  state.teleprompterText =
-    $("teleprompterText")?.value ||
-    "";
-
-
-  localStorage.setItem(
-    "snkMentorTeleprompter",
-    state.teleprompterText
-  );
-
-
-  updateTeleprompterPreview();
-
-
-  showToast(
-    "Teleprompter script saved.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   LOAD TELEPROMPTER FILE
-========================================================= */
-
-async function loadTeleprompterFile(
-  event
-) {
-
-  const file =
-    event.target.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  try {
-
-    const text =
-      await file.text();
-
-
-    state.teleprompterText =
-      text;
-
-
-    $("teleprompterText").value =
-      text;
-
-
-    updateTeleprompterPreview();
-
-
-    openTeleprompter();
-
-
-    showToast(
-      "Teleprompter script loaded.",
+    toast(
+      "Download started.",
       "success"
     );
-
-  } catch (error) {
-
-    console.error(error);
-
-    showToast(
-      "Could not read the text file.",
-      "error"
-    );
-
   }
 
-
-  event.target.value =
-    "";
-
-}
-
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-function initializeSettings() {
-
-  bindClick(
-    "closeSettingsBtn",
-    closeSettings
-  );
-
-  bindClick(
-    "closeSettingsFooterBtn",
-    closeSettings
-  );
-
-  bindClick(
-    "saveSettingsBtn",
-    saveSettings
-  );
-
-
-  const brand =
-    $("brandNameInput");
-
-
-  if (brand) {
-
-    brand.addEventListener(
-      "input",
-      () => {
-
-        brandBadgeText.textContent =
-          brand.value ||
-          "SNK Institute";
-
-      }
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   OPEN SETTINGS
-========================================================= */
-
-function openSettings() {
-
-  const modal =
-    $("settingsModal");
-
-
-  if (!modal) {
-    return;
-  }
-
-
-  $("brandNameInput").value =
-    state.brandName;
-
-
-  $("settingsRecordingQuality").value =
-    `${state.recordingWidth}x${state.recordingHeight}`;
-
-
-  $("settingsRecordingFps").value =
-    String(
-      state.recordingFps
-    );
-
-
-  $("settingsAutoStartTeleprompter").checked =
-    state.autoStartTeleprompter;
-
-
-  $("settingsShowTeleprompterRecording").checked =
-    state.showTeleprompterRecording;
-
-
-  modal.classList.add(
-    "active"
-  );
-
-
-  modal.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-}
-
-
-/* =========================================================
-   CLOSE SETTINGS
-========================================================= */
-
-function closeSettings() {
-
-  const modal =
-    $("settingsModal");
-
-
-  modal?.classList.remove(
-    "active"
-  );
-
-
-  modal?.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-}
-
-
-/* =========================================================
-   SAVE SETTINGS
-========================================================= */
-
-function saveSettings() {
-
-  state.brandName =
-    $("brandNameInput")?.value ||
-    "SNK Institute";
-
-
-  brandBadgeText.textContent =
-    state.brandName;
-
-
-  state.autoStartTeleprompter =
-    $("settingsAutoStartTeleprompter")
-      ?.checked ||
-    false;
-
-
-  state.showTeleprompterRecording =
-    $("settingsShowTeleprompterRecording")
-      ?.checked !== false;
-
-
-  const quality =
-    $("settingsRecordingQuality")
-      ?.value ||
-    "1920x1080";
-
-
-  const parts =
-    quality.split("x");
-
-
-  state.recordingWidth =
-    Number(parts[0]);
-
-
-  state.recordingHeight =
-    Number(parts[1]);
-
-
-  state.recordingFps =
-    Number(
-      $("settingsRecordingFps")
-        ?.value ||
-      30
-    );
-
-
-  $("recordingQualitySide").value =
-    quality;
-
-
-  $("recordingFpsSide").value =
-    String(
-      state.recordingFps
-    );
-
-
-  localStorage.setItem(
-    "snkMentorSettings",
-    JSON.stringify({
-
-      brandName:
-        state.brandName,
-
-      recordingWidth:
-        state.recordingWidth,
-
-      recordingHeight:
-        state.recordingHeight,
-
-      recordingFps:
-        state.recordingFps,
-
-      autoStartTeleprompter:
-        state.autoStartTeleprompter,
-
-      showTeleprompterRecording:
-        state.showTeleprompterRecording
-
-    })
-  );
-
-
-  updateStageBadges();
-
-  closeSettings();
-
-
-  showToast(
-    "Settings saved.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   LOAD SETTINGS
-========================================================= */
-
-function loadSavedSettings() {
-
-  try {
-
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          "snkMentorSettings"
-        ) ||
-        "null"
-      );
-
-
-    if (saved) {
-
-      state.brandName =
-        saved.brandName ||
-        "SNK Institute";
-
-
-      state.recordingWidth =
-        saved.recordingWidth ||
-        1920;
-
-
-      state.recordingHeight =
-        saved.recordingHeight ||
-        1080;
-
-
-      state.recordingFps =
-        saved.recordingFps ||
-        30;
-
-
-      state.autoStartTeleprompter =
-        !!saved.autoStartTeleprompter;
-
-
-      state.showTeleprompterRecording =
-        saved.showTeleprompterRecording !==
-        false;
-
+  /* =======================================================
+     RENAME
+     ======================================================= */
+
+  async function renameCurrentRecording() {
+    if (
+      !state.previewRecordingId
+    ) {
+      return;
     }
 
-  } catch (error) {
+    const metadata =
+      state.history.find(
+        (item) =>
+          item.id ===
+          state.previewRecordingId
+      );
 
-    console.warn(
-      "Settings load failed:",
-      error
+    if (!metadata) {
+      return;
+    }
+
+    let newName =
+      recordingFileName?.value ||
+      metadata.name;
+
+    newName =
+      sanitizeFilename(
+        newName
+      );
+
+    const extension =
+      getExtensionFromMime(
+        metadata.mimeType
+      );
+
+    if (
+      !newName.toLowerCase().endsWith(
+        `.${extension}`
+      )
+    ) {
+      newName +=
+        `.${extension}`;
+    }
+
+    metadata.name =
+      newName;
+
+    if (recordingFileName) {
+      recordingFileName.value =
+        newName;
+    }
+
+    saveHistoryMetadata();
+
+    renderRecordingHistory();
+
+    if (recordingFileInfo) {
+      recordingFileInfo.textContent =
+        `${metadata.name} • ${formatBytes(
+          metadata.size
+        )} • ${metadata.width}×${metadata.height} • ${metadata.fps} FPS`;
+    }
+
+    toast(
+      "Recording renamed.",
+      "success"
     );
-
   }
 
+  /* =======================================================
+     DELETE RECORDING
+     ======================================================= */
 
-  brandBadgeText.textContent =
-    state.brandName;
+  async function deleteCurrentRecording() {
+    if (
+      !state.previewRecordingId
+    ) {
+      return;
+    }
 
+    const id =
+      state.previewRecordingId;
 
-  $("recordingQualitySide").value =
-    `${state.recordingWidth}x${state.recordingHeight}`;
+    try {
+      await deleteRecordingBlob(
+        id
+      );
+    } catch (error) {
+      console.warn(
+        "Blob delete failed:",
+        error
+      );
+    }
 
+    state.history =
+      state.history.filter(
+        (item) =>
+          item.id !== id
+      );
 
-  $("recordingFpsSide").value =
-    String(
-      state.recordingFps
+    saveHistoryMetadata();
+
+    state.previewRecordingId =
+      null;
+
+    state.recordingBlob =
+      null;
+
+    if (
+      state.previewObjectUrl
+    ) {
+      URL.revokeObjectURL(
+        state.previewObjectUrl
+      );
+
+      state.previewObjectUrl =
+        "";
+    }
+
+    if (recordingPreviewVideo) {
+      recordingPreviewVideo.removeAttribute(
+        "src"
+      );
+
+      recordingPreviewVideo.load();
+    }
+
+    closeModal(
+      recordingPreviewModal
     );
 
+    renderRecordingHistory();
 
-  $("settingsRecordingQuality").value =
-    `${state.recordingWidth}x${state.recordingHeight}`;
-
-
-  $("settingsRecordingFps").value =
-    String(
-      state.recordingFps
+    toast(
+      "Recording deleted.",
+      "success"
     );
-
-
-  $("settingsAutoStartTeleprompter").checked =
-    state.autoStartTeleprompter;
-
-
-  $("settingsShowTeleprompterRecording").checked =
-    state.showTeleprompterRecording;
-
-
-  const savedScript =
-    localStorage.getItem(
-      "snkMentorTeleprompter"
-    );
-
-
-  if (savedScript) {
-
-    state.teleprompterText =
-      savedScript;
-
-
-    $("teleprompterText").value =
-      savedScript;
-
   }
 
+  /* =======================================================
+     RECORD AGAIN
+     ======================================================= */
 
-  updateTeleprompterPreview();
-
-}
-
-
-/* =========================================================
-   STUDENTS
-========================================================= */
-
-function initializeStudentSystem() {
-
-  bindClick(
-    "addStudentBtn",
-    openStudentModal
-  );
-
-  bindClick(
-    "closeStudentModalBtn",
-    closeStudentModal
-  );
-
-  bindClick(
-    "cancelStudentBtn",
-    closeStudentModal
-  );
-
-  bindClick(
-    "saveStudentBtn",
-    saveStudent
-  );
-
-
-  renderStudents();
-
-}
-
-
-/* =========================================================
-   OPEN STUDENT MODAL
-========================================================= */
-
-function openStudentModal() {
-
-  $("studentNameInput").value =
-    "";
-
-
-  const modal =
-    $("studentModal");
-
-
-  modal?.classList.add(
-    "active"
-  );
-
-
-  modal?.setAttribute(
-    "aria-hidden",
-    "false"
-  );
-
-
-  setTimeout(
-    () =>
-      $("studentNameInput")?.focus(),
-    100
-  );
-
-}
-
-
-/* =========================================================
-   CLOSE STUDENT MODAL
-========================================================= */
-
-function closeStudentModal() {
-
-  const modal =
-    $("studentModal");
-
-
-  modal?.classList.remove(
-    "active"
-  );
-
-
-  modal?.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-}
-
-
-/* =========================================================
-   SAVE STUDENT
-========================================================= */
-
-function saveStudent() {
-
-  const input =
-    $("studentNameInput");
-
-
-  const name =
-    input?.value.trim();
-
-
-  if (!name) {
-
-    showToast(
-      "Enter a student name.",
-      "error"
+  function recordAgain() {
+    closeModal(
+      recordingPreviewModal
     );
 
-    return;
-
+    setTimeout(() => {
+      startRecording();
+    }, 200);
   }
 
+  /* =======================================================
+     INDEXED DB
+     ======================================================= */
 
-  state.students.push({
+  let dbPromise = null;
 
-    id:
-      createId(),
+  function openDatabase() {
+    if (dbPromise) {
+      return dbPromise;
+    }
 
-    name
+    dbPromise =
+      new Promise(
+        (resolve, reject) => {
+          if (
+            !window.indexedDB
+          ) {
+            reject(
+              new Error(
+                "IndexedDB unavailable."
+              )
+            );
 
-  });
+            return;
+          }
 
+          const request =
+            indexedDB.open(
+              DB_NAME,
+              DB_VERSION
+            );
 
-  saveStudents();
+          request.onupgradeneeded =
+            (event) => {
+              const db =
+                event.target.result;
 
-  renderStudents();
+              if (
+                !db.objectStoreNames.contains(
+                  STORE_NAME
+                )
+              ) {
+                db.createObjectStore(
+                  STORE_NAME
+                );
+              }
+            };
 
-  closeStudentModal();
+          request.onsuccess =
+            () =>
+              resolve(
+                request.result
+              );
 
+          request.onerror =
+            () =>
+              reject(
+                request.error
+              );
+        }
+      );
 
-  showToast(
-    "Student added.",
-    "success"
-  );
-
-}
-
-
-/* =========================================================
-   RENDER STUDENTS
-========================================================= */
-
-function renderStudents() {
-
-  const list =
-    $("studentsList");
-
-
-  if (!list) {
-    return;
+    return dbPromise;
   }
 
+  async function saveRecordingBlob(
+    id,
+    blob
+  ) {
+    try {
+      const db =
+        await openDatabase();
 
-  list.innerHTML = "";
+      await new Promise(
+        (resolve, reject) => {
+          const tx =
+            db.transaction(
+              STORE_NAME,
+              "readwrite"
+            );
 
+          tx.objectStore(
+            STORE_NAME
+          ).put(
+            blob,
+            id
+          );
 
-  if (!state.students.length) {
+          tx.oncomplete =
+            resolve;
 
-    list.innerHTML =
-      `
+          tx.onerror =
+            () =>
+              reject(
+                tx.error
+              );
+        }
+      );
+    } catch (error) {
+      console.warn(
+        "IndexedDB save failed:",
+        error
+      );
+    }
+  }
+
+  async function getRecordingBlob(
+    id
+  ) {
+    try {
+      const db =
+        await openDatabase();
+
+      return await new Promise(
+        (resolve, reject) => {
+          const tx =
+            db.transaction(
+              STORE_NAME,
+              "readonly"
+            );
+
+          const request =
+            tx.objectStore(
+              STORE_NAME
+            ).get(id);
+
+          request.onsuccess =
+            () =>
+              resolve(
+                request.result ||
+                  null
+              );
+
+          request.onerror =
+            () =>
+              reject(
+                request.error
+              );
+        }
+      );
+    } catch (error) {
+      console.warn(
+        "IndexedDB read failed:",
+        error
+      );
+
+      return null;
+    }
+  }
+
+  async function deleteRecordingBlob(
+    id
+  ) {
+    try {
+      const db =
+        await openDatabase();
+
+      await new Promise(
+        (resolve, reject) => {
+          const tx =
+            db.transaction(
+              STORE_NAME,
+              "readwrite"
+            );
+
+          tx.objectStore(
+            STORE_NAME
+          ).delete(id);
+
+          tx.oncomplete =
+            resolve;
+
+          tx.onerror =
+            () =>
+              reject(
+                tx.error
+              );
+        }
+      );
+    } catch (error) {
+      console.warn(
+        "IndexedDB delete failed:",
+        error
+      );
+    }
+  }
+
+  async function clearRecordingBlobs() {
+    try {
+      const db =
+        await openDatabase();
+
+      await new Promise(
+        (resolve, reject) => {
+          const tx =
+            db.transaction(
+              STORE_NAME,
+              "readwrite"
+            );
+
+          tx.objectStore(
+            STORE_NAME
+          ).clear();
+
+          tx.oncomplete =
+            resolve;
+
+          tx.onerror =
+            () =>
+              reject(
+                tx.error
+              );
+        }
+      );
+    } catch (error) {
+      console.warn(
+        "IndexedDB clear failed:",
+        error
+      );
+    }
+  }
+
+  /* =======================================================
+     HISTORY
+     ======================================================= */
+
+  function saveHistoryMetadata() {
+    try {
+      localStorage.setItem(
+        HISTORY_STORAGE_KEY,
+        JSON.stringify(
+          state.history
+        )
+      );
+    } catch (error) {
+      console.warn(
+        "History metadata save failed:",
+        error
+      );
+    }
+  }
+
+  async function loadHistoryMetadata() {
+    try {
+      const raw =
+        localStorage.getItem(
+          HISTORY_STORAGE_KEY
+        );
+
+      if (!raw) {
+        state.history = [];
+        return;
+      }
+
+      const parsed =
+        JSON.parse(raw);
+
+      if (
+        Array.isArray(parsed)
+      ) {
+        state.history =
+          parsed;
+      }
+    } catch (error) {
+      console.warn(
+        "History load failed:",
+        error
+      );
+
+      state.history = [];
+    }
+  }
+
+  function renderRecordingHistory() {
+    if (!recordingHistoryList) {
+      return;
+    }
+
+    recordingHistoryList.innerHTML =
+      "";
+
+    if (!state.history.length) {
+      recordingHistoryList.innerHTML = `
+        <div class="empty-history">
+          No recordings yet.
+        </div>
+      `;
+
+      return;
+    }
+
+    state.history.forEach(
+      (recording) => {
+        const item =
+          document.createElement(
+            "div"
+          );
+
+        item.className =
+          "recording-history-item";
+
+        item.dataset.id =
+          recording.id;
+
+        const date =
+          new Date(
+            recording.createdAt
+          );
+
+        item.innerHTML = `
+          <div class="recording-history-main">
+            <div class="recording-history-title"></div>
+
+            <div class="recording-history-meta">
+              <span>${formatTime(
+                recording.duration || 0
+              )}</span>
+              <span>${formatBytes(
+                recording.size || 0
+              )}</span>
+              <span>${recording.width || 0}×${recording.height || 0}</span>
+              <span>${recording.fps || 0} FPS</span>
+            </div>
+
+            <div class="recording-history-date">
+              ${date.toLocaleString()}
+            </div>
+          </div>
+
+          <div class="recording-history-actions">
+            <button
+              type="button"
+              class="history-preview"
+              data-action="preview"
+            >
+              Preview
+            </button>
+
+            <button
+              type="button"
+              class="history-download"
+              data-action="download"
+            >
+              Download
+            </button>
+
+            <button
+              type="button"
+              class="history-delete"
+              data-action="delete"
+            >
+              Delete
+            </button>
+          </div>
+        `;
+
+        const title =
+          $(".recording-history-title", item);
+
+        if (title) {
+          title.textContent =
+            recording.name;
+        }
+
+        recordingHistoryList.appendChild(
+          item
+        );
+      }
+    );
+  }
+
+  async function previewHistoryRecording(
+    id
+  ) {
+    const metadata =
+      state.history.find(
+        (item) =>
+          item.id === id
+      );
+
+    if (!metadata) {
+      return;
+    }
+
+    const blob =
+      await getRecordingBlob(
+        id
+      );
+
+    if (!blob) {
+      toast(
+        "Recording file is not available.",
+        "error"
+      );
+      return;
+    }
+
+    await openRecordingPreview(
+      metadata,
+      blob
+    );
+  }
+
+  async function downloadHistoryRecording(
+    id
+  ) {
+    const metadata =
+      state.history.find(
+        (item) =>
+          item.id === id
+      );
+
+    if (!metadata) {
+      return;
+    }
+
+    const blob =
+      await getRecordingBlob(
+        id
+      );
+
+    if (!blob) {
+      toast(
+        "Recording file is not available.",
+        "error"
+      );
+      return;
+    }
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+    const a =
+      document.createElement(
+        "a"
+      );
+
+    a.href = url;
+
+    a.download =
+      metadata.name ||
+      `recording.${getExtensionFromMime(
+        metadata.mimeType
+      )}`;
+
+    document.body.appendChild(
+      a
+    );
+
+    a.click();
+
+    a.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(
+        url
+      );
+    }, 1000);
+  }
+
+  async function deleteHistoryRecording(
+    id
+  ) {
+    await deleteRecordingBlob(
+      id
+    );
+
+    state.history =
+      state.history.filter(
+        (item) =>
+          item.id !== id
+      );
+
+    saveHistoryMetadata();
+
+    if (
+      state.previewRecordingId ===
+      id
+    ) {
+      state.previewRecordingId =
+        null;
+
+      closeModal(
+        recordingPreviewModal
+      );
+    }
+
+    renderRecordingHistory();
+
+    toast(
+      "Recording deleted.",
+      "success"
+    );
+  }
+
+  async function clearRecordingHistory() {
+    if (!state.history.length) {
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        "Delete all recording history?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await clearRecordingBlobs();
+
+    state.history = [];
+
+    saveHistoryMetadata();
+
+    renderRecordingHistory();
+
+    toast(
+      "Recording history cleared.",
+      "success"
+    );
+  }
+
+  /* =======================================================
+     TELEPROMPTER
+     ======================================================= */
+
+  function updateTeleprompterPreview() {
+    if (!teleprompterPreview) {
+      return;
+    }
+
+    teleprompterPreview.textContent =
+      teleprompterText?.value ||
+      "Your teleprompter text will appear here.";
+
+    const fontSize =
+      clamp(
+        safeNumber(
+          teleprompterFontSize?.value,
+          36
+        ),
+        18,
+        100
+      );
+
+    const opacity =
+      clamp(
+        safeNumber(
+          teleprompterOpacity?.value,
+          90
+        ),
+        0,
+        100
+      );
+
+    teleprompterPreview.style.fontSize =
+      `${fontSize}px`;
+
+    teleprompterPreview.style.opacity =
+      String(
+        opacity / 100
+      );
+  }
+
+  function updateTeleprompterMiniPreview() {
+    if (!teleprompterMiniPreview) {
+      return;
+    }
+
+    const text =
+      teleprompterText?.value ||
+      "";
+
+    teleprompterMiniPreview.textContent =
+      text.trim()
+        ? text.slice(0, 220)
+        : "No teleprompter text.";
+  }
+
+  function openTeleprompter() {
+    updateTeleprompterPreview();
+    updateTeleprompterMiniPreview();
+
+    openModal(
+      teleprompterModal
+    );
+  }
+
+  function startTeleprompter() {
+    if (
+      !teleprompterText?.value.trim()
+    ) {
+      return;
+    }
+
+    state.teleprompterPlaying =
+      true;
+
+    state.teleprompterLastTime =
+      performance.now();
+
+    teleprompterPlayBtn?.classList.add(
+      "active"
+    );
+
+    teleprompterPauseBtn?.classList.remove(
+      "active"
+    );
+
+    requestTeleprompterLoop();
+  }
+
+  function pauseTeleprompter() {
+    state.teleprompterPlaying =
+      false;
+
+    teleprompterPauseBtn?.classList.add(
+      "active"
+    );
+
+    teleprompterPlayBtn?.classList.remove(
+      "active"
+    );
+  }
+
+  function requestTeleprompterLoop() {
+    if (
+      !state.teleprompterPlaying
+    ) {
+      return;
+    }
+
+    const now =
+      performance.now();
+
+    const delta =
+      Math.min(
+        100,
+        now -
+          state.teleprompterLastTime
+      );
+
+    state.teleprompterLastTime =
+      now;
+
+    const speed =
+      clamp(
+        safeNumber(
+          teleprompterSpeed?.value,
+          20
+        ),
+        1,
+        100
+      );
+
+    state.teleprompterOffset +=
+      (speed / 1000) *
+      delta;
+
+    if (
+      teleprompterPreview
+    ) {
+      teleprompterPreview.scrollTop =
+        state.teleprompterOffset;
+    }
+
+    requestAnimationFrame(
+      requestTeleprompterLoop
+    );
+  }
+
+  function resetTeleprompter() {
+    state.teleprompterPlaying =
+      false;
+
+    state.teleprompterOffset =
+      0;
+
+    if (
+      teleprompterPreview
+    ) {
+      teleprompterPreview.scrollTop =
+        0;
+    }
+
+    if (teleprompterPauseBtn) {
+      teleprompterPauseBtn.classList.add(
+        "active"
+      );
+    }
+
+    if (teleprompterPlayBtn) {
+      teleprompterPlayBtn.classList.remove(
+        "active"
+      );
+    }
+  }
+
+  function saveTeleprompter() {
+    try {
+      localStorage.setItem(
+        "snkMentorStudioTeleprompter",
+        teleprompterText?.value ||
+          ""
+      );
+
+      localStorage.setItem(
+        "snkMentorStudioTeleprompterSpeed",
+        teleprompterSpeed?.value ||
+          "20"
+      );
+
+      localStorage.setItem(
+        "snkMentorStudioTeleprompterFont",
+        teleprompterFontSize?.value ||
+          "36"
+      );
+
+      localStorage.setItem(
+        "snkMentorStudioTeleprompterOpacity",
+        teleprompterOpacity?.value ||
+          "90"
+      );
+
+      updateTeleprompterPreview();
+      updateTeleprompterMiniPreview();
+
+      toast(
+        "Teleprompter saved.",
+        "success"
+      );
+    } catch (error) {
+      console.warn(
+        "Teleprompter save failed:",
+        error
+      );
+    }
+  }
+
+  function loadTeleprompter() {
+    try {
+      const text =
+        localStorage.getItem(
+          "snkMentorStudioTeleprompter"
+        );
+
+      const speed =
+        localStorage.getItem(
+          "snkMentorStudioTeleprompterSpeed"
+        );
+
+      const font =
+        localStorage.getItem(
+          "snkMentorStudioTeleprompterFont"
+        );
+
+      const opacity =
+        localStorage.getItem(
+          "snkMentorStudioTeleprompterOpacity"
+        );
+
+      if (
+        teleprompterText &&
+        text !== null
+      ) {
+        teleprompterText.value =
+          text;
+      }
+
+      if (
+        teleprompterSpeed &&
+        speed !== null
+      ) {
+        teleprompterSpeed.value =
+          speed;
+      }
+
+      if (
+        teleprompterFontSize &&
+        font !== null
+      ) {
+        teleprompterFontSize.value =
+          font;
+      }
+
+      if (
+        teleprompterOpacity &&
+        opacity !== null
+      ) {
+        teleprompterOpacity.value =
+          opacity;
+      }
+    } catch (error) {
+      console.warn(
+        "Teleprompter load failed:",
+        error
+      );
+    }
+
+    updateTeleprompterPreview();
+    updateTeleprompterMiniPreview();
+  }
+
+  function uploadTeleprompterFile(
+    file
+  ) {
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.name
+        .toLowerCase()
+        .endsWith(".txt")
+    ) {
+      toast(
+        "Please select a TXT file.",
+        "error"
+      );
+      return;
+    }
+
+    const reader =
+      new FileReader();
+
+    reader.onload = () => {
+      if (teleprompterText) {
+        teleprompterText.value =
+          String(
+            reader.result || ""
+          );
+      }
+
+      updateTeleprompterPreview();
+      updateTeleprompterMiniPreview();
+
+      toast(
+        "Teleprompter text loaded.",
+        "success"
+      );
+    };
+
+    reader.readAsText(
+      file,
+      "UTF-8"
+    );
+  }
+
+  /* =======================================================
+     STUDENTS
+     ======================================================= */
+
+  function renderStudents() {
+    if (!studentsList) {
+      return;
+    }
+
+    studentsList.innerHTML =
+      "";
+
+    if (!state.students.length) {
+      studentsList.innerHTML = `
         <div class="empty-students">
           No students added.
         </div>
       `;
 
-    return;
+      return;
+    }
 
-  }
+    state.students.forEach(
+      (student) => {
+        const item =
+          document.createElement(
+            "div"
+          );
 
+        item.className =
+          "student-item";
 
-  state.students.forEach(
-    student => {
+        item.dataset.id =
+          student.id;
 
-      const row =
-        document.createElement(
-          "div"
-        );
-
-
-      row.className =
-        "student-row";
-
-
-      row.innerHTML =
-        `
-          <div class="student-avatar">
-            ${escapeHTML(
-              student.name
-                .charAt(0)
-                .toUpperCase()
-            )}
-          </div>
+        item.innerHTML = `
+          <div class="student-avatar"></div>
 
           <div class="student-info">
-
-            <strong>
-              ${escapeHTML(
-                student.name
-              )}
-            </strong>
-
-            <small>
+            <div class="student-name"></div>
+            <div class="student-status">
               Online
-            </small>
-
+            </div>
           </div>
 
           <button
             type="button"
             class="student-remove"
+            aria-label="Remove student"
           >
             ×
           </button>
         `;
 
+        const avatar =
+          $(".student-avatar", item);
 
-      row
-        .querySelector(
-          ".student-remove"
-        )
-        .addEventListener(
-          "click",
-          () => {
+        if (avatar) {
+          avatar.textContent =
+            String(
+              student.name ||
+                "S"
+            )
+              .trim()
+              .charAt(0)
+              .toUpperCase();
+        }
 
-            state.students =
-              state.students.filter(
-                item =>
-                  item.id !==
-                  student.id
-              );
+        const name =
+          $(".student-name", item);
 
+        if (name) {
+          name.textContent =
+            student.name;
+        }
 
-            saveStudents();
-
-            renderStudents();
-
-          }
+        studentsList.appendChild(
+          item
         );
-
-
-      list.appendChild(
-        row
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   SAVE STUDENTS
-========================================================= */
-
-function saveStudents() {
-
-  localStorage.setItem(
-    "snkMentorStudents",
-    JSON.stringify(
-      state.students
-    )
-  );
-
-}
-
-
-/* =========================================================
-   LOAD STUDENTS
-========================================================= */
-
-function loadStudents() {
-
-  try {
-
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          "snkMentorStudents"
-        ) ||
-        "[]"
-      );
-
-
-    if (
-      Array.isArray(saved)
-    ) {
-
-      state.students =
-        saved;
-
-    }
-
-  } catch (error) {
-
-    console.warn(
-      error
+      }
     );
-
   }
 
+  function openStudentModal() {
+    state.studentEditingId =
+      null;
 
-  renderStudents();
-
-}
-
-
-/* =========================================================
-   FULLSCREEN
-========================================================= */
-
-function initializeFullscreen() {
-
-  bindClick(
-    "fullscreenStageBtn",
-    toggleStageFullscreen
-  );
-
-
-  bindClick(
-    "fullscreenStudioBtn",
-    toggleStudioFullscreen
-  );
-
-}
-
-
-/* =========================================================
-   STAGE FULLSCREEN
-========================================================= */
-
-async function toggleStageFullscreen() {
-
-  try {
-
-    if (
-      document.fullscreenElement
-    ) {
-
-      await document.exitFullscreen();
-
-      return;
-
+    if (studentNameInput) {
+      studentNameInput.value =
+        "";
     }
 
+    openModal(
+      studentModal
+    );
 
-    if (
-      stageShell?.requestFullscreen
-    ) {
+    setTimeout(() => {
+      studentNameInput?.focus();
+    }, 100);
+  }
+
+  function saveStudent() {
+    const name =
+      studentNameInput?.value.trim();
+
+    if (!name) {
+      toast(
+        "Enter student name.",
+        "error"
+      );
+      return;
+    }
+
+    const student = {
+      id:
+        `student-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 6)}`,
+      name
+    };
+
+    state.students.push(
+      student
+    );
+
+    saveStudents();
+    renderStudents();
+
+    closeModal(
+      studentModal
+    );
+
+    toast(
+      "Student added.",
+      "success"
+    );
+  }
+
+  function removeStudent(id) {
+    state.students =
+      state.students.filter(
+        (student) =>
+          student.id !== id
+      );
+
+    saveStudents();
+    renderStudents();
+
+    toast(
+      "Student removed.",
+      "success"
+    );
+  }
+
+  /* =======================================================
+     FULLSCREEN
+     ======================================================= */
+
+  async function fullscreenStage() {
+    if (!stageShell) {
+      return;
+    }
+
+    try {
+      if (
+        document.fullscreenElement
+      ) {
+        await document.exitFullscreen();
+        return;
+      }
 
       await stageShell.requestFullscreen();
+    } catch (error) {
+      console.warn(
+        "Stage fullscreen failed:",
+        error
+      );
 
+      toast(
+        "Fullscreen is not available.",
+        "error"
+      );
     }
-
-  } catch (error) {
-
-    console.warn(
-      "Stage fullscreen failed:",
-      error
-    );
-
   }
 
-}
+  async function fullscreenStudio() {
+    try {
+      if (
+        document.fullscreenElement
+      ) {
+        await document.exitFullscreen();
+        return;
+      }
 
+      await document.documentElement.requestFullscreen();
+    } catch (error) {
+      console.warn(
+        "Studio fullscreen failed:",
+        error
+      );
 
-/* =========================================================
-   STUDIO FULLSCREEN
-========================================================= */
+      toast(
+        "Fullscreen is not available.",
+        "error"
+      );
+    }
+  }
 
-async function toggleStudioFullscreen() {
+  /* =======================================================
+     STAGE BADGE
+     ======================================================= */
 
-  try {
+  function updateStageSourceBadge(
+    source
+  ) {
+    if (stageSourceBadge) {
+      stageSourceBadge.textContent =
+        source;
+    }
+  }
+
+  /* =======================================================
+     SETTINGS
+     ======================================================= */
+
+  function openSettings() {
+    applySettingsToUI();
+    openModal(
+      settingsModal
+    );
+  }
+
+  function saveSettingsFromModal() {
+    if (brandNameInput) {
+      state.brandName =
+        brandNameInput.value.trim() ||
+        "SNK Mentor Studio";
+    }
 
     if (
-      document.fullscreenElement
+      settingsAutoStartTeleprompter
     ) {
+      state.autoStartTeleprompter =
+        settingsAutoStartTeleprompter.checked;
+    }
 
-      await document.exitFullscreen();
+    if (
+      settingsShowTeleprompterRecording
+    ) {
+      state.showTeleprompterRecording =
+        settingsShowTeleprompterRecording.checked;
+    }
+
+    if (
+      settingsRecordingQuality
+    ) {
+      const value =
+        settingsRecordingQuality.value;
+
+      if (recordingQualitySide) {
+        recordingQualitySide.value =
+          value;
+      }
+
+      if (recordingQuality) {
+        recordingQuality.value =
+          value;
+      }
+    }
+
+    if (
+      settingsRecordingFps
+    ) {
+      const value =
+        settingsRecordingFps.value;
+
+      if (recordingFpsSide) {
+        recordingFpsSide.value =
+          value;
+      }
+
+      if (recordingFps) {
+        recordingFps.value =
+          value;
+      }
+    }
+
+    saveSettings();
+
+    syncRecordingSettings();
+    applySettingsToUI();
+
+    closeModal(
+      settingsModal
+    );
+
+    toast(
+      "Settings saved.",
+      "success"
+    );
+  }
+
+  /* =======================================================
+     KEYBOARD SHORTCUTS
+     ======================================================= */
+
+  function handleKeyboardShortcuts(
+    event
+  ) {
+    const target =
+      event.target;
+
+    const isTyping =
+      target &&
+      (
+        target.tagName ===
+          "INPUT" ||
+        target.tagName ===
+          "TEXTAREA" ||
+        target.isContentEditable
+      );
+
+    if (
+      isTyping &&
+      event.key !== "Escape"
+    ) {
+      return;
+    }
+
+    if (
+      event.key === "Escape"
+    ) {
+      closeModal(
+        settingsModal
+      );
+
+      closeModal(
+        shortcutsModal
+      );
+
+      closeModal(
+        teleprompterModal
+      );
+
+      closeModal(
+        recordingPreviewModal
+      );
+
+      closeModal(
+        studentModal
+      );
+
+      if (
+        document.fullscreenElement
+      ) {
+        document.exitFullscreen()
+          .catch(() => {});
+      }
 
       return;
-
     }
-
 
     if (
-      document.documentElement
-        .requestFullscreen
+      event.code === "Space"
     ) {
+      event.preventDefault();
 
-      await document.documentElement
-        .requestFullscreen();
+      if (
+        state.recording
+      ) {
+        if (state.paused) {
+          resumeRecording();
+        } else {
+          pauseRecording();
+        }
+      } else if (
+        state.mainSource ===
+        "video"
+      ) {
+        if (
+          mainVideo?.paused
+        ) {
+          playMainVideo();
+        } else {
+          pauseMainVideo();
+        }
+      }
 
+      return;
     }
 
-  } catch (error) {
+    const key =
+      String(
+        event.key
+      ).toLowerCase();
 
-    console.warn(
-      "Studio fullscreen failed:",
-      error
-    );
+    if (key === "r") {
+      event.preventDefault();
 
+      if (!state.recording) {
+        startRecording();
+      }
+
+      return;
+    }
+
+    if (key === "p") {
+      event.preventDefault();
+
+      if (state.recording) {
+        if (state.paused) {
+          resumeRecording();
+        } else {
+          pauseRecording();
+        }
+      }
+
+      return;
+    }
+
+    if (key === "s") {
+      event.preventDefault();
+
+      if (state.recording) {
+        stopRecording();
+      }
+
+      return;
+    }
+
+    if (key === "f") {
+      event.preventDefault();
+
+      fullscreenStage();
+
+      return;
+    }
   }
 
-}
+  /* =======================================================
+     FILE INPUTS
+     ======================================================= */
 
-
-/* =========================================================
-   KEYBOARD SHORTCUTS
-========================================================= */
-
-function initializeKeyboardShortcuts() {
-
-  document.addEventListener(
-    "keydown",
-    event => {
-
-      const tag =
-        event.target?.tagName;
-
-
-      if (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        tag === "SELECT"
-      ) {
-
-        if (
-          event.key !== "Escape"
-        ) {
-
-          return;
-
-        }
-
-      }
-
-
-      if (
-        event.key === "Escape"
-      ) {
-
-        closeAllModals();
-
-        return;
-
-      }
-
-
-      if (
-        event.code === "Space"
-      ) {
-
-        event.preventDefault();
-
-        if (
-          state.recordingActive
-        ) {
-
-          if (
-            state.recordingPaused
-          ) {
-
-            resumeRecording();
-
-          } else {
-
-            pauseRecording();
-
-          }
-
-        } else {
-
-          if (
-            mainVideo.paused
-          ) {
-
-            playMainMedia();
-
-          } else {
-
-            pauseMainMedia();
-
-          }
-
-        }
-
-        return;
-
-      }
-
-
-      const key =
-        event.key.toLowerCase();
-
-
-      if (
-        key === "r"
-      ) {
-
-        if (
-          !state.recordingActive
-        ) {
-
-          startRecording();
-
-        }
-
-      }
-
-
-      if (
-        key === "p"
-      ) {
-
-        if (
-          state.recordingActive
-        ) {
-
-          if (
-            state.recordingPaused
-          ) {
-
-            resumeRecording();
-
-          } else {
-
-            pauseRecording();
-
-          }
-
-        }
-
-      }
-
-
-      if (
-        key === "s"
-      ) {
-
-        if (
-          state.recordingActive
-        ) {
-
-          stopRecording();
-
-        }
-
-      }
-
-
-      if (
-        key === "f"
-      ) {
-
-        toggleStageFullscreen();
-
-      }
-
+  function bindFileInput(
+    input,
+    handler
+  ) {
+    if (!input) {
+      return;
     }
-  );
 
-}
+    input.addEventListener(
+      "change",
+      () => {
+        const file =
+          input.files?.[0];
 
+        if (file) {
+          handler(file);
+        }
 
-/* =========================================================
-   SHORTCUTS
-========================================================= */
+        input.value = "";
+      }
+    );
+  }
 
-function openShortcuts() {
+  /* =======================================================
+     EVENTS
+     ======================================================= */
 
-  const modal =
-    $("shortcutsModal");
+  function bindEvents() {
+    /* Main */
 
+    uploadMainBtn?.addEventListener(
+      "click",
+      () =>
+        mainFileInput?.click()
+    );
 
-  modal?.classList.add(
-    "active"
-  );
+    uploadMainSideBtn?.addEventListener(
+      "click",
+      () =>
+        mainFileInput?.click()
+    );
 
+    uploadVideoBtn?.addEventListener(
+      "click",
+      () =>
+        mainVideoInput?.click()
+    );
 
-  modal?.setAttribute(
-    "aria-hidden",
-    "false"
-  );
+    uploadVideoSideBtn?.addEventListener(
+      "click",
+      () =>
+        mainVideoInput?.click()
+    );
 
-}
+    mainPlayBtn?.addEventListener(
+      "click",
+      playMainVideo
+    );
 
+    mainPauseBtn?.addEventListener(
+      "click",
+      pauseMainVideo
+    );
 
-function closeShortcuts() {
+    /* Mentor */
 
-  const modal =
-    $("shortcutsModal");
+    uploadMentorBtn?.addEventListener(
+      "click",
+      () =>
+        mentorFileInput?.click()
+    );
 
+    uploadMentorSideBtn?.addEventListener(
+      "click",
+      () =>
+        mentorFileInput?.click()
+    );
 
-  modal?.classList.remove(
-    "active"
-  );
+    uploadMentorFileSideBtn?.addEventListener(
+      "click",
+      () =>
+        mentorFileInput?.click()
+    );
 
+    startCameraBtn?.addEventListener(
+      "click",
+      startCamera
+    );
 
-  modal?.setAttribute(
-    "aria-hidden",
-    "true"
-  );
+    startCameraSideBtn?.addEventListener(
+      "click",
+      startCamera
+    );
 
-}
+    stopCameraBtn?.addEventListener(
+      "click",
+      () =>
+        stopCamera(true)
+    );
 
+    stopCameraSideBtn?.addEventListener(
+      "click",
+      () =>
+        stopCamera(true)
+    );
 
-bindClick(
-  "closeShortcutsBtn",
-  closeShortcuts
-);
+    switchCameraSideBtn?.addEventListener(
+      "click",
+      switchCamera
+    );
 
+    cameraDeviceSelect?.addEventListener(
+      "change",
+      async () => {
+        state.cameraDeviceId =
+          cameraDeviceSelect.value ||
+          "";
 
-/* =========================================================
-   CLOSE ALL MODALS
-========================================================= */
-
-function closeAllModals() {
-
-  qsa(".modal.active")
-    .forEach(
-      modal => {
-
-        modal.classList.remove(
-          "active"
-        );
-
-        modal.setAttribute(
-          "aria-hidden",
-          "true"
-        );
-
+        if (
+          state.mentorSource ===
+          "camera"
+        ) {
+          await startCamera();
+        }
       }
     );
 
-}
+    cameraQuality?.addEventListener(
+      "change",
+      async () => {
+        if (
+          state.mentorSource ===
+          "camera"
+        ) {
+          await startCamera();
+        }
+      }
+    );
 
+    cameraFps?.addEventListener(
+      "change",
+      async () => {
+        if (
+          state.mentorSource ===
+          "camera"
+        ) {
+          await startCamera();
+        }
+      }
+    );
 
-/* =========================================================
-   STAGE BADGES
-========================================================= */
+    /* Background */
 
-function updateStageBadges() {
+    bgOriginalBtn?.addEventListener(
+      "click",
+      () =>
+        setBackgroundMode(
+          "original"
+        )
+    );
 
-  const resolution =
-    `${state.recordingWidth}×${state.recordingHeight}`;
+    bgRemoveBtn?.addEventListener(
+      "click",
+      () =>
+        setBackgroundMode(
+          "remove"
+        )
+    );
 
+    bgBlurBtn?.addEventListener(
+      "click",
+      () =>
+        setBackgroundMode(
+          "blur"
+        )
+    );
 
-  const fps =
-    `${state.recordingFps} FPS`;
+    bgImageBtn?.addEventListener(
+      "click",
+      () => {
+        setBackgroundMode(
+          "custom"
+        );
 
+        backgroundImageUpload?.click();
+      }
+    );
 
-  $("stageResolutionBadge").textContent =
-    resolution;
+    bgColorBtn?.addEventListener(
+      "click",
+      () =>
+        setBackgroundMode(
+          "solid"
+        )
+    );
 
+    backgroundColor?.addEventListener(
+      "input",
+      renderCompositionFrame
+    );
 
-  $("stageFpsBadge").textContent =
-    fps;
+    uploadBackgroundSideBtn?.addEventListener(
+      "click",
+      () => {
+        setBackgroundMode(
+          "custom"
+        );
 
+        backgroundImageUpload?.click();
+      }
+    );
 
-  $("recordingQuality").textContent =
-    resolution;
+    /* Screen */
 
+    startScreenCaptureBtn?.addEventListener(
+      "click",
+      startScreenCapture
+    );
 
-  $("recordingFps").textContent =
-    fps;
+    startScreenCaptureSideBtn?.addEventListener(
+      "click",
+      startScreenCapture
+    );
 
+    stopScreenCaptureBtn?.addEventListener(
+      "click",
+      () =>
+        stopScreenCapture(true)
+    );
 
-  const mime =
-    $("recordingFormatSide")?.value ||
-    "webm-vp9";
+    /* Audio */
 
+    mainVideoAudioCheckbox?.addEventListener(
+      "change",
+      async () => {
+        await setupMainVideoAudio();
+        updateMainAudioGraph();
+      }
+    );
 
-  $("recordingFormat").textContent =
-    mime === "mp4"
-      ? "MP4"
-      : "WebM";
+    mainVideoVolume?.addEventListener(
+      "input",
+      async () => {
+        await setupMainVideoAudio();
+        updateMainAudioGraph();
+      }
+    );
 
-}
+    micEnabled?.addEventListener(
+      "change",
+      async () => {
+        if (
+          micEnabled.checked
+        ) {
+          if (!state.micReady) {
+            await enableMicrophone();
+          }
 
+          updateMicGraph();
+        } else {
+          stopMicrophone(true);
+        }
 
-/* =========================================================
-   STAGE SOURCE
-========================================================= */
+        updateAudioIndicator();
+      }
+    );
 
-function updateStageSource(
-  source
-) {
+    micVolume?.addEventListener(
+      "input",
+      () =>
+        updateMicGraph()
+    );
 
-  $("stageSourceBadge").textContent =
-    source;
+    micMonitor?.addEventListener(
+      "change",
+      () =>
+        updateMicMonitoring()
+    );
 
-}
+    /* Teleprompter */
 
+    openTeleprompterBtn?.addEventListener(
+      "click",
+      openTeleprompter
+    );
 
-/* =========================================================
-   UTILITY — CLAMP
-========================================================= */
+    openTeleprompterTopBtn?.addEventListener(
+      "click",
+      openTeleprompter
+    );
 
-function clamp(
-  value,
-  min,
-  max
-) {
+    openTeleprompterSide?.addEventListener(
+      "click",
+      openTeleprompter
+    );
 
-  return Math.min(
-    Math.max(
-      value,
-      min
-    ),
-    max
-  );
+    uploadTeleprompterBtn?.addEventListener(
+      "click",
+      () =>
+        teleprompterFileInput?.click()
+    );
 
-}
+    teleprompterText?.addEventListener(
+      "input",
+      () => {
+        updateTeleprompterPreview();
+        updateTeleprompterMiniPreview();
+      }
+    );
 
+    teleprompterSpeed?.addEventListener(
+      "input",
+      updateTeleprompterPreview
+    );
 
-/* =========================================================
-   UTILITY — ID
-========================================================= */
+    teleprompterFontSize?.addEventListener(
+      "input",
+      updateTeleprompterPreview
+    );
 
-function createId() {
+    teleprompterOpacity?.addEventListener(
+      "input",
+      updateTeleprompterPreview
+    );
 
-  return (
-    Date.now().toString(36) +
-    Math.random()
-      .toString(36)
-      .slice(2)
-  );
+    teleprompterResetBtn?.addEventListener(
+      "click",
+      resetTeleprompter
+    );
 
-}
+    teleprompterPauseBtn?.addEventListener(
+      "click",
+      pauseTeleprompter
+    );
 
+    teleprompterPlayBtn?.addEventListener(
+      "click",
+      startTeleprompter
+    );
 
-/* =========================================================
-   UTILITY — FILE NAME
-========================================================= */
+    teleprompterSaveBtn?.addEventListener(
+      "click",
+      saveTeleprompter
+    );
 
-function sanitizeFileName(
-  value
-) {
+    /* Recording */
 
-  return String(
-    value || ""
-  )
-    .trim()
-    .replace(
-      /[<>:"/\\|?*\x00-\x1F]/g,
-      "-"
-    )
-    .replace(
-      /\s+/g,
-      "-"
-    )
-    .replace(
-      /-+/g,
-      "-"
-    )
-    .slice(
-      0,
-      120
-    ) ||
-    "SNK-Course-Recording";
+    recordBtn?.addEventListener(
+      "click",
+      () => {
+        if (!state.recording) {
+          startRecording();
+        } else if (
+          state.paused
+        ) {
+          resumeRecording();
+        } else {
+          pauseRecording();
+        }
+      }
+    );
 
-}
+    recordToolbarBtn?.addEventListener(
+      "click",
+      () => {
+        if (!state.recording) {
+          startRecording();
+        } else if (
+          state.paused
+        ) {
+          resumeRecording();
+        } else {
+          pauseRecording();
+        }
+      }
+    );
 
+    pauseRecordingBtn?.addEventListener(
+      "click",
+      pauseRecording
+    );
 
-/* =========================================================
-   UTILITY — FORMAT BYTES
-========================================================= */
+    resumeRecordingBtn?.addEventListener(
+      "click",
+      resumeRecording
+    );
 
-function formatBytes(
-  bytes
-) {
+    stopRecordingBtn?.addEventListener(
+      "click",
+      stopRecording
+    );
+
+    recordingQuality?.addEventListener(
+      "change",
+      syncRecordingSettings
+    );
+
+    recordingFps?.addEventListener(
+      "change",
+      syncRecordingSettings
+    );
+
+    recordingFormat?.addEventListener(
+      "change",
+      () => {
+        const mime =
+          getSelectedRecordingMime();
+
+        if (
+          recordingFormat.value ===
+            "mp4" &&
+          !mime.includes("mp4")
+        ) {
+          toast(
+            "MP4 is not supported by this browser. WebM will be used.",
+            "error",
+            4500
+          );
+        }
+      }
+    );
+
+    recordingQualitySide?.addEventListener(
+      "change",
+      () => {
+        if (recordingQuality) {
+          recordingQuality.value =
+            recordingQualitySide.value;
+        }
+
+        syncRecordingSettings();
+      }
+    );
+
+    recordingFpsSide?.addEventListener(
+      "change",
+      () => {
+        if (recordingFps) {
+          recordingFps.value =
+            recordingFpsSide.value;
+        }
+
+        syncRecordingSettings();
+      }
+    );
+
+    recordingFormatSide?.addEventListener(
+      "change",
+      () => {
+        if (recordingFormat) {
+          recordingFormat.value =
+            recordingFormatSide.value;
+        }
+      }
+    );
+
+    recordingFileNameSide?.addEventListener(
+      "input",
+      () => {
+        if (
+          recordingFileName
+        ) {
+          recordingFileName.value =
+            recordingFileNameSide.value;
+        }
+      }
+    );
+
+    /* Fullscreen */
+
+    fullscreenStageBtn?.addEventListener(
+      "click",
+      fullscreenStage
+    );
+
+    fullscreenStudioBtn?.addEventListener(
+      "click",
+      fullscreenStudio
+    );
+
+    /* Settings */
+
+    settingsBtn?.addEventListener(
+      "click",
+      openSettings
+    );
+
+    closeSettingsBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          settingsModal
+        )
+    );
+
+    closeSettingsFooterBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          settingsModal
+        )
+    );
+
+    saveSettingsBtn?.addEventListener(
+      "click",
+      saveSettingsFromModal
+    );
+
+    /* Shortcuts */
+
+    openShortcutsBtn?.addEventListener(
+      "click",
+      () =>
+        openModal(
+          shortcutsModal
+        )
+    );
+
+    closeShortcutsModalBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          shortcutsModal
+        )
+    );
+
+    /* Recording Preview */
+
+    closeRecordingPreviewBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          recordingPreviewModal
+        )
+    );
+
+    recordingPreviewPlayBtn?.addEventListener(
+      "click",
+      previewPlay
+    );
+
+    recordingPreviewPauseBtn?.addEventListener(
+      "click",
+      previewPause
+    );
+
+    recordingPreviewVideo?.addEventListener(
+      "loadedmetadata",
+      () => {
+        state.previewDuration =
+          recordingPreviewVideo.duration ||
+          state.previewDuration;
+
+        if (recordingDuration) {
+          recordingDuration.textContent =
+            formatTime(
+              state.previewDuration
+            );
+        }
+
+        if (recordingTrimEnd) {
+          recordingTrimEnd.max =
+            String(
+              state.previewDuration
+            );
+
+          recordingTrimEnd.value =
+            String(
+              state.previewDuration
+            );
+        }
+
+        updateTrimLabels();
+      }
+    );
+
+    recordingPreviewVideo?.addEventListener(
+      "timeupdate",
+      () => {
+        if (
+          recordingCurrentTime
+        ) {
+          recordingCurrentTime.textContent =
+            formatTime(
+              recordingPreviewVideo.currentTime
+            );
+        }
+      }
+    );
+
+    recordingTrimStart?.addEventListener(
+      "input",
+      () => {
+        let value =
+          safeNumber(
+            recordingTrimStart.value,
+            0
+          );
+
+        const end =
+          safeNumber(
+            recordingTrimEnd?.value,
+            state.previewDuration
+          );
+
+        value =
+          clamp(
+            value,
+            0,
+            Math.max(
+              0,
+              end - 0.1
+            )
+          );
+
+        recordingTrimStart.value =
+          String(value);
+
+        state.previewTrimStart =
+          value;
+
+        updateTrimLabels();
+
+        if (
+          recordingPreviewVideo
+        ) {
+          recordingPreviewVideo.currentTime =
+            value;
+        }
+      }
+    );
+
+    recordingTrimEnd?.addEventListener(
+      "input",
+      () => {
+        let value =
+          safeNumber(
+            recordingTrimEnd.value,
+            state.previewDuration
+          );
+
+        const start =
+          safeNumber(
+            recordingTrimStart?.value,
+            0
+          );
+
+        value =
+          clamp(
+            value,
+            Math.min(
+              state.previewDuration,
+              start + 0.1
+            ),
+            state.previewDuration
+          );
+
+        recordingTrimEnd.value =
+          String(value);
+
+        state.previewTrimEnd =
+          value;
+
+        updateTrimLabels();
+
+        if (
+          recordingPreviewVideo
+        ) {
+          recordingPreviewVideo.currentTime =
+            value;
+        }
+      }
+    );
+
+    applyTrimBtn?.addEventListener(
+      "click",
+      applyTrim
+    );
+
+    resetTrimBtn?.addEventListener(
+      "click",
+      resetTrim
+    );
+
+    renameRecordingBtn?.addEventListener(
+      "click",
+      renameCurrentRecording
+    );
+
+    deleteRecordingBtn?.addEventListener(
+      "click",
+      deleteCurrentRecording
+    );
+
+    recordAgainBtn?.addEventListener(
+      "click",
+      recordAgain
+    );
+
+    downloadRecordingBtn?.addEventListener(
+      "click",
+      downloadCurrentRecording
+    );
+
+    clearRecordingHistoryBtn?.addEventListener(
+      "click",
+      clearRecordingHistory
+    );
+
+    recordingHistoryList?.addEventListener(
+      "click",
+      async (event) => {
+        const button =
+          event.target.closest(
+            "[data-action]"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const item =
+          button.closest(
+            ".recording-history-item"
+          );
+
+        if (!item) {
+          return;
+        }
+
+        const id =
+          item.dataset.id;
+
+        const action =
+          button.dataset.action;
+
+        if (
+          action ===
+          "preview"
+        ) {
+          await previewHistoryRecording(
+            id
+          );
+        }
+
+        if (
+          action ===
+          "download"
+        ) {
+          await downloadHistoryRecording(
+            id
+          );
+        }
+
+        if (
+          action ===
+          "delete"
+        ) {
+          await deleteHistoryRecording(
+            id
+          );
+        }
+      }
+    );
+
+    /* Students */
+
+    addStudentBtn?.addEventListener(
+      "click",
+      openStudentModal
+    );
+
+    closeStudentModalBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          studentModal
+        )
+    );
+
+    cancelStudentBtn?.addEventListener(
+      "click",
+      () =>
+        closeModal(
+          studentModal
+        )
+    );
+
+    saveStudentBtn?.addEventListener(
+      "click",
+      saveStudent
+    );
+
+    studentsList?.addEventListener(
+      "click",
+      (event) => {
+        const button =
+          event.target.closest(
+            ".student-remove"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        const item =
+          button.closest(
+            ".student-item"
+          );
+
+        if (!item) {
+          return;
+        }
+
+        removeStudent(
+          item.dataset.id
+        );
+      }
+    );
+
+    /* Modal backdrop */
+
+    $$(".modal").forEach(
+      (modal) => {
+        modal.addEventListener(
+          "click",
+          (event) => {
+            if (
+              event.target ===
+              modal
+            ) {
+              closeModal(
+                modal
+              );
+            }
+          }
+        );
+      }
+    );
+
+    /* Keyboard */
+
+    document.addEventListener(
+      "keydown",
+      handleKeyboardShortcuts
+    );
+
+    /* Mentor drag */
+
+    mentorCard?.addEventListener(
+      "mousedown",
+      startMentorDrag
+    );
+
+    mentorCard?.addEventListener(
+      "touchstart",
+      startMentorDrag,
+      {
+        passive: false
+      }
+    );
+
+    mentorResize?.addEventListener(
+      "mousedown",
+      startMentorResize
+    );
+
+    mentorResize?.addEventListener(
+      "touchstart",
+      startMentorResize,
+      {
+        passive: false
+      }
+    );
+
+    document.addEventListener(
+      "mousemove",
+      moveMentorDrag
+    );
+
+    document.addEventListener(
+      "touchmove",
+      moveMentorDrag,
+      {
+        passive: false
+      }
+    );
+
+    document.addEventListener(
+      "mouseup",
+      stopMentorDrag
+    );
+
+    document.addEventListener(
+      "touchend",
+      stopMentorDrag
+    );
+
+    document.addEventListener(
+      "mousemove",
+      moveMentorResize
+    );
+
+    document.addEventListener(
+      "touchmove",
+      moveMentorResize,
+      {
+        passive: false
+      }
+    );
+
+    document.addEventListener(
+      "mouseup",
+      stopMentorResize
+    );
+
+    document.addEventListener(
+      "touchend",
+      stopMentorResize
+    );
+
+    /* Main media events */
+
+    mainVideo?.addEventListener(
+      "play",
+      async () => {
+        await setupMainVideoAudio();
+        updateMainAudioGraph();
+        renderCompositionFrame();
+      }
+    );
+
+    mainVideo?.addEventListener(
+      "pause",
+      renderCompositionFrame
+    );
+
+    mainVideo?.addEventListener(
+      "timeupdate",
+      () => {
+        renderCompositionFrame();
+      }
+    );
+
+    mainVideo?.addEventListener(
+      "loadedmetadata",
+      () => {
+        renderCompositionFrame();
+      }
+    );
+
+    mainImage?.addEventListener(
+      "load",
+      renderCompositionFrame
+    );
+
+    mentorVideo?.addEventListener(
+      "timeupdate",
+      renderCompositionFrame
+    );
+
+    mentorCameraVideo?.addEventListener(
+      "loadedmetadata",
+      () => {
+        initializeSegmentation();
+        renderCompositionFrame();
+      }
+    );
+
+    /* File inputs */
+
+    bindFileInput(
+      mainFileInput,
+      loadImageFile
+    );
+
+    bindFileInput(
+      mainVideoInput,
+      loadMainVideoFile
+    );
+
+    bindFileInput(
+      mentorFileInput,
+      loadMentorFile
+    );
+
+    bindFileInput(
+      backgroundImageUpload,
+      loadBackgroundImage
+    );
+
+    bindFileInput(
+      teleprompterFileInput,
+      uploadTeleprompterFile
+    );
+
+    /* Window */
+
+    window.addEventListener(
+      "resize",
+      () => {
+        renderCompositionFrame();
+        drawMicWaveform();
+      }
+    );
+
+    document.addEventListener(
+      "fullscreenchange",
+      () => {
+        setTimeout(
+          renderCompositionFrame,
+          100
+        );
+      }
+    );
+
+    window.addEventListener(
+      "beforeunload",
+      cleanup
+    );
+  }
+
+  /* =======================================================
+     INIT
+     ======================================================= */
+
+  async function init() {
+    loadSettings();
+    loadStudents();
+    loadTeleprompter();
+
+    await loadHistoryMetadata();
+
+    applySettingsToUI();
+
+    syncRecordingSettings();
+
+    renderStudents();
+    renderRecordingHistory();
+
+    initializeMentorPosition();
+
+    showWelcome();
+
+    setBackgroundMode(
+      "original"
+    );
+
+    updateMainAudioUI();
+
+    updateRecordingUI();
+
+    updateCameraIndicator(false);
+    updateMicIndicator(false);
+    updateScreenIndicator(false);
+
+    updateAudioIndicator();
+
+    await enumerateCameras();
+
+    /*
+      Do not automatically request
+      camera/microphone permission.
+      User starts them manually.
+    */
+
+    startAudioMeterLoop();
+
+    /*
+      Prepare composition canvas.
+    */
+
+    createRecordingCanvas();
+    renderCompositionFrame();
+
+    /*
+      Global API.
+    */
+
+    window.CourseStudio = {
+      state,
+
+      startCamera,
+      stopCamera,
+
+      startScreenCapture,
+      stopScreenCapture,
+
+      startRecording,
+      pauseRecording,
+      resumeRecording,
+      stopRecording,
+
+      playMainVideo,
+      pauseMainVideo,
+
+      openTeleprompter,
+      startTeleprompter,
+      pauseTeleprompter,
+
+      fullscreenStage,
+      fullscreenStudio,
+
+      setBackgroundMode,
+
+      renderCompositionFrame,
+
+      toast
+    };
+
+    /*
+      Compatibility bridge for existing
+      UI code.
+    */
+
+    window.CourseStudioMicVolume = () =>
+      safeNumber(
+        micVolume?.value,
+        100
+      );
+
+    window.CourseStudioMicEnabled = () =>
+      Boolean(
+        micEnabled?.checked
+      );
+
+    window.CourseStudioMicMonitor = () =>
+      Boolean(
+        micMonitor?.checked
+      );
+
+    console.log(
+      "%c SNK Mentor Studio loaded ",
+      "background:#0c8; color:#fff; padding:5px 10px; border-radius:5px;"
+    );
+  }
+
+  /* =======================================================
+     CLEANUP
+     ======================================================= */
+
+  function cleanup() {
+    stopRecordingTimer();
+    stopRecordingRenderLoop();
+    stopAudioMeterLoop();
+
+    stopCamera(false);
+    stopScreenCapture(false);
+    stopMicrophone(false);
+
+    if (state.mainImageUrl) {
+      URL.revokeObjectURL(
+        state.mainImageUrl
+      );
+    }
+
+    if (state.mainVideoUrl) {
+      URL.revokeObjectURL(
+        state.mainVideoUrl
+      );
+    }
+
+    if (state.mentorVideoUrl) {
+      URL.revokeObjectURL(
+        state.mentorVideoUrl
+      );
+    }
+
+    if (
+      state.backgroundImageUrl
+    ) {
+      URL.revokeObjectURL(
+        state.backgroundImageUrl
+      );
+    }
+
+    if (
+      state.recordingUrl
+    ) {
+      URL.revokeObjectURL(
+        state.recordingUrl
+      );
+    }
+
+    if (
+      state.previewObjectUrl
+    ) {
+      URL.revokeObjectURL(
+        state.previewObjectUrl
+      );
+    }
+
+    if (
+      state.audioContext &&
+      state.audioContext.state !==
+        "closed"
+    ) {
+      state.audioContext
+        .close()
+        .catch(() => {});
+    }
+  }
+
+  /* =======================================================
+     START
+     ======================================================= */
 
   if (
-    !Number.isFinite(bytes) ||
-    bytes <= 0
+    document.readyState ===
+    "loading"
   ) {
-
-    return "0 B";
-
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      {
+        once: true
+      }
+    );
+  } else {
+    init();
   }
 
-
-  const units =
-    [
-      "B",
-      "KB",
-      "MB",
-      "GB"
-    ];
-
-
-  const index =
-    Math.floor(
-      Math.log(bytes) /
-      Math.log(1024)
-    );
-
-
-  return (
-    `${(
-      bytes /
-      Math.pow(
-        1024,
-        index
-      )
-    ).toFixed(
-      index === 0
-        ? 0
-        : 2
-    )} ${units[index]}`
-  );
-
-}
-
-
-/* =========================================================
-   UTILITY — TIME
-========================================================= */
-
-function formatRecordingTime(
-  seconds
-) {
-
-  seconds =
-    Math.max(
-      0,
-      Math.floor(
-        Number(seconds) || 0
-      )
-    );
-
-
-  const hours =
-    Math.floor(
-      seconds / 3600
-    );
-
-
-  const minutes =
-    Math.floor(
-      (
-        seconds % 3600
-      ) / 60
-    );
-
-
-  const secs =
-    seconds % 60;
-
-
-  return [
-    String(hours)
-      .padStart(2, "0"),
-
-    String(minutes)
-      .padStart(2, "0"),
-
-    String(secs)
-      .padStart(2, "0")
-
-  ].join(":");
-
-}
-
-
-/* =========================================================
-   UTILITY — ESCAPE HTML
-========================================================= */
-
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-function showToast(
-  message,
-  type = "info"
-) {
-
-  if (!toastContainer) {
-    return;
-  }
-
-
-  const toast =
-    document.createElement(
-      "div"
-    );
-
-
-  toast.className =
-    `toast ${type}`;
-
-
-  toast.innerHTML =
-    `
-      <span class="toast-icon">
-        ${
-          type === "success"
-            ? "✓"
-            : type === "error"
-              ? "!"
-              : "i"
-        }
-      </span>
-
-      <span>
-        ${escapeHTML(message)}
-      </span>
-    `;
-
-
-  toastContainer.appendChild(
-    toast
-  );
-
-
-  requestAnimationFrame(
-    () => {
-
-      toast.classList.add(
-        "show"
-      );
-
-    }
-  );
-
-
-  setTimeout(
-    () => {
-
-      toast.classList.remove(
-        "show"
-      );
-
-
-      setTimeout(
-        () =>
-          toast.remove(),
-        300
-      );
-
-    },
-    3500
-  );
-
-}
-
-
-/* =========================================================
-   GLOBAL API
-========================================================= */
-
-window.CourseStudio = {
-
-  state,
-
-  startCamera,
-  stopCamera,
-
-  startRecording,
-  pauseRecording,
-  resumeRecording,
-  stopRecording,
-
-  startScreenCapture,
-  stopScreenCapture,
-
-  openTeleprompter,
-  startTeleprompter,
-  pauseTeleprompter,
-
-  renderCompositionFrame,
-
-  setAIBackgroundMode,
-
-  loadMainImage,
-  loadMainVideo,
-  loadMentorVideo,
-
-  downloadCurrentRecording,
-
-  openSettings,
-  closeSettings
-
-};
-
-
-/* =========================================================
-   INITIAL MENTOR POSITION
-========================================================= */
-
-applyMentorDOMPosition();
-
-
-/* =========================================================
-   INITIAL RECORDING SETTINGS
-========================================================= */
-
-updateRecordingSettings();
-
-
-/* =========================================================
-   INITIAL BADGES
-========================================================= */
-
-updateStageBadges();
-
-
-/* =========================================================
-   FINAL INITIAL RENDER
-========================================================= */
-
-renderCompositionFrame();
-
-
-/* =========================================================
-   END
-========================================================= */
+})();
