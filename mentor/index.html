@@ -1,1106 +1,3044 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNK Mentor Studio | AI Camera</title>
-<meta name="theme-color" content="#070b14">
-<meta name="description" content="Private AI-powered Mentor Studio for course recording.">
 
-<!-- MediaPipe AI Segmentation -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
 
-<style>
-:root{
-  --bg:#070b14;
-  --panel:#101827;
-  --panel2:#151f30;
-  --line:rgba(255,255,255,.09);
-  --text:#f8fafc;
-  --muted:#94a3b8;
-  --blue:#3b82f6;
-  --cyan:#38bdf8;
-  --green:#4ade80;
-  --red:#ef4444;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
-  min-height:100vh;overflow-x:hidden
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-button:disabled{opacity:.45;cursor:not-allowed}
-.app{
-  min-height:100vh;
-  background:
-  radial-gradient(ellipse at 10% 0%,#1d4ed81c,transparent 35%),
-  radial-gradient(ellipse at 90% 90%,#7c3aed15,transparent 35%),
-  var(--bg)
-}
-.topbar{
-  height:72px;position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;background:#070b14ed;
-  backdrop-filter:blur(20px);border-bottom:1px solid var(--line)
-}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{
-  width:42px;height:42px;border-radius:12px;
-  object-fit:contain;background:white;padding:4px
-}
-.brand-title{font-size:14px;font-weight:900}
-.brand-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.top-actions{display:flex;align-items:center;gap:9px}
-.pill{
-  border:1px solid #3b82f633;background:#2563eb18;
-  color:#93c5fd;padding:8px 12px;border-radius:30px;
-  font-size:10px;font-weight:900;letter-spacing:1px
-}
-.btn{
-  border:1px solid var(--line);background:#ffffff0a;color:#e2e8f0;
-  padding:10px 14px;border-radius:10px;font-size:12px;font-weight:800;
-  transition:.2s
-}
-.btn:hover{background:#ffffff17}
-.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5);border:0;color:white}
-.btn.danger{color:#fca5a5}
-.main{
-  width:min(1550px,100%);margin:auto;padding:22px;
-  display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px
-}
-.workspace{min-width:0;display:flex;flex-direction:column;gap:15px}
-.header-card,.panel,.toolbar,.bottom-card{
-  background:linear-gradient(145deg,#ffffff09,#ffffff03);
-  border:1px solid var(--line);border-radius:17px
-}
-.header-card{
-  padding:18px;display:flex;justify-content:space-between;
-  align-items:center;gap:12px
-}
-.header-card h1{font-size:20px;letter-spacing:-.5px}
-.header-card p{font-size:12px;color:var(--muted);margin-top:5px}
-.status{
-  padding:8px 11px;border-radius:30px;background:#22c55e12;
-  color:#86efac;font-size:10px;font-weight:900;white-space:nowrap
-}
-.stage{
-  position:relative;width:100%;aspect-ratio:16/9;min-height:380px;
-  max-height:calc(100vh - 220px);overflow:hidden;
-  background:#020617;border:1px solid #ffffff18;border-radius:20px;
-  box-shadow:0 25px 80px #0008;isolation:isolate
-}
-.stage.empty{
-  display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle,#1e40af22,transparent 55%),#020617
-}
-.placeholder{text-align:center;padding:25px;max-width:420px}
-.placeholder-icon{
-  width:65px;height:65px;display:grid;place-items:center;
-  margin:0 auto 16px;border-radius:20px;background:#2563eb20;
-  border:1px solid #60a5fa33;font-size:28px
-}
-.placeholder h2{font-size:20px}
-.placeholder p{font-size:12px;color:var(--muted);line-height:1.7;margin:9px 0 18px}
-#mainImage,#mainVideo{
-  position:absolute;inset:0;width:100%;height:100%;
-  object-fit:contain;background:#020617;display:none
-}
-.stage-label,.brand-badge{
-  position:absolute;z-index:10;top:15px;padding:9px 12px;
-  background:#020617c9;border:1px solid #ffffff20;
-  backdrop-filter:blur(12px);border-radius:10px;
-  user-select:none;cursor:move
-}
-.stage-label{left:15px}
-.stage-label strong{font-size:12px;display:block}
-.stage-label small{font-size:9px;color:#94a3b8}
-.brand-badge{right:15px;color:#bfdbfe;font-size:10px;font-weight:900}
-.stage.clean .stage-label,.stage.clean .brand-badge,
-.stage.clean .camera-label{visibility:hidden}
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-/* AI CAMERA */
-.camera-box{
-  position:absolute;z-index:20;right:18px;bottom:18px;
-  width:260px;aspect-ratio:16/10;border-radius:17px;
-  overflow:hidden;background:#020617;border:1px solid #ffffff30;
-  box-shadow:0 20px 55px #0009;display:none;touch-action:none;
-  cursor:move
-}
-#cameraCanvas{width:100%;height:100%;display:block;object-fit:cover}
-#rawCamera{display:none}
-.camera-label{
-  position:absolute;left:10px;bottom:10px;z-index:5;
-  padding:6px 9px;border-radius:8px;background:#020617c9;
-  font-size:9px;font-weight:900;pointer-events:none
-}
-.camera-label i{
-  display:inline-block;width:6px;height:6px;background:#4ade80;
-  border-radius:50%;margin-right:5px
-}
-.resize-handle{
-  position:absolute;right:0;bottom:0;width:24px;height:24px;
-  z-index:8;background:#3b82f6;border-radius:9px 0 0 0;
-  cursor:nwse-resize
-}
+  <meta
+    name="theme-color"
+    content="#0b1220"
+  >
 
-/* TOOLBAR */
-.toolbar{padding:11px;display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
-.tool{
-  min-height:68px;border:1px solid #ffffff0d;border-radius:12px;
-  background:#ffffff06;color:#cbd5e1;
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:7px;font-size:10px;font-weight:800;
-  transition:.2s
-}
-.tool:hover{background:#2563eb20;border-color:#60a5fa55;color:white}
-.tool.active{background:#2563eb28;border-color:#3b82f6;color:#93c5fd}
-.tool .ico{font-size:20px}
-.tool.recording{background:#7f1d1d55;border-color:#ef4444;color:#fca5a5}
+  <meta
+    name="description"
+    content="SNK Mentor Studio — Personal Course Studio"
+  >
 
-/* BACKGROUND CONTROL */
-.bg-panel{
-  padding:16px;border:1px solid #60a5fa25;border-radius:16px;
-  background:linear-gradient(120deg,#1d4ed817,#7c3aed0b)
-}
-.bg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
-.bg-head h3{font-size:13px}
-.ai-badge{font-size:9px;color:#86efac;background:#22c55e16;padding:6px 9px;border-radius:20px;font-weight:900}
-.bg-options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.bg-option{
-  min-height:72px;border:1px solid #ffffff15;border-radius:11px;
-  background:#02061788;color:#cbd5e1;font-size:10px;font-weight:800;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px
-}
-.bg-option span{font-size:21px}
-.bg-option.active{border-color:#60a5fa;background:#2563eb30;color:#bfdbfe}
-.bg-option:hover{border-color:#60a5fa}
-.bg-help{font-size:10px;color:#94a3b8;margin-top:11px;line-height:1.6}
+  <title>
+    SNK Mentor Studio | Personal Course Studio
+  </title>
 
-/* BOTTOM */
-.bottom-card{padding:15px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.bottom-card h3{font-size:12px}
-.bottom-card p{font-size:10px;color:var(--muted);margin-top:4px}
-.bottom-actions{display:flex;gap:8px;flex-wrap:wrap}
-.record-status{
-  display:flex;align-items:center;gap:9px;padding:12px 14px;
-  border:1px solid var(--line);border-radius:12px;
-  background:#ffffff05;color:#94a3b8;font-size:11px
-}
-.record-dot{width:8px;height:8px;background:#64748b;border-radius:50%}
-.record-status.active{color:#fca5a5}
-.record-status.active .record-dot{background:#ef4444;animation:pulse 1s infinite}
-.timer{margin-left:auto;color:white;font-weight:900;font-variant-numeric:tabular-nums}
-@keyframes pulse{50%{opacity:.3}}
 
-/* SIDEBAR */
-.sidebar{display:flex;flex-direction:column;gap:14px}
-.panel{padding:17px}
-.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-.panel-title h3{font-size:13px}
-.panel-title span{font-size:9px;color:#64748b}
-.info-row{
-  display:flex;align-items:center;gap:11px;padding:11px;
-  background:#ffffff06;border-radius:11px;margin-bottom:9px
-}
-.info-icon{
-  width:36px;height:36px;border-radius:11px;display:grid;
-  place-items:center;background:#2563eb25;color:#93c5fd
-}
-.info-row strong{font-size:11px;display:block}
-.info-row small{font-size:10px;color:#64748b;display:block;margin-top:4px}
-.green{color:#86efac!important}
-.tip{
-  padding:12px;border:1px solid #60a5fa20;background:#2563eb10;
-  border-radius:11px;font-size:10px;color:#94a3b8;line-height:1.7
-}
-.tip strong{color:#bfdbfe;display:block;margin-bottom:5px}
-.check{display:flex;justify-content:space-between;font-size:11px;padding:9px 0;border-bottom:1px solid #ffffff0b}
-.check:last-child{border:0}
-.check span{color:#94a3b8}
+  <!-- =====================================================
+       GOOGLE FONT
+       ===================================================== -->
 
-/* MODALS */
-.overlay{
-  position:fixed;inset:0;z-index:500;background:#000b;
-  display:none;align-items:center;justify-content:center;padding:18px;
-  backdrop-filter:blur(8px)
-}
-.overlay.show{display:flex}
-.modal{
-  width:min(430px,100%);padding:23px;border-radius:18px;
-  background:#111827;border:1px solid #ffffff20;box-shadow:0 30px 100px #000b
-}
-.modal h2{font-size:18px;margin-bottom:7px}
-.modal p{font-size:11px;color:#94a3b8;line-height:1.7;margin-bottom:15px}
-.modal label{font-size:11px;font-weight:800;display:block;margin:13px 0 7px}
-.modal input,.modal select{
-  width:100%;height:42px;border:1px solid #334155;border-radius:9px;
-  background:#020617;color:white;padding:0 12px;outline:none
-}
-.modal input:focus,.modal select:focus{border-color:#3b82f6}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
-.toast{
-  position:fixed;z-index:900;bottom:22px;left:50%;
-  transform:translate(-50%,20px);opacity:0;pointer-events:none;
-  background:#1e293b;border:1px solid #475569;color:white;
-  border-radius:12px;padding:12px 17px;font-size:12px;font-weight:700;
-  transition:.25s;max-width:90%;text-align:center
-}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-.hidden{display:none!important}
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
 
-/* RESPONSIVE */
-@media(max-width:1100px){
-  .main{grid-template-columns:minmax(0,1fr) 250px;padding:14px}
-  .toolbar{grid-template-columns:repeat(4,1fr)}
-}
-@media(max-width:760px){
-  .topbar{height:62px;padding:0 12px}
-  .logo{width:36px;height:36px}
-  .brand-sub,.pill{display:none}
-  .top-actions{gap:5px}
-  .btn{padding:9px;font-size:10px}
-  .main{display:flex;flex-direction:column;padding:10px}
-  .header-card{padding:14px}
-  .header-card h1{font-size:17px}
-  .stage{min-height:280px;max-height:none;border-radius:14px}
-  .camera-box{width:155px;right:10px;bottom:10px;border-radius:12px}
-  .toolbar{grid-template-columns:repeat(4,1fr);gap:6px;padding:8px}
-  .tool{min-height:59px;font-size:9px}
-  .tool .ico{font-size:18px}
-  .bg-options{grid-template-columns:repeat(3,1fr)}
-  .bottom-card{align-items:flex-start;flex-direction:column}
-  .sidebar{display:grid;grid-template-columns:1fr}
-}
-@media(max-width:420px){
-  .brand-title{font-size:12px}
-  .stage{min-height:235px}
-  .stage-label{left:8px;top:8px}
-  .brand-badge{right:8px;top:8px;font-size:8px}
-  .camera-box{width:130px}
-}
-</style>
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       INLINE CSS
+       ===================================================== -->
+
+  <style>
+
+    /* =====================================================
+       ROOT
+       ===================================================== */
+
+    :root {
+
+      --bg:
+        #07111f;
+
+      --bg-2:
+        #0b1626;
+
+      --panel:
+        #0d1b2d;
+
+      --panel-2:
+        #102238;
+
+      --card:
+        #13263d;
+
+      --card-2:
+        #172d46;
+
+      --border:
+        rgba(255,255,255,0.09);
+
+      --border-light:
+        rgba(255,255,255,0.14);
+
+      --text:
+        #f5f9ff;
+
+      --muted:
+        #8fa4bb;
+
+      --blue:
+        #55a8ff;
+
+      --blue-2:
+        #2f82df;
+
+      --green:
+        #32d583;
+
+      --red:
+        #ff5d6c;
+
+      --yellow:
+        #f5c451;
+
+      --shadow:
+        0 25px 70px rgba(0,0,0,0.35);
+
+      --radius:
+        18px;
+
+    }
+
+
+    /* =====================================================
+       RESET
+       ===================================================== */
+
+    * {
+
+      box-sizing:
+        border-box;
+
+      margin:
+        0;
+
+      padding:
+        0;
+
+    }
+
+
+    html {
+
+      width:
+        100%;
+
+      height:
+        100%;
+
+    }
+
+
+    body {
+
+      width:
+        100%;
+
+      min-height:
+        100%;
+
+      margin:
+        0;
+
+      font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+      color:
+        var(--text);
+
+      background:
+        linear-gradient(
+          135deg,
+          #06101d,
+          #0a1727 45%,
+          #07111f
+        );
+
+      overflow:
+        hidden;
+
+    }
+
+
+    button,
+    input,
+    select {
+
+      font:
+        inherit;
+
+    }
+
+
+    button {
+
+      border:
+        0;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    /* =====================================================
+       APP
+       ===================================================== */
+
+    .app {
+
+      width:
+        100%;
+
+      height:
+        100vh;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      overflow:
+        hidden;
+
+    }
+
+
+    /* =====================================================
+       TOP BAR
+       ===================================================== */
+
+    .topbar {
+
+      height:
+        70px;
+
+      min-height:
+        70px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      padding:
+        0 22px;
+
+      background:
+        rgba(7,17,31,0.92);
+
+      border-bottom:
+        1px solid var(--border);
+
+      backdrop-filter:
+        blur(18px);
+
+      z-index:
+        100;
+
+    }
+
+
+    .brand-area {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        12px;
+
+      min-width:
+        0;
+
+    }
+
+
+    .logo-box {
+
+      width:
+        40px;
+
+      height:
+        40px;
+
+      flex:
+        0 0 40px;
+
+      border-radius:
+        12px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      background:
+        linear-gradient(
+          135deg,
+          #5bb2ff,
+          #286dc1
+        );
+
+      color:
+        white;
+
+      font-size:
+        17px;
+
+      font-weight:
+        800;
+
+      box-shadow:
+        0 10px 30px rgba(45,139,230,0.3);
+
+    }
+
+
+    .brand-title {
+
+      min-width:
+        0;
+
+    }
+
+
+    .brand-title h1 {
+
+      font-size:
+        16px;
+
+      font-weight:
+        800;
+
+      white-space:
+        nowrap;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+    }
+
+
+    .brand-title p {
+
+      margin-top:
+        2px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        11px;
+
+      white-space:
+        nowrap;
+
+    }
+
+
+    .top-actions {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+
+    }
+
+
+    .top-btn {
+
+      height:
+        40px;
+
+      padding:
+        0 14px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      gap:
+        7px;
+
+      color:
+        #dceaff;
+
+      background:
+        rgba(255,255,255,0.05);
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        11px;
+
+      transition:
+        0.2s ease;
+
+    }
+
+
+    .top-btn:hover {
+
+      background:
+        rgba(255,255,255,0.09);
+
+      border-color:
+        var(--border-light);
+
+      transform:
+        translateY(-1px);
+
+    }
+
+
+    .record-btn {
+
+      background:
+        rgba(255,93,108,0.11);
+
+      border-color:
+        rgba(255,93,108,0.25);
+
+      color:
+        #ff9aa5;
+
+    }
+
+
+    .record-btn.active {
+
+      color:
+        white;
+
+      background:
+        #d73f50;
+
+      border-color:
+        #ff6d7a;
+
+      box-shadow:
+        0 0 25px rgba(255,70,90,0.25);
+
+    }
+
+
+    /* =====================================================
+       WORKSPACE
+       ===================================================== */
+
+    .workspace {
+
+      flex:
+        1;
+
+      min-height:
+        0;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0, 1fr)
+        245px;
+
+      gap:
+        14px;
+
+      padding:
+        14px;
+
+    }
+
+
+    /* =====================================================
+       STAGE
+       ===================================================== */
+
+    .stage {
+
+      position:
+        relative;
+
+      min-width:
+        0;
+
+      min-height:
+        0;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        22px;
+
+      background:
+        #030a12;
+
+      border:
+        1px solid var(--border);
+
+      box-shadow:
+        var(--shadow);
+
+      isolation:
+        isolate;
+
+    }
+
+
+    .stage-grid {
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      pointer-events:
+        none;
+
+      opacity:
+        0.13;
+
+      background-image:
+        linear-gradient(
+          rgba(255,255,255,0.04) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.04) 1px,
+          transparent 1px
+        );
+
+      background-size:
+        40px 40px;
+
+    }
+
+
+    /* =====================================================
+       WELCOME
+       ===================================================== */
+
+    .welcome-content {
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      text-align:
+        center;
+
+      padding:
+        30px;
+
+      z-index:
+        2;
+
+    }
+
+
+    .welcome-inner {
+
+      max-width:
+        560px;
+
+    }
+
+
+    .welcome-icon {
+
+      width:
+        76px;
+
+      height:
+        76px;
+
+      margin:
+        0 auto 20px;
+
+      border-radius:
+        24px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      font-size:
+        30px;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(85,168,255,0.25),
+          rgba(85,168,255,0.07)
+        );
+
+      border:
+        1px solid rgba(85,168,255,0.2);
+
+      color:
+        #75bcff;
+
+    }
+
+
+    .welcome-inner h2 {
+
+      font-size:
+        clamp(25px, 3vw, 40px);
+
+      line-height:
+        1.15;
+
+      margin-bottom:
+        12px;
+
+    }
+
+
+    .welcome-inner p {
+
+      color:
+        var(--muted);
+
+      line-height:
+        1.7;
+
+      font-size:
+        14px;
+
+    }
+
+
+    /* =====================================================
+       MAIN MEDIA
+       ===================================================== */
+
+    #mainImage,
+    #mainVideo {
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      width:
+        100%;
+
+      height:
+        100%;
+
+      object-fit:
+        contain;
+
+      display:
+        none;
+
+      z-index:
+        1;
+
+      background:
+        #02070d;
+
+    }
+
+
+    #mainVideo {
+
+      object-fit:
+        contain;
+
+    }
+
+
+    /* =====================================================
+       STAGE TOP CONTROLS
+       ===================================================== */
+
+    .stage-top {
+
+      position:
+        absolute;
+
+      left:
+        18px;
+
+      right:
+        18px;
+
+      top:
+        16px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      z-index:
+        20;
+
+      pointer-events:
+        none;
+
+    }
+
+
+    .stage-chip {
+
+      pointer-events:
+        auto;
+
+      padding:
+        8px 12px;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(0,0,0,0.52);
+
+      border:
+        1px solid rgba(255,255,255,0.1);
+
+      color:
+        #d9e9fa;
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+      backdrop-filter:
+        blur(12px);
+
+    }
+
+
+    .stage-actions {
+
+      display:
+        flex;
+
+      gap:
+        7px;
+
+      pointer-events:
+        auto;
+
+    }
+
+
+    .stage-action {
+
+      width:
+        38px;
+
+      height:
+        38px;
+
+      border-radius:
+        11px;
+
+      color:
+        white;
+
+      background:
+        rgba(0,0,0,0.52);
+
+      border:
+        1px solid rgba(255,255,255,0.1);
+
+      backdrop-filter:
+        blur(12px);
+
+    }
+
+
+    .stage-action:hover {
+
+      background:
+        rgba(255,255,255,0.12);
+
+    }
+
+
+    /* =====================================================
+       MENTOR CARD
+       ===================================================== */
+
+    .mentor-card {
+
+      position:
+        absolute;
+
+      top:
+        20px;
+
+      right:
+        20px;
+
+      width:
+        240px;
+
+      height:
+        150px;
+
+      min-width:
+        140px;
+
+      min-height:
+        95px;
+
+      max-width:
+        48%;
+
+      max-height:
+        65%;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        17px;
+
+      background:
+        #13263d;
+
+      border:
+        1px solid rgba(255,255,255,0.16);
+
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.5);
+
+      z-index:
+        30;
+
+      user-select:
+        none;
+
+      touch-action:
+        none;
+
+      cursor:
+        grab;
+
+    }
+
+
+    .mentor-card.dragging {
+
+      cursor:
+        grabbing;
+
+      box-shadow:
+        0 25px 65px rgba(0,0,0,0.65);
+
+      border-color:
+        rgba(85,168,255,0.65);
+
+    }
+
+
+    .mentor-card::after {
+
+      content:
+        "";
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      pointer-events:
+        none;
+
+      border-radius:
+        inherit;
+
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04);
+
+    }
+
+
+    #mentorVideo {
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      width:
+        100%;
+
+      height:
+        100%;
+
+      object-fit:
+        cover;
+
+      display:
+        none;
+
+      background:
+        #101b29;
+
+    }
+
+
+    .mentor-placeholder {
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      flex-direction:
+        column;
+
+      gap:
+        8px;
+
+      color:
+        #b7c9dc;
+
+      background:
+        linear-gradient(
+          135deg,
+          #13263d,
+          #0d1a2b
+        );
+
+    }
+
+
+    .mentor-placeholder-icon {
+
+      width:
+        42px;
+
+      height:
+        42px;
+
+      border-radius:
+        14px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      background:
+        rgba(85,168,255,0.12);
+
+      border:
+        1px solid rgba(85,168,255,0.18);
+
+      color:
+        #6fb8ff;
+
+      font-size:
+        18px;
+
+    }
+
+
+    .mentor-placeholder span {
+
+      font-size:
+        10px;
+
+      font-weight:
+        700;
+
+      letter-spacing:
+        0.4px;
+
+    }
+
+
+    .mentor-label {
+
+      position:
+        absolute;
+
+      left:
+        9px;
+
+      bottom:
+        9px;
+
+      padding:
+        5px 8px;
+
+      border-radius:
+        7px;
+
+      background:
+        rgba(0,0,0,0.58);
+
+      color:
+        white;
+
+      font-size:
+        9px;
+
+      font-weight:
+        700;
+
+      z-index:
+        5;
+
+      pointer-events:
+        none;
+
+    }
+
+
+    .mentor-online {
+
+      position:
+        absolute;
+
+      right:
+        10px;
+
+      top:
+        10px;
+
+      width:
+        9px;
+
+      height:
+        9px;
+
+      border-radius:
+        50%;
+
+      background:
+        var(--green);
+
+      box-shadow:
+        0 0 0 4px rgba(50,213,131,0.13);
+
+      z-index:
+        6;
+
+      pointer-events:
+        none;
+
+    }
+
+
+    /* =====================================================
+       RESIZE HANDLE
+       ===================================================== */
+
+    .mentor-resize {
+
+      position:
+        absolute;
+
+      right:
+        0;
+
+      bottom:
+        0;
+
+      width:
+        22px;
+
+      height:
+        22px;
+
+      z-index:
+        20;
+
+      cursor:
+        nwse-resize;
+
+      background:
+        linear-gradient(
+          135deg,
+          transparent 48%,
+          rgba(255,255,255,0.8) 50%,
+          transparent 53%
+        );
+
+      touch-action:
+        none;
+
+    }
+
+
+    /* =====================================================
+       BRAND BADGE
+       ===================================================== */
+
+    .brand-badge {
+
+      position:
+        absolute;
+
+      left:
+        18px;
+
+      bottom:
+        18px;
+
+      z-index:
+        15;
+
+      padding:
+        9px 13px;
+
+      border-radius:
+        10px;
+
+      background:
+        rgba(0,0,0,0.55);
+
+      border:
+        1px solid rgba(255,255,255,0.1);
+
+      color:
+        white;
+
+      font-size:
+        11px;
+
+      font-weight:
+        800;
+
+      backdrop-filter:
+        blur(12px);
+
+    }
+
+
+    /* =====================================================
+       BOTTOM TOOLBAR
+       ===================================================== */
+
+    .stage-toolbar {
+
+      position:
+        absolute;
+
+      left:
+        50%;
+
+      bottom:
+        16px;
+
+      transform:
+        translateX(-50%);
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        7px;
+
+      padding:
+        7px;
+
+      border-radius:
+        15px;
+
+      background:
+        rgba(7,17,31,0.84);
+
+      border:
+        1px solid rgba(255,255,255,0.1);
+
+      backdrop-filter:
+        blur(18px);
+
+      z-index:
+        40;
+
+    }
+
+
+    .toolbar-btn {
+
+      height:
+        38px;
+
+      min-width:
+        38px;
+
+      padding:
+        0 12px;
+
+      border-radius:
+        10px;
+
+      background:
+        rgba(255,255,255,0.06);
+
+      color:
+        #dce9f7;
+
+      border:
+        1px solid rgba(255,255,255,0.06);
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+    }
+
+
+    .toolbar-btn:hover {
+
+      background:
+        rgba(85,168,255,0.13);
+
+      color:
+        white;
+
+    }
+
+
+    /* =====================================================
+       STUDENTS PANEL
+       ===================================================== */
+
+    .students-panel {
+
+      min-width:
+        0;
+
+      min-height:
+        0;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      background:
+        rgba(13,27,45,0.9);
+
+      border:
+        1px solid var(--border);
+
+      border-radius:
+        20px;
+
+      overflow:
+        hidden;
+
+    }
+
+
+    .students-header {
+
+      padding:
+        17px;
+
+      border-bottom:
+        1px solid var(--border);
+
+    }
+
+
+    .students-title-row {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        10px;
+
+    }
+
+
+    .students-title {
+
+      font-size:
+        14px;
+
+      font-weight:
+        800;
+
+    }
+
+
+    .student-count {
+
+      color:
+        var(--muted);
+
+      font-size:
+        10px;
+
+      margin-top:
+        4px;
+
+    }
+
+
+    .add-student {
+
+      width:
+        34px;
+
+      height:
+        34px;
+
+      border-radius:
+        10px;
+
+      background:
+        rgba(85,168,255,0.12);
+
+      color:
+        #77bdff;
+
+      border:
+        1px solid rgba(85,168,255,0.18);
+
+      font-size:
+        20px;
+
+    }
+
+
+    .students-list {
+
+      flex:
+        1;
+
+      overflow:
+        auto;
+
+      padding:
+        10px;
+
+    }
+
+
+    .students-list::-webkit-scrollbar {
+
+      width:
+        5px;
+
+    }
+
+
+    .students-list::-webkit-scrollbar-thumb {
+
+      background:
+        rgba(255,255,255,0.1);
+
+      border-radius:
+        20px;
+
+    }
+
+
+    .student {
+
+      position:
+        relative;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        9px;
+
+      padding:
+        10px;
+
+      margin-bottom:
+        5px;
+
+      border-radius:
+        12px;
+
+      background:
+        rgba(255,255,255,0.025);
+
+      border:
+        1px solid transparent;
+
+    }
+
+
+    .student:hover {
+
+      background:
+        rgba(255,255,255,0.05);
+
+      border-color:
+        rgba(255,255,255,0.06);
+
+    }
+
+
+    .avatar {
+
+      width:
+        34px;
+
+      height:
+        34px;
+
+      flex:
+        0 0 34px;
+
+      border-radius:
+        10px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      background:
+        linear-gradient(
+          135deg,
+          #245d94,
+          #163b62
+        );
+
+      color:
+        #dceeff;
+
+      font-size:
+        10px;
+
+      font-weight:
+        800;
+
+    }
+
+
+    .student-info {
+
+      min-width:
+        0;
+
+      flex:
+        1;
+
+    }
+
+
+    .student-name {
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+      white-space:
+        nowrap;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+    }
+
+
+    .student-status {
+
+      margin-top:
+        4px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        5px;
+
+      color:
+        #6fbd91;
+
+      font-size:
+        9px;
+
+    }
+
+
+    .online-dot {
+
+      width:
+        6px;
+
+      height:
+        6px;
+
+      border-radius:
+        50%;
+
+      background:
+        var(--green);
+
+    }
+
+
+    .student-menu {
+
+      width:
+        23px;
+
+      height:
+        23px;
+
+      border-radius:
+        7px;
+
+      background:
+        transparent;
+
+      color:
+        #668096;
+
+      font-size:
+        17px;
+
+    }
+
+
+    .student-menu:hover {
+
+      color:
+        #ff8793;
+
+      background:
+        rgba(255,93,108,0.1);
+
+    }
+
+
+    /* =====================================================
+       STATUS BAR
+       ===================================================== */
+
+    .statusbar {
+
+      height:
+        35px;
+
+      min-height:
+        35px;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      padding:
+        0 17px;
+
+      border-top:
+        1px solid var(--border);
+
+      color:
+        var(--muted);
+
+      font-size:
+        10px;
+
+      background:
+        rgba(5,13,23,0.75);
+
+    }
+
+
+    .status-left {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        7px;
+
+    }
+
+
+    .status-dot {
+
+      width:
+        7px;
+
+      height:
+        7px;
+
+      border-radius:
+        50%;
+
+      background:
+        var(--green);
+
+    }
+
+
+    .status-dot.recording {
+
+      background:
+        var(--red);
+
+      box-shadow:
+        0 0 0 5px rgba(255,93,108,0.12);
+
+      animation:
+        recordingPulse 1s infinite;
+
+    }
+
+
+    @keyframes recordingPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.35;
+      }
+
+    }
+
+
+    /* =====================================================
+       TOAST
+       ===================================================== */
+
+    .toast {
+
+      position:
+        fixed;
+
+      left:
+        50%;
+
+      bottom:
+        30px;
+
+      transform:
+        translate(-50%, 20px);
+
+      padding:
+        11px 16px;
+
+      border-radius:
+        11px;
+
+      color:
+        white;
+
+      background:
+        rgba(10,22,37,0.95);
+
+      border:
+        1px solid rgba(255,255,255,0.12);
+
+      box-shadow:
+        0 18px 50px rgba(0,0,0,0.35);
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+      opacity:
+        0;
+
+      pointer-events:
+        none;
+
+      transition:
+        0.25s ease;
+
+      z-index:
+        1000;
+
+    }
+
+
+    .toast.show {
+
+      opacity:
+        1;
+
+      transform:
+        translate(-50%, 0);
+
+    }
+
+
+    /* =====================================================
+       SETTINGS MODAL
+       ===================================================== */
+
+    .modal {
+
+      position:
+        fixed;
+
+      inset:
+        0;
+
+      display:
+        none;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        20px;
+
+      background:
+        rgba(0,0,0,0.62);
+
+      backdrop-filter:
+        blur(10px);
+
+      z-index:
+        500;
+
+    }
+
+
+    .modal.show {
+
+      display:
+        flex;
+
+    }
+
+
+    .modal-card {
+
+      width:
+        min(480px, 100%);
+
+      padding:
+        22px;
+
+      border-radius:
+        20px;
+
+      background:
+        #102238;
+
+      border:
+        1px solid rgba(255,255,255,0.11);
+
+      box-shadow:
+        0 30px 100px rgba(0,0,0,0.5);
+
+    }
+
+
+    .modal-header {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      margin-bottom:
+        20px;
+
+    }
+
+
+    .modal-header h3 {
+
+      font-size:
+        17px;
+
+    }
+
+
+    .modal-close {
+
+      width:
+        34px;
+
+      height:
+        34px;
+
+      border-radius:
+        10px;
+
+      background:
+        rgba(255,255,255,0.06);
+
+      color:
+        #c5d4e4;
+
+      font-size:
+        18px;
+
+    }
+
+
+    .field {
+
+      margin-bottom:
+        16px;
+
+    }
+
+
+    .field label {
+
+      display:
+        block;
+
+      margin-bottom:
+        7px;
+
+      color:
+        #a8bbcf;
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+    }
+
+
+    .field input {
+
+      width:
+        100%;
+
+      height:
+        44px;
+
+      padding:
+        0 13px;
+
+      border-radius:
+        11px;
+
+      border:
+        1px solid rgba(255,255,255,0.1);
+
+      background:
+        rgba(0,0,0,0.18);
+
+      color:
+        white;
+
+      outline:
+        none;
+
+    }
+
+
+    .field input:focus {
+
+      border-color:
+        rgba(85,168,255,0.55);
+
+      box-shadow:
+        0 0 0 3px rgba(85,168,255,0.08);
+
+    }
+
+
+    .modal-actions {
+
+      display:
+        flex;
+
+      justify-content:
+        flex-end;
+
+      gap:
+        8px;
+
+      margin-top:
+        20px;
+
+    }
+
+
+    .modal-btn {
+
+      height:
+        40px;
+
+      padding:
+        0 15px;
+
+      border-radius:
+        10px;
+
+      font-size:
+        11px;
+
+      font-weight:
+        700;
+
+    }
+
+
+    .modal-btn.cancel {
+
+      color:
+        #b9c9d9;
+
+      background:
+        rgba(255,255,255,0.06);
+
+    }
+
+
+    .modal-btn.save {
+
+      color:
+        white;
+
+      background:
+        linear-gradient(
+          135deg,
+          #4fa8ff,
+          #2879d1
+        );
+
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 1000px) {
+
+      .workspace {
+
+        grid-template-columns:
+          minmax(0, 1fr);
+
+      }
+
+      .students-panel {
+
+        display:
+          none;
+
+      }
+
+      .mentor-card {
+
+        max-width:
+          55%;
+
+      }
+
+    }
+
+
+    @media (max-width: 700px) {
+
+      body {
+
+        overflow:
+          auto;
+
+      }
+
+
+      .topbar {
+
+        height:
+          62px;
+
+        min-height:
+          62px;
+
+        padding:
+          0 12px;
+
+      }
+
+
+      .logo-box {
+
+        width:
+          36px;
+
+        height:
+          36px;
+
+      }
+
+
+      .brand-title h1 {
+
+        font-size:
+          13px;
+
+      }
+
+
+      .brand-title p {
+
+        display:
+          none;
+
+      }
+
+
+      .top-btn {
+
+        width:
+          38px;
+
+        padding:
+          0;
+
+        font-size:
+          0;
+
+      }
+
+
+      .top-btn:first-letter {
+
+        font-size:
+          14px;
+
+      }
+
+
+      .workspace {
+
+        padding:
+          8px;
+
+      }
+
+
+      .stage {
+
+        min-height:
+          calc(100vh - 115px);
+
+        border-radius:
+          16px;
+
+      }
+
+
+      .mentor-card {
+
+        width:
+          180px;
+
+        height:
+          115px;
+
+        top:
+          14px;
+
+        right:
+          14px;
+
+      }
+
+
+      .stage-toolbar {
+
+        max-width:
+          calc(100% - 20px);
+
+        overflow:
+          auto;
+
+      }
+
+
+      .toolbar-btn {
+
+        white-space:
+          nowrap;
+
+      }
+
+
+      .brand-badge {
+
+        left:
+          10px;
+
+        bottom:
+          70px;
+
+      }
+
+    }
+
+
+    @media (max-width: 430px) {
+
+      .mentor-card {
+
+        width:
+          155px;
+
+        height:
+          100px;
+
+      }
+
+
+      .welcome-inner h2 {
+
+        font-size:
+          24px;
+
+      }
+
+
+      .welcome-inner p {
+
+        font-size:
+          12px;
+
+      }
+
+    }
+
+  </style>
+
 </head>
 
+
 <body>
-<div class="app">
 
-<header class="topbar">
-  <div class="brand">
-    <img class="logo" src="https://github.com/yourdocuments/products/blob/main/snk%20itlogo%20tn.svg?raw=true" alt="SNK">
-    <div>
-      <div class="brand-title">SNK Mentor Studio</div>
-      <div class="brand-sub">AI Course Production Workspace</div>
-    </div>
+
+  <!-- =====================================================
+       APP
+       ===================================================== -->
+
+  <div class="app">
+
+
+    <!-- ===================================================
+         TOP BAR
+         =================================================== -->
+
+    <header class="topbar">
+
+      <div class="brand-area">
+
+        <div class="logo-box">
+          SNK
+        </div>
+
+        <div class="brand-title">
+
+          <h1>
+            Mentor Studio
+          </h1>
+
+          <p>
+            Personal Course Studio
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="top-actions">
+
+        <button
+          class="top-btn"
+          type="button"
+          onclick="openBrandSettings()"
+        >
+          ⚙ Settings
+        </button>
+
+
+        <button
+          id="recordTopBtn"
+          class="top-btn record-btn"
+          type="button"
+          onclick="toggleRecording()"
+        >
+          ● Record
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================================================
+         WORKSPACE
+         =================================================== -->
+
+    <main class="workspace">
+
+
+      <!-- ================================================
+           MAIN STAGE
+           ================================================ -->
+
+      <section
+        id="stage"
+        class="stage"
+      >
+
+        <div class="stage-grid"></div>
+
+
+        <!-- MAIN IMAGE -->
+
+        <img
+          id="mainImage"
+          alt="Course slide"
+        >
+
+
+        <!-- MAIN VIDEO -->
+
+        <video
+          id="mainVideo"
+          playsinline
+          controls
+        ></video>
+
+
+        <!-- WELCOME -->
+
+        <div
+          id="welcomeContent"
+          class="welcome-content"
+        >
+
+          <div class="welcome-inner">
+
+            <div class="welcome-icon">
+              🎓
+            </div>
+
+            <h2>
+              Welcome to Mentor Studio
+            </h2>
+
+            <p>
+              Upload your course slide or video,
+              then add your Mentor camera window.
+              You can move and resize the Mentor
+              window anywhere inside the stage.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- ============================================
+             STAGE TOP
+             ============================================ -->
+
+        <div class="stage-top">
+
+          <div
+            id="stageStatusChip"
+            class="stage-chip"
+          >
+            Personal Course Studio
+          </div>
+
+
+          <div class="stage-actions">
+
+            <button
+              class="stage-action"
+              type="button"
+              title="Fullscreen"
+              onclick="fullscreenStage()"
+            >
+              ⛶
+            </button>
+
+
+            <button
+              class="stage-action"
+              type="button"
+              title="Clear main content"
+              onclick="clearMainContent()"
+            >
+              ↺
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- ============================================
+             MENTOR CARD
+             ============================================ -->
+
+        <div
+          id="mentorCard"
+          class="mentor-card"
+        >
+
+          <video
+            id="mentorVideo"
+            playsinline
+            muted
+          ></video>
+
+
+          <div
+            id="mentorPlaceholder"
+            class="mentor-placeholder"
+          >
+
+            <div class="mentor-placeholder-icon">
+              🎥
+            </div>
+
+            <span>
+              Mentor Camera
+            </span>
+
+          </div>
+
+
+          <div class="mentor-label">
+            Mentor
+          </div>
+
+
+          <div class="mentor-online"></div>
+
+
+          <div
+            id="mentorResize"
+            class="mentor-resize"
+            title="Resize"
+          ></div>
+
+        </div>
+
+
+        <!-- ============================================
+             BRAND BADGE
+             ============================================ -->
+
+        <div
+          id="brandBadge"
+          class="brand-badge"
+        >
+          SNK Mentor Studio
+        </div>
+
+
+        <!-- ============================================
+             TOOLBAR
+             ============================================ -->
+
+        <div class="stage-toolbar">
+
+
+          <!-- IMAGE -->
+
+          <label
+            class="toolbar-btn"
+            title="Upload slide/image"
+          >
+            🖼 Image
+
+            <input
+              id="imageUpload"
+              type="file"
+              accept="image/*"
+              hidden
+            >
+
+          </label>
+
+
+          <!-- MAIN VIDEO -->
+
+          <label
+            class="toolbar-btn"
+            title="Upload main video"
+          >
+            🎬 Video
+
+            <input
+              id="videoUpload"
+              type="file"
+              accept="video/*"
+              hidden
+            >
+
+          </label>
+
+
+          <!-- MENTOR VIDEO -->
+
+          <label
+            class="toolbar-btn"
+            title="Upload mentor video"
+          >
+            🎥 Mentor
+
+            <input
+              id="mentorUpload"
+              type="file"
+              accept="video/*"
+              hidden
+            >
+
+          </label>
+
+
+          <!-- PLAY -->
+
+          <button
+            class="toolbar-btn"
+            type="button"
+            onclick="toggleMainPlay()"
+          >
+            ▶ Play
+          </button>
+
+
+          <!-- RESET MENTOR -->
+
+          <button
+            class="toolbar-btn"
+            type="button"
+            onclick="resetMentorPosition()"
+            title="Reset Mentor position"
+          >
+            ↺ Mentor
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           STUDENTS
+           ================================================= -->
+
+      <aside class="students-panel">
+
+        <div class="students-header">
+
+          <div class="students-title-row">
+
+            <div>
+
+              <div class="students-title">
+                Students
+              </div>
+
+              <div
+                id="studentCount"
+                class="student-count"
+              >
+                0 Students
+              </div>
+
+            </div>
+
+
+            <button
+              class="add-student"
+              type="button"
+              onclick="addStudent()"
+              title="Add student"
+            >
+              +
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="studentsList"
+          class="students-list"
+        ></div>
+
+      </aside>
+
+    </main>
+
+
+    <!-- ===================================================
+         STATUS BAR
+         =================================================== -->
+
+    <footer class="statusbar">
+
+      <div class="status-left">
+
+        <span
+          id="statusDot"
+          class="status-dot"
+        ></span>
+
+        <span id="statusText">
+          Ready
+        </span>
+
+      </div>
+
+
+      <div>
+        SNK Mentor Studio
+      </div>
+
+    </footer>
+
   </div>
-  <div class="top-actions">
-    <span class="pill">PRIVATE AI STUDIO</span>
-    <button class="btn" id="settingsBtn">⚙ Settings</button>
-    <button class="btn danger" id="exitBtn">Exit</button>
-  </div>
-</header>
 
-<main class="main">
 
-<section class="workspace">
+  <!-- =====================================================
+       SETTINGS MODAL
+       ===================================================== -->
 
-  <div class="header-card">
-    <div>
-      <h1>Mentor Studio</h1>
-      <p>Teach. Record. Create professional courses.</p>
-    </div>
-    <span class="status" id="aiStatus">● AI READY</span>
-  </div>
+  <div
+    id="settingsModal"
+    class="modal"
+  >
 
-  <div class="stage empty" id="stage">
+    <div class="modal-card">
 
-    <div class="placeholder" id="placeholder">
-      <div class="placeholder-icon">🎓</div>
-      <h2>Your Studio is Ready</h2>
-      <p>Upload your lesson slides, presentation or video. Start your camera and choose an AI background.</p>
-      <button class="btn primary" id="startUpload">＋ Upload Lesson</button>
-    </div>
 
-    <img id="mainImage" alt="Lesson content">
-    <video id="mainVideo" controls playsinline></video>
+      <div class="modal-header">
 
-    <div class="stage-label" id="stageLabel">
-      <strong>SNK Mentor Studio</strong>
-      <small>Personal Course Production</small>
-    </div>
+        <h3>
+          Studio Settings
+        </h3>
 
-    <div class="brand-badge" id="brandBadge">SNK IT INSTITUTE</div>
 
-    <div class="camera-box" id="cameraBox">
-      <canvas id="cameraCanvas" width="640" height="400"></canvas>
-      <video id="rawCamera" autoplay muted playsinline></video>
-      <div class="camera-label"><i></i> AI MENTOR CAMERA</div>
-      <div class="resize-handle" id="resizeHandle"></div>
-    </div>
+        <button
+          class="modal-close"
+          type="button"
+          onclick="closeSettings()"
+        >
+          ×
+        </button>
 
-  </div>
+      </div>
 
-  <div class="record-status" id="recordStatus">
-    <span class="record-dot"></span>
-    <span id="recordText">Ready to record</span>
-    <span class="timer" id="timer">00:00:00</span>
-  </div>
 
-  <div class="toolbar">
-    <button class="tool" id="uploadBtn"><span class="ico">📂</span>Upload</button>
-    <button class="tool" id="cameraBtn"><span class="ico">📷</span>Camera</button>
-    <button class="tool" id="micBtn"><span class="ico">🎙️</span>Microphone</button>
-    <button class="tool" id="recordBtn"><span class="ico">⏺</span>Record</button>
-    <button class="tool" id="cleanBtn"><span class="ico">🎬</span>Clean View</button>
-    <button class="tool" id="cameraSizeBtn"><span class="ico">↗</span>Camera Size</button>
-    <button class="tool" id="backgroundBtn"><span class="ico">🖼️</span>Background</button>
-    <button class="tool" id="stopBtn"><span class="ico">■</span>Stop</button>
-  </div>
+      <div class="field">
 
-  <section class="bg-panel">
-    <div class="bg-head">
-      <h3>✨ AI Camera Background Studio</h3>
-      <span class="ai-badge" id="segmentationStatus">AI ENGINE READY</span>
-    </div>
+        <label for="brandInput">
+          Brand / Mentor Name
+        </label>
 
-    <div class="bg-options">
-      <button class="bg-option active" data-mode="original">
-        <span>📷</span>Original
-      </button>
-      <button class="bg-option" data-mode="remove">
-        <span>✂️</span>Remove BG
-      </button>
-      <button class="bg-option" data-mode="blur">
-        <span>🌫️</span>Blur
-      </button>
-      <button class="bg-option" data-mode="image">
-        <span>🖼️</span>My Image
-      </button>
-      <button class="bg-option" data-mode="color">
-        <span>🎨</span>Solid Color
-      </button>
+        <input
+          id="brandInput"
+          type="text"
+          placeholder="Enter brand name"
+          value="SNK Mentor Studio"
+        >
+
+      </div>
+
+
+      <div class="modal-actions">
+
+        <button
+          class="modal-btn cancel"
+          type="button"
+          onclick="closeSettings()"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          class="modal-btn save"
+          type="button"
+          onclick="saveSettings()"
+        >
+          Save Settings
+        </button>
+
+      </div>
+
     </div>
 
-    <p class="bg-help" id="bgHelp">
-      Original camera background is currently active. Start your camera to enable AI effects.
-    </p>
-  </section>
-
-  <div class="bottom-card">
-    <div>
-      <h3>Recording Workspace</h3>
-      <p id="lessonName">No lesson uploaded</p>
-    </div>
-    <div class="bottom-actions">
-      <button class="btn" id="renameBtn">✎ Lesson Title</button>
-      <button class="btn primary" id="downloadBtn" disabled>↓ Download Recording</button>
-    </div>
   </div>
 
-</section>
 
-<aside class="sidebar">
+  <!-- =====================================================
+       TOAST
+       ===================================================== -->
 
-  <div class="panel">
-    <div class="panel-title">
-      <h3>Studio Overview</h3>
-      <span>PRIVATE</span>
-    </div>
+  <div
+    id="toast"
+    class="toast"
+  ></div>
 
-    <div class="info-row">
-      <div class="info-icon">🎓</div>
-      <div><strong>Personal Workspace</strong><small>Local browser session</small></div>
-    </div>
-    <div class="info-row">
-      <div class="info-icon">✨</div>
-      <div><strong>AI Background Engine</strong><small id="aiCheck">Waiting for camera</small></div>
-    </div>
-    <div class="info-row">
-      <div class="info-icon">🎥</div>
-      <div><strong>Recording</strong><small id="recordCheck">Not recording</small></div>
-    </div>
-  </div>
 
-  <div class="panel">
-    <div class="panel-title"><h3>Session Checklist</h3><span>STATUS</span></div>
-    <div class="check">Lesson Content <span id="contentCheck">Not loaded</span></div>
-    <div class="check">Camera <span id="cameraCheck">Off</span></div>
-    <div class="check">Microphone <span id="micCheck">Off</span></div>
-    <div class="check">AI Background <span id="bgCheck">Original</span></div>
-  </div>
+  <!-- =====================================================
+       JAVASCRIPT
+       ===================================================== -->
 
-  <div class="panel">
-    <div class="panel-title"><h3>Production Tips</h3></div>
-    <div class="tip">
-      <strong>✨ AI Background</strong>
-      Keep your face well-lit and sit in front of a simple background for cleaner AI edges.
-    </div>
-    <div class="tip" style="margin-top:10px">
-      <strong>🎬 Recording</strong>
-      Select your Studio tab in the browser's screen-sharing dialog to capture the complete workspace.
-    </div>
-    <div class="tip" style="margin-top:10px">
-      <strong>🔒 Privacy</strong>
-      Segmentation runs in your browser. Camera and microphone access require your permission.
-    </div>
-  </div>
+  <script src="script.js"></script>
 
-</aside>
-</main>
-</div>
 
-<input type="file" id="fileInput" accept="image/*,video/*" hidden>
-<input type="file" id="bgInput" accept="image/*" hidden>
+  <!-- =====================================================
+       EXTRA MENTOR RESIZE SCRIPT
+       ===================================================== -->
 
-<div class="overlay" id="settingsModal">
-  <div class="modal">
-    <h2>Studio Settings</h2>
-    <p>Customize your course recording workspace.</p>
-    <label for="mentorName">Studio Title</label>
-    <input id="mentorName" value="SNK Mentor Studio">
-    <label for="brandName">Brand Badge</label>
-    <input id="brandName" value="SNK IT INSTITUTE">
-    <label for="cameraQuality">Camera Preview Size</label>
-    <select id="cameraQuality">
-      <option value="small">Small</option>
-      <option value="medium" selected>Medium</option>
-      <option value="large">Large</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn" id="closeSettings">Cancel</button>
-      <button class="btn primary" id="saveSettings">Save Settings</button>
-    </div>
-  </div>
-</div>
+  <script>
 
-<div class="overlay" id="renameModal">
-  <div class="modal">
-    <h2>Lesson Title</h2>
-    <p>Enter a title for your lesson.</p>
-    <label for="titleInput">Lesson Name</label>
-    <input id="titleInput" placeholder="e.g. UI UX Design Class 01">
-    <div class="modal-actions">
-      <button class="btn" id="cancelRename">Cancel</button>
-      <button class="btn primary" id="saveRename">Save Title</button>
-    </div>
-  </div>
-</div>
+    (function () {
 
-<div class="toast" id="toast"></div>
+      const mentorCard =
+        document.getElementById(
+          "mentorCard"
+        );
 
-<script>
-"use strict";
+      const resizeHandle =
+        document.getElementById(
+          "mentorResize"
+        );
 
-const $ = id => document.getElementById(id);
+      const stage =
+        document.getElementById(
+          "stage"
+        );
 
-const stage = $("stage");
-const cameraBox = $("cameraBox");
-const rawCamera = $("rawCamera");
-const cameraCanvas = $("cameraCanvas");
-const ctx = cameraCanvas.getContext("2d");
 
-let cameraStream = null;
-let micStream = null;
-let displayStream = null;
-let selfieSegmenter = null;
-let cameraRunning = false;
-let aiReady = false;
-let processing = false;
-let bgMode = "original";
-let bgImage = null;
-let bgObjectURL = null;
-let bgColor = "#243b53";
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordingBlob = null;
-let recording = false;
-let seconds = 0;
-let timerInterval = null;
-let mediaURL = null;
-let cameraSize = 0;
-const sizes = [150,220,300];
+      if (
+        !mentorCard ||
+        !resizeHandle ||
+        !stage
+      ) {
 
-/* TOAST */
-function toast(message){
-  const el=$("toast");
-  el.textContent=message;
-  el.classList.add("show");
-  clearTimeout(el._timer);
-  el._timer=setTimeout(()=>el.classList.remove("show"),3000);
-}
+        return;
 
-/* AI ENGINE */
-async function initializeAI(){
-  if(selfieSegmenter) return true;
-
-  if(typeof SelfieSegmentation==="undefined"){
-    $("aiStatus").textContent="AI LIBRARY ERROR";
-    $("segmentationStatus").textContent="LIBRARY NOT LOADED";
-    toast("AI library could not load. Check your internet connection.");
-    return false;
-  }
-
-  try{
-    $("segmentationStatus").textContent="LOADING AI MODEL...";
-
-    selfieSegmenter = new SelfieSegmentation({
-      locateFile:(file)=>{
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
       }
-    });
 
-    selfieSegmenter.setOptions({
-      modelSelection:1
-    });
 
-    selfieSegmenter.onResults(onAIResults);
+      let resizing =
+        false;
 
-    $("segmentationStatus").textContent="AI ENGINE READY";
-    $("aiStatus").textContent="● AI READY";
-    return true;
-  }catch(error){
-    console.error(error);
-    $("segmentationStatus").textContent="AI ERROR";
-    toast("Could not initialize AI background engine.");
-    return false;
-  }
-}
+      let pointerId =
+        null;
 
-/* AI FRAME COMPOSITING */
-function onAIResults(results){
-  const w=cameraCanvas.width;
-  const h=cameraCanvas.height;
+      let startX =
+        0;
 
-  ctx.save();
-  ctx.clearRect(0,0,w,h);
+      let startY =
+        0;
 
-  if(bgMode==="original"){
-    ctx.drawImage(results.image,0,0,w,h);
-  }
-  else{
-    // Draw selected background first
-    if(bgMode==="image" && bgImage){
-      ctx.drawImage(bgImage,0,0,w,h);
-    }
-    else if(bgMode==="blur"){
-      ctx.filter="blur(18px)";
-      ctx.drawImage(results.image,-12,-12,w+24,h+24);
-      ctx.filter="none";
-    }
-    else if(bgMode==="color"){
-      ctx.fillStyle=bgColor;
-      ctx.fillRect(0,0,w,h);
-    }
-    else{
-      // Transparent background preview
-      ctx.fillStyle="#111827";
-      ctx.fillRect(0,0,w,h);
-    }
+      let startWidth =
+        0;
 
-    // Keep only the person from the original camera
-    ctx.globalCompositeOperation="destination-out";
-    ctx.drawImage(results.segmentationMask,0,0,w,h);
+      let startHeight =
+        0;
 
-    ctx.globalCompositeOperation="destination-over";
 
-    // Draw person back over the background
-    ctx.drawImage(results.image,0,0,w,h);
+      resizeHandle.addEventListener(
+        "pointerdown",
+        function (event) {
 
-    // Re-apply mask to isolate foreground:
-    // Use a temporary canvas to form the person layer.
-    const personCanvas=onAIResults.personCanvas ||
-      (onAIResults.personCanvas=document.createElement("canvas"));
+          event.stopPropagation();
 
-    personCanvas.width=w;
-    personCanvas.height=h;
-    const pctx=personCanvas.getContext("2d");
+          if (
+            event.pointerType === "mouse" &&
+            event.button !== 0
+          ) {
 
-    pctx.clearRect(0,0,w,h);
-    pctx.drawImage(results.image,0,0,w,h);
-    pctx.globalCompositeOperation="destination-in";
-    pctx.drawImage(results.segmentationMask,0,0,w,h);
-    pctx.globalCompositeOperation="source-over";
+            return;
 
-    // Rebuild clean background and composite person
-    ctx.clearRect(0,0,w,h);
+          }
 
-    if(bgMode==="image" && bgImage){
-      ctx.drawImage(bgImage,0,0,w,h);
-    }else if(bgMode==="blur"){
-      ctx.filter="blur(18px)";
-      ctx.drawImage(results.image,-12,-12,w+24,h+24);
-      ctx.filter="none";
-    }else if(bgMode==="color"){
-      ctx.fillStyle=bgColor;
-      ctx.fillRect(0,0,w,h);
-    }else{
-      ctx.fillStyle="#111827";
-      ctx.fillRect(0,0,w,h);
-    }
 
-    ctx.drawImage(personCanvas,0,0,w,h);
-  }
+          resizing =
+            true;
 
-  ctx.restore();
-}
+          pointerId =
+            event.pointerId;
 
-/* CAMERA LOOP */
-async function cameraLoop(){
-  if(!cameraRunning || !rawCamera.videoWidth){
-    requestAnimationFrame(cameraLoop);
-    return;
-  }
+          startX =
+            event.clientX;
 
-  if(!processing && selfieSegmenter){
-    processing=true;
-    try{
-      await selfieSegmenter.send({image:rawCamera});
-    }catch(error){
-      console.error("AI frame error",error);
-    }
-    processing=false;
-  }
+          startY =
+            event.clientY;
 
-  requestAnimationFrame(cameraLoop);
-}
+          startWidth =
+            mentorCard.offsetWidth;
 
-/* CAMERA START */
-async function startCamera(){
-  if(!navigator.mediaDevices?.getUserMedia){
-    toast("Camera requires HTTPS or localhost.");
-    return;
-  }
+          startHeight =
+            mentorCard.offsetHeight;
 
-  try{
-    const ready=await initializeAI();
-    if(!ready) return;
 
-    cameraStream=await navigator.mediaDevices.getUserMedia({
-      video:{
-        width:{ideal:640},
-        height:{ideal:400},
-        facingMode:"user"
-      },
-      audio:false
-    });
+          try {
 
-    rawCamera.srcObject=cameraStream;
-    await rawCamera.play();
+            resizeHandle.setPointerCapture(
+              event.pointerId
+            );
 
-    cameraRunning=true;
-    cameraBox.style.display="block";
+          } catch (error) {}
 
-    $("cameraBtn").classList.add("active");
-    $("cameraCheck").textContent="Active";
-    $("aiCheck").textContent="AI processing active";
-    $("segmentationStatus").textContent="AI PROCESSING";
-    $("aiStatus").textContent="● CAMERA ACTIVE";
 
-    cameraLoop();
-    toast("AI camera started.");
-  }catch(error){
-    console.error(error);
-    toast("Camera permission denied or camera unavailable.");
-  }
-}
+          mentorCard.classList.add(
+            "dragging"
+          );
 
-function stopCamera(){
-  cameraRunning=false;
 
-  if(cameraStream){
-    cameraStream.getTracks().forEach(t=>t.stop());
-    cameraStream=null;
-  }
+          event.preventDefault();
 
-  rawCamera.srcObject=null;
-  cameraBox.style.display="none";
+        }
+      );
 
-  $("cameraBtn").classList.remove("active");
-  $("cameraCheck").textContent="Off";
-  $("aiCheck").textContent="Waiting for camera";
-  $("aiStatus").textContent="● AI READY";
-}
 
-$("cameraBtn").addEventListener("click",()=>{
-  cameraRunning ? stopCamera() : startCamera();
-});
+      document.addEventListener(
+        "pointermove",
+        function (event) {
 
-/* MICROPHONE */
-async function startMic(){
-  try{
-    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    $("micBtn").classList.add("active");
-    $("micCheck").textContent="Active";
-    toast("Microphone enabled.");
-  }catch(error){
-    toast("Microphone permission denied.");
-  }
-}
+          if (!resizing) {
+            return;
+          }
 
-function stopMic(){
-  if(micStream) micStream.getTracks().forEach(t=>t.stop());
-  micStream=null;
-  $("micBtn").classList.remove("active");
-  $("micCheck").textContent="Off";
-}
 
-$("micBtn").addEventListener("click",()=>{
-  micStream ? stopMic() : startMic();
-});
+          if (
+            pointerId !== null &&
+            event.pointerId !== pointerId
+          ) {
 
-/* BACKGROUND MODES */
-function setBackground(mode){
-  bgMode=mode;
+            return;
 
-  document.querySelectorAll(".bg-option").forEach(btn=>{
-    btn.classList.toggle("active",btn.dataset.mode===mode);
-  });
+          }
 
-  const messages={
-    original:"Original camera background is visible.",
-    remove:"AI removes the background. The preview uses a dark replacement backdrop.",
-    blur:"AI keeps you sharp and blurs the background.",
-    image:"Your uploaded image is used behind the AI-isolated person.",
-    color:"Your selected solid color is used as the background."
-  };
 
-  $("bgHelp").textContent=messages[mode];
-  $("bgCheck").textContent=mode;
-  toast(messages[mode]);
-}
+          const deltaX =
+            event.clientX -
+            startX;
 
-document.querySelectorAll(".bg-option").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    const mode=btn.dataset.mode;
+          const deltaY =
+            event.clientY -
+            startY;
 
-    if(mode==="image"){
-      $("bgInput").click();
-      return;
-    }
 
-    if(mode==="color"){
-      const color=prompt("Enter background color (e.g. #183153):",bgColor);
-      if(color && /^#[0-9a-f]{6}$/i.test(color)){
-        bgColor=color;
-        setBackground("color");
-      }else if(color){
-        toast("Please enter a valid hex color.");
+          let width =
+            startWidth +
+            deltaX;
+
+
+          let height =
+            startHeight +
+            deltaY;
+
+
+          const stageWidth =
+            stage.clientWidth;
+
+          const stageHeight =
+            stage.clientHeight;
+
+
+          const minWidth =
+            140;
+
+          const minHeight =
+            95;
+
+
+          const maxWidth =
+            Math.max(
+              minWidth,
+              Math.floor(
+                stageWidth * 0.48
+              )
+            );
+
+
+          const maxHeight =
+            Math.max(
+              minHeight,
+              Math.floor(
+                stageHeight * 0.65
+              )
+            );
+
+
+          width =
+            Math.max(
+              minWidth,
+              Math.min(
+                width,
+                maxWidth
+              )
+            );
+
+
+          height =
+            Math.max(
+              minHeight,
+              Math.min(
+                height,
+                maxHeight
+              )
+            );
+
+
+          mentorCard.style.width =
+            width + "px";
+
+          mentorCard.style.height =
+            height + "px";
+
+
+          event.preventDefault();
+
+        }
+      );
+
+
+      document.addEventListener(
+        "pointerup",
+        function (event) {
+
+          if (!resizing) {
+            return;
+          }
+
+
+          if (
+            pointerId !== null &&
+            event.pointerId !== pointerId
+          ) {
+
+            return;
+
+          }
+
+
+          resizing =
+            false;
+
+          pointerId =
+            null;
+
+
+          mentorCard.classList.remove(
+            "dragging"
+          );
+
+
+          localStorage.setItem(
+            "courseStudioMentorWidth",
+            String(
+              mentorCard.offsetWidth
+            )
+          );
+
+
+          localStorage.setItem(
+            "courseStudioMentorHeight",
+            String(
+              mentorCard.offsetHeight
+            )
+          );
+
+        }
+      );
+
+
+      /*
+       * Restore saved Mentor size
+       */
+
+      const savedWidth =
+        localStorage.getItem(
+          "courseStudioMentorWidth"
+        );
+
+      const savedHeight =
+        localStorage.getItem(
+          "courseStudioMentorHeight"
+        );
+
+
+      if (savedWidth) {
+
+        const width =
+          parseFloat(
+            savedWidth
+          );
+
+        if (!Number.isNaN(width)) {
+
+          mentorCard.style.width =
+            width + "px";
+
+        }
+
       }
-      return;
-    }
 
-    setBackground(mode);
-  });
-});
 
-/* CUSTOM BACKGROUND */
-$("bgInput").addEventListener("change",event=>{
-  const file=event.target.files[0];
-  if(!file) return;
+      if (savedHeight) {
 
-  if(bgObjectURL) URL.revokeObjectURL(bgObjectURL);
-  bgObjectURL=URL.createObjectURL(file);
+        const height =
+          parseFloat(
+            savedHeight
+          );
 
-  const img=new Image();
-  img.onload=()=>{
-    bgImage=img;
-    setBackground("image");
-    toast("Custom background applied.");
-  };
-  img.onerror=()=>toast("Could not load background image.");
-  img.src=bgObjectURL;
-  event.target.value="";
-});
+        if (!Number.isNaN(height)) {
 
-$("backgroundBtn").addEventListener("click",()=>$("bgInput").click());
+          mentorCard.style.height =
+            height + "px";
 
-/* UPLOAD LESSON */
-function openUpload(){$("fileInput").click()}
-$("uploadBtn").addEventListener("click",openUpload);
-$("startUpload").addEventListener("click",openUpload);
+        }
 
-$("fileInput").addEventListener("change",event=>{
-  const file=event.target.files[0];
-  if(!file) return;
-
-  if(mediaURL) URL.revokeObjectURL(mediaURL);
-  mediaURL=URL.createObjectURL(file);
-
-  $("mainImage").style.display="none";
-  $("mainVideo").style.display="none";
-  $("mainVideo").pause();
-
-  if(file.type.startsWith("image/")){
-    $("mainImage").src=mediaURL;
-    $("mainImage").style.display="block";
-  }else if(file.type.startsWith("video/")){
-    $("mainVideo").src=mediaURL;
-    $("mainVideo").style.display="block";
-  }else{
-    toast("Select an image or video.");
-    return;
-  }
-
-  $("placeholder").style.display="none";
-  stage.classList.remove("empty");
-  $("stageLabel").querySelector("strong").textContent=file.name;
-  $("lessonName").textContent=file.name;
-  $("contentCheck").textContent="Loaded";
-  toast("Lesson content loaded.");
-  event.target.value="";
-});
-
-/* CAMERA SIZE */
-$("cameraSizeBtn").addEventListener("click",()=>{
-  cameraSize=(cameraSize+1)%sizes.length;
-  cameraBox.style.width=sizes[cameraSize]+"px";
-  toast("Camera size updated.");
-});
-
-/* DRAG CAMERA */
-let drag=null;
-
-cameraBox.addEventListener("pointerdown",event=>{
-  if(event.target===$("resizeHandle")) return;
-  drag={
-    x:event.clientX,y:event.clientY,
-    left:cameraBox.offsetLeft,top:cameraBox.offsetTop
-  };
-  cameraBox.setPointerCapture(event.pointerId);
-});
-
-cameraBox.addEventListener("pointermove",event=>{
-  if(!drag) return;
-  const left=drag.left+event.clientX-drag.x;
-  const top=drag.top+event.clientY-drag.y;
-
-  cameraBox.style.left=Math.max(0,Math.min(stage.clientWidth-cameraBox.offsetWidth,left))+"px";
-  cameraBox.style.top=Math.max(0,Math.min(stage.clientHeight-cameraBox.offsetHeight,top))+"px";
-  cameraBox.style.right="auto";
-  cameraBox.style.bottom="auto";
-});
-cameraBox.addEventListener("pointerup",()=>drag=null);
-cameraBox.addEventListener("pointercancel",()=>drag=null);
-
-/* RESIZE CAMERA */
-let resize=null;
-$("resizeHandle").addEventListener("pointerdown",event=>{
-  event.stopPropagation();
-  resize={x:event.clientX,width:cameraBox.offsetWidth};
-  $("resizeHandle").setPointerCapture(event.pointerId);
-});
-$("resizeHandle").addEventListener("pointermove",event=>{
-  if(!resize) return;
-  cameraBox.style.width=Math.max(120,Math.min(450,
-    resize.width+event.clientX-resize.x))+"px";
-});
-$("resizeHandle").addEventListener("pointerup",()=>resize=null);
-$("resizeHandle").addEventListener("pointercancel",()=>resize=null);
-
-/* CLEAN VIEW */
-$("cleanBtn").addEventListener("click",()=>{
-  stage.classList.toggle("clean");
-  $("cleanBtn").classList.toggle("active");
-  toast(stage.classList.contains("clean")?"Clean view enabled.":"Labels restored.");
-});
-
-/* RECORDING */
-function timeString(s){
-  return [
-    Math.floor(s/3600),
-    Math.floor((s%3600)/60),
-    s%60
-  ].map(n=>String(n).padStart(2,"0")).join(":");
-}
-
-function startTimer(){
-  seconds=0;
-  $("timer").textContent="00:00:00";
-  timerInterval=setInterval(()=>{
-    seconds++;
-    $("timer").textContent=timeString(seconds);
-  },1000);
-}
-
-function stopTimer(){
-  clearInterval(timerInterval);
-  timerInterval=null;
-}
-
-async function startRecording(){
-  if(!navigator.mediaDevices?.getDisplayMedia){
-    toast("Screen recording requires a supported browser and HTTPS.");
-    return;
-  }
-
-  try{
-    displayStream=await navigator.mediaDevices.getDisplayMedia({
-      video:{frameRate:{ideal:30,max:30}},
-      audio:true
-    });
-
-    const tracks=[...displayStream.getTracks()];
-
-    if(micStream){
-      const audioTrack=micStream.getAudioTracks()[0];
-      if(audioTrack) tracks.push(audioTrack);
-    }
-
-    const combined=new MediaStream(tracks);
-
-    let options={};
-    if(MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")){
-      options.mimeType="video/webm;codecs=vp9,opus";
-    }else if(MediaRecorder.isTypeSupported("video/webm")){
-      options.mimeType="video/webm";
-    }
-
-    mediaRecorder=new MediaRecorder(combined,options);
-    recordedChunks=[];
-
-    mediaRecorder.ondataavailable=e=>{
-      if(e.data.size) recordedChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop=()=>{
-      recordingBlob=new Blob(recordedChunks,{
-        type:mediaRecorder.mimeType||"video/webm"
-      });
-
-      $("downloadBtn").disabled=false;
-      $("recordText").textContent="Recording ready";
-      $("recordCheck").textContent="Completed";
-      toast("Recording completed. Download is ready.");
-
-      if(displayStream){
-        displayStream.getTracks().forEach(t=>t.stop());
-        displayStream=null;
       }
-    };
 
-    displayStream.getVideoTracks()[0].addEventListener("ended",()=>{
-      if(recording) stopRecording();
-    });
+    })();
 
-    mediaRecorder.start(1000);
-    recording=true;
-    startTimer();
+  </script>
 
-    $("recordBtn").classList.add("recording");
-    $("recordStatus").classList.add("active");
-    $("recordText").textContent="Recording in progress";
-    $("recordCheck").textContent="Recording";
-    $("recordBtn").querySelector(".ico").textContent="⏹";
-
-    toast("Recording started.");
-  }catch(error){
-    console.error(error);
-    toast("Screen sharing cancelled or permission denied.");
-  }
-}
-
-function stopRecording(){
-  if(mediaRecorder && mediaRecorder.state!=="inactive"){
-    mediaRecorder.stop();
-  }
-
-  recording=false;
-  stopTimer();
-
-  $("recordBtn").classList.remove("recording");
-  $("recordBtn").querySelector(".ico").textContent="⏺";
-  $("recordStatus").classList.remove("active");
-  $("recordText").textContent="Processing recording";
-}
-
-$("recordBtn").addEventListener("click",()=>{
-  recording ? stopRecording() : startRecording();
-});
-
-$("stopBtn").addEventListener("click",()=>{
-  if(recording) stopRecording();
-  else{
-    stopCamera();
-    stopMic();
-    toast("Camera and microphone stopped.");
-  }
-});
-
-/* DOWNLOAD */
-$("downloadBtn").addEventListener("click",()=>{
-  if(!recordingBlob) return;
-
-  const url=URL.createObjectURL(recordingBlob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=`SNK-Mentor-${Date.now()}.webm`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),5000);
-});
-
-/* MODALS */
-function openModal(id){$(id).classList.add("show")}
-function closeModal(id){$(id).classList.remove("show")}
-
-$("settingsBtn").addEventListener("click",()=>openModal("settingsModal"));
-$("closeSettings").addEventListener("click",()=>closeModal("settingsModal"));
-
-$("saveSettings").addEventListener("click",()=>{
-  $("stageLabel").querySelector("strong").textContent=
-    $("mentorName").value.trim()||"SNK Mentor Studio";
-  $("brandBadge").textContent=
-    $("brandName").value.trim()||"SNK IT INSTITUTE";
-
-  const size=$("cameraQuality").value;
-  cameraSize=size==="small"?0:size==="large"?2:1;
-  cameraBox.style.width=sizes[cameraSize]+"px";
-
-  closeModal("settingsModal");
-  toast("Settings saved.");
-});
-
-$("renameBtn").addEventListener("click",()=>{
-  $("titleInput").value=$("stageLabel").querySelector("strong").textContent;
-  openModal("renameModal");
-});
-$("cancelRename").addEventListener("click",()=>closeModal("renameModal"));
-$("saveRename").addEventListener("click",()=>{
-  const title=$("titleInput").value.trim();
-  if(!title){toast("Enter a lesson title.");return;}
-  $("stageLabel").querySelector("strong").textContent=title;
-  closeModal("renameModal");
-  toast("Lesson title updated.");
-});
-
-document.querySelectorAll(".overlay").forEach(el=>{
-  el.addEventListener("click",e=>{
-    if(e.target===el) el.classList.remove("show");
-  });
-});
-
-/* EXIT */
-$("exitBtn").addEventListener("click",()=>{
-  if(recording && !confirm("Recording is active. Stop before exit?")) return;
-  if(recording) stopRecording();
-  stopCamera();
-  stopMic();
-  toast("Studio devices stopped. You may close this tab.");
-});
-
-/* CLEANUP */
-window.addEventListener("beforeunload",()=>{
-  stopTimer();
-  if(cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
-  if(micStream) micStream.getTracks().forEach(t=>t.stop());
-  if(displayStream) displayStream.getTracks().forEach(t=>t.stop());
-  if(bgObjectURL) URL.revokeObjectURL(bgObjectURL);
-});
-</script>
 
 </body>
+
 </html>
