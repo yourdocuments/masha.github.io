@@ -1,310 +1,6752 @@
 /* =========================================================
    PERSONAL COURSE STUDIO
-   STEP 3.6 — TELEPROMPTER + AUTO SCROLL + MIC VOICE TRACK
+   MENTOR STUDIO — STEP 3.8
    File: mentor/script.js
 
    FEATURES
    ---------------------------------------------------------
-   1. Main Image Upload
-   2. Main Video Upload
-   3. Main Video Play / Pause
-   4. Mentor Video Upload
-   5. Real Webcam
-   6. Camera Switch
-   7. AI Person Segmentation
-   8. Original Background
-   9. Remove Background
-   10. Blur Background
-   11. Custom Background Image
-   12. Solid Background
-   13. Mentor Drag
-   14. Mentor Resize
-   15. Students
-   16. Settings
-   17. Brand Name
-   18. Composition Canvas
-   19. Microphone Voice Track
-   20. Main Video Audio
-   21. Recording Timer
-   22. Recording Pause / Resume
-   23. Recording Preview
-   24. Download Recording
-   25. Record Again
-   26. Teleprompter
-   27. TXT Script Upload
-   28. Auto Scroll
-   29. Teleprompter Speed
-   30. Font Size
-   31. Opacity
-   32. Manual Scroll
-   33. Reset
-   34. Start Teleprompter With Recording
-   35. Teleprompter Recording Overlay Control
+   MAIN CONTENT
+   - Image upload
+   - Main video upload
+   - Main video play / pause
+   - Screen capture source
+
+   MENTOR
+   - Mentor video upload
+   - Webcam
+   - Camera switching
+   - Drag
+   - Resize
+
+   AI BACKGROUND
+   - Original
+   - Remove
+   - Blur
+   - Custom image
+   - Solid color
+   - Person preserved over background
+
+   AUDIO
+   - Main video audio
+   - Main volume
+   - Microphone
+   - Mic volume
+   - Mic monitor
+   - Web Audio mixing
+
+   TELEPROMPTER
+   - TXT upload
+   - Auto scroll
+   - Font size
+   - Speed
+   - Opacity
+   - Play / pause
+   - Start with recording
+   - Show while recording
+
+   RECORDING
+   - 720p
+   - 1080p
+   - 1440p
+   - 24 FPS
+   - 30 FPS
+   - 60 FPS
+   - Bitrate
+   - Start
+   - Pause
+   - Resume
+   - Stop
+   - Timer
+   - Preview
+   - Download
+   - Record again
+   - Delete
+
+   SCREEN CAPTURE
+   - Browser tab
+   - Window
+   - Screen
+   - Capture ended detection
+
+   FULLSCREEN
+   - Stage fullscreen
+   - Studio fullscreen
+   - Browser Fullscreen API when available
+
+   KEYBOARD
+   - Ctrl + Enter  = Start recording
+   - Ctrl + Shift + R = Start/Stop
+   - Ctrl + Shift + S = Screen capture
+   - Ctrl + Shift + F = Stage fullscreen
+   - Space = Pause/Resume recording
+   - Escape = close overlays/fullscreen
 
    ========================================================= */
 
 
-/* =========================================================
-   GLOBAL STATE
-   ========================================================= */
+(() => {
+  "use strict";
 
-const CourseStudio = {
 
-  version: "3.6",
+  /* =======================================================
+     DOM HELPER
+     ======================================================= */
 
-  recording: false,
-  recordingPaused: false,
+  const $ = (selector) =>
+    document.querySelector(selector);
 
-  mediaRecorder: null,
-  recordedChunks: [],
+  const $$ = (selector) =>
+    Array.from(document.querySelectorAll(selector));
 
-  recordingStartTime: 0,
-  recordingPausedAt: 0,
-  recordingPausedTotal: 0,
 
-  recordingTimerInterval: null,
+  /* =======================================================
+     ELEMENTS
+     ======================================================= */
 
-  cameraStream: null,
-  microphoneStream: null,
+  const stage =
+    $("#stage");
 
-  currentCameraFacing: "user",
+  const mainImage =
+    $("#mainImage");
 
-  segmentation: null,
-  segmentationReady: false,
-  segmentationBusy: false,
+  const mainVideo =
+    $("#mainVideo");
 
-  backgroundMode: "original",
-  customBackgroundImage: null,
+  const welcomeContent =
+    $("#welcomeContent");
 
-  mentorSource: "placeholder",
+  const mentorCard =
+    $("#mentorCard");
 
-  mentorX: null,
-  mentorY: null,
+  const mentorVideo =
+    $("#mentorVideo");
 
-  mentorWidth: null,
-  mentorHeight: null,
+  const mentorCameraVideo =
+    $("#mentorCameraVideo");
 
-  compositionCanvas: null,
-  compositionCtx: null,
+  const mentorAICanvas =
+    $("#mentorAICanvas");
 
-  audioContext: null,
-  audioDestination: null,
+  const mentorPlaceholder =
+    $("#mentorPlaceholder");
 
-  audioSources: new Map(),
+  const mentorSourceLabel =
+    $("#mentorSourceLabel");
 
-  teleprompter: null,
+  const brandBadge =
+    $("#brandBadge");
 
-  teleprompterAnimation: null,
+  const recordingOverlay =
+    $("#recordingOverlay");
 
-  initialized: false
-};
+  const recordingOverlayTime =
+    $("#recordingOverlayTime");
 
+  const recordingOverlayText =
+    $("#recordingOverlayText");
 
-/* =========================================================
-   DOM REFERENCES
-   ========================================================= */
+  const screenShareBadge =
+    $("#screenShareBadge");
 
-const $ = (id) => document.getElementById(id);
 
+  /* =======================================================
+     FILE INPUTS
+     ======================================================= */
 
-/* Main */
+  const mainFileInput =
+    $("#mainFileInput");
 
-const stage = $("stage");
+  const mainVideoInput =
+    $("#mainVideoInput");
 
-const mainImage = $("mainImage");
-const mainVideo = $("mainVideo");
+  const mentorFileInput =
+    $("#mentorFileInput");
 
-const welcomeContent = $("welcomeContent");
+  const backgroundImageUpload =
+    $("#backgroundImageUpload");
 
 
-/* Mentor */
+  /* =======================================================
+     AI CANVASES
+     ======================================================= */
 
-const mentorCard = $("mentorCard");
+  const aiCanvas =
+    $("#aiCanvas");
 
-const mentorVideo = $("mentorVideo");
-const mentorCameraVideo = $("mentorCameraVideo");
-const mentorAICanvas = $("mentorAICanvas");
+  const aiSourceCanvas =
+    $("#aiSourceCanvas");
 
-const mentorPlaceholder = $("mentorPlaceholder");
-const mentorSourceLabel = $("mentorSourceLabel");
+  const aiMaskCanvas =
+    $("#aiMaskCanvas");
 
-const mentorResize = $("mentorResize");
 
+  /* =======================================================
+     STATE
+     ======================================================= */
 
-/* Brand */
+  const state = {
 
-const brandBadge = $("brandBadge");
+    main: {
+      type: "none",
+      objectUrl: null
+    },
 
+    mentor: {
+      type: "none",
+      objectUrl: null
+    },
 
-/* Top / toolbar */
+    camera: {
+      stream: null,
+      deviceIndex: 0,
+      devices: []
+    },
+
+    screen: {
+      stream: null,
+      video: null,
+      active: false
+    },
 
-const uploadMainBtn = $("uploadMainBtn");
-const uploadVideoBtn = $("uploadVideoBtn");
+    ai: {
+      enabled: false,
+      mode: "original",
+      backgroundImage: null,
+      segmentation: null,
+      processing: false,
+      ready: false,
+      sourceWidth: 640,
+      sourceHeight: 360,
+      personCanvas: null,
+      personContext: null,
+      sourceContext: null,
+      maskContext: null
+    },
 
-const mainPlayBtn = $("mainPlayBtn");
-const mainPauseBtn = $("mainPauseBtn");
+    audio: {
+      context: null,
+      destination: null,
 
-const uploadMentorBtn = $("uploadMentorBtn");
+      mainSource: null,
+      mainGain: null,
 
-const startCameraBtn = $("startCameraBtn");
-const stopCameraBtn = $("stopCameraBtn");
-const switchCameraBtn = $("switchCameraBtn");
+      micSource: null,
+      micGain: null,
 
-const recordBtn = $("recordBtn");
+      micStream: null,
 
-const settingsBtn = $("settingsBtn");
+      monitorGain: null,
 
+      initialized: false
+    },
 
-/* Side camera */
+    recording: {
 
-const startCameraSideBtn = $("startCameraSideBtn");
-const stopCameraSideBtn = $("stopCameraSideBtn");
-const switchCameraSideBtn = $("switchCameraSideBtn");
+      active: false,
+      paused: false,
 
-const cameraStatus = $("cameraStatus");
+      recorder: null,
 
+      chunks: [],
 
-/* Background */
+      blob: null,
+      url: null,
 
-const bgOriginalBtn = $("bgOriginalBtn");
-const bgRemoveBtn = $("bgRemoveBtn");
-const bgBlurBtn = $("bgBlurBtn");
-const bgImageBtn = $("bgImageBtn");
-const bgColorBtn = $("bgColorBtn");
+      timerStart: 0,
+      pausedAt: 0,
+      elapsedBeforePause: 0,
 
-const backgroundColor = $("backgroundColor");
-const backgroundImageUpload = $("backgroundImageUpload");
+      timerId: null,
 
+      canvasStream: null,
+      finalStream: null,
 
-/* Teleprompter */
+      fps: 30,
 
-const openTeleprompterTopBtn = $("openTeleprompterTopBtn");
-const openTeleprompterBtn = $("openTeleprompterBtn");
+      width: 1920,
+      height: 1080,
 
+      bitrate: 8000000,
 
-/* Audio */
+      mimeType:
+        "video/webm;codecs=vp9",
 
-const mainVideoAudioCheckbox = $("mainVideoAudioCheckbox");
+      renderLoop: false,
 
+      preview: null
+    },
 
-/* Students */
+    teleprompter: {
+      initialized: false,
+      open: false,
+      playing: false,
+      startWithRecording: false,
+      showWhileRecording: true,
+      speed: 2,
+      fontSize: 32,
+      opacity: 0.88,
+      text: ""
+    },
 
-const studentsList = $("studentsList");
-const addStudentBtn = $("addStudentBtn");
+    settings: {
+      brandName:
+        "Personal Course Studio"
+    },
 
+    composition: {
+      canvas: null,
+      context: null
+    },
 
-/* Hidden files */
+    render: {
+      raf: null,
+      running: false
+    }
 
-const mainFileInput = $("mainFileInput");
-const mainVideoInput = $("mainVideoInput");
-const mentorFileInput = $("mentorFileInput");
+  };
 
 
-/* Settings */
+  /* =======================================================
+     INITIALIZE
+     ======================================================= */
 
-const settingsModal = $("settingsModal");
+  function init() {
 
-const brandNameInput = $("brandNameInput");
+    setupCompositionCanvas();
 
-const closeSettingsBtn = $("closeSettingsBtn");
-const closeSettingsFooterBtn = $("closeSettingsFooterBtn");
-const saveSettingsBtn = $("saveSettingsBtn");
+    setupAI();
 
+    setupButtons();
 
-/* =========================================================
-   INITIALIZATION
-   ========================================================= */
+    setupFiles();
 
-document.addEventListener("DOMContentLoaded", () => {
+    setupAudioControls();
 
-  initializeCourseStudio();
+    setupTeleprompter();
 
-});
+    setupSettings();
 
+    setupRecordingSettings();
 
-function initializeCourseStudio() {
+    setupScreenCapture();
 
-  if (CourseStudio.initialized) {
-    return;
+    setupFullscreen();
+
+    setupKeyboard();
+
+    setupMentorDragResize();
+
+    restoreSettings();
+
+    restoreRecordingSettings();
+
+    renderMentorState();
+
+    updateStatus();
+
+    startRenderLoop();
+
+    console.log(
+      "Personal Course Studio Step 3.8 ready."
+    );
+
   }
 
-  CourseStudio.initialized = true;
 
+  /* =======================================================
+     COMPOSITION CANVAS
+     ======================================================= */
 
-  createCompositionCanvas();
+  function setupCompositionCanvas() {
 
-  restoreSettings();
+    const canvas =
+      document.createElement("canvas");
 
-  restoreMentorSize();
+    canvas.width = 1920;
+    canvas.height = 1080;
 
-  setupMainControls();
+    state.composition.canvas =
+      canvas;
 
-  setupMentorControls();
-
-  setupCameraControls();
-
-  setupBackgroundControls();
-
-  setupStudentControls();
-
-  setupSettingsControls();
-
-  setupKeyboardShortcuts();
-
-  setupStageResize();
-
-  createTeleprompter();
-
-  setupTeleprompterButtons();
-
-  updateUI();
-
-  renderCompositionLoop();
-
-  console.log(
-    "Personal Course Studio Step 3.6 initialized."
-  );
-}
-
-
-/* =========================================================
-   MAIN IMAGE
-   ========================================================= */
-
-function setupMainControls() {
-
-  if (uploadMainBtn) {
-
-    uploadMainBtn.addEventListener(
-      "click",
-      () => {
-        if (mainFileInput) {
-          mainFileInput.click();
+    state.composition.context =
+      canvas.getContext(
+        "2d",
+        {
+          alpha: false,
+          desynchronized: true
         }
+      );
+
+    applyRecordingResolution();
+
+  }
+
+
+  function getSelectedResolution() {
+
+    const value =
+      $("#recordingResolution")?.value ||
+      $("#advancedResolution")?.value ||
+      "1920x1080";
+
+    const parts =
+      value.split("x").map(Number);
+
+    return {
+      width:
+        parts[0] || 1920,
+
+      height:
+        parts[1] || 1080
+    };
+
+  }
+
+
+  function applyRecordingResolution() {
+
+    const resolution =
+      getSelectedResolution();
+
+    state.recording.width =
+      resolution.width;
+
+    state.recording.height =
+      resolution.height;
+
+    const canvas =
+      state.composition.canvas;
+
+    if (!canvas) {
+      return;
+    }
+
+    canvas.width =
+      resolution.width;
+
+    canvas.height =
+      resolution.height;
+
+  }
+
+
+  function getSelectedFPS() {
+
+    const value =
+      $("#recordingFPS")?.value ||
+      $("#advancedFPS")?.value ||
+      "30";
+
+    const fps =
+      Number(value);
+
+    return (
+      fps === 24 ||
+      fps === 60
+    )
+      ? fps
+      : 30;
+
+  }
+
+
+  function getSelectedBitrate() {
+
+    const value =
+      $("#recordingBitrate")?.value ||
+      "8000000";
+
+    const bitrate =
+      Number(value);
+
+    if (!Number.isFinite(bitrate)) {
+      return 8000000;
+    }
+
+    return bitrate;
+
+  }
+
+
+  /* =======================================================
+     MAIN CONTENT
+     ======================================================= */
+
+  function showMainImage(file) {
+
+    if (!file) {
+      return;
+    }
+
+    cleanupUrl(
+      state.main.objectUrl
+    );
+
+    const url =
+      URL.createObjectURL(file);
+
+    state.main.objectUrl =
+      url;
+
+    mainImage.src =
+      url;
+
+    mainImage.style.display =
+      "block";
+
+    mainVideo.style.display =
+      "none";
+
+    if (
+      mainVideo.src
+    ) {
+
+      try {
+        mainVideo.pause();
+      } catch {}
+
+    }
+
+    state.main.type =
+      "image";
+
+    hideWelcome();
+
+    renderCompositionFrame();
+
+  }
+
+
+  function showMainVideo(file) {
+
+    if (!file) {
+      return;
+    }
+
+    cleanupUrl(
+      state.main.objectUrl
+    );
+
+    const url =
+      URL.createObjectURL(file);
+
+    state.main.objectUrl =
+      url;
+
+    mainVideo.src =
+      url;
+
+    mainVideo.style.display =
+      "block";
+
+    mainImage.style.display =
+      "none";
+
+    state.main.type =
+      "video";
+
+    hideWelcome();
+
+    initializeMainAudio();
+
+    renderCompositionFrame();
+
+  }
+
+
+  function hideWelcome() {
+
+    if (!welcomeContent) {
+      return;
+    }
+
+    welcomeContent.style.display =
+      "none";
+
+  }
+
+
+  /* =======================================================
+     SCREEN CAPTURE
+     ======================================================= */
+
+  function setupScreenCapture() {
+
+    const button =
+      $("#screenCaptureBtn");
+
+    if (!button) {
+      return;
+    }
+
+    button.addEventListener(
+      "click",
+      async () => {
+
+        if (
+          state.screen.active
+        ) {
+
+          stopScreenCapture();
+
+          return;
+
+        }
+
+        await startScreenCapture();
+
       }
     );
 
   }
 
 
-  if (mainFileInput) {
+  async function startScreenCapture() {
 
-    mainFileInput.addEventListener(
-      "change",
-      handleMainImageUpload
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getDisplayMedia
+    ) {
+
+      showToast(
+        "Screen capture is not supported in this browser."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const stream =
+        await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+
+          preferCurrentTab: false,
+
+          selfBrowserSurface:
+            "exclude",
+
+          systemAudio:
+            "include",
+
+          surfaceSwitching:
+            "include"
+        });
+
+
+      state.screen.stream =
+        stream;
+
+      state.screen.active =
+        true;
+
+
+      const video =
+        document.createElement("video");
+
+      video.autoplay =
+        true;
+
+      video.muted =
+        true;
+
+      video.playsInline =
+        true;
+
+      video.srcObject =
+        stream;
+
+      state.screen.video =
+        video;
+
+
+      try {
+        await video.play();
+      } catch {}
+
+
+      const track =
+        stream.getVideoTracks()[0];
+
+
+      if (track) {
+
+        track.addEventListener(
+          "ended",
+          () => {
+
+            stopScreenCapture();
+
+          }
+        );
+
+      }
+
+
+      if (screenShareBadge) {
+
+        screenShareBadge.classList.add(
+          "show"
+        );
+
+      }
+
+
+      const button =
+        $("#screenCaptureBtn");
+
+      if (button) {
+
+        button.textContent =
+          "Stop Screen";
+
+        button.classList.add(
+          "active"
+        );
+
+      }
+
+
+      /*
+       * Screen becomes main composition source.
+       */
+      state.main.type =
+        "screen";
+
+      hideWelcome();
+
+      renderCompositionFrame();
+
+      updateStatus();
+
+      showToast(
+        "Screen capture started."
+      );
+
+    } catch (error) {
+
+      console.warn(
+        "Screen capture failed:",
+        error
+      );
+
+      showToast(
+        "Screen capture cancelled."
+      );
+
+    }
+
+  }
+
+
+  function stopScreenCapture() {
+
+    const stream =
+      state.screen.stream;
+
+    if (stream) {
+
+      stream
+        .getTracks()
+        .forEach(
+          track => {
+
+            try {
+              track.stop();
+            } catch {}
+
+          }
+        );
+
+    }
+
+
+    state.screen.stream =
+      null;
+
+    state.screen.video =
+      null;
+
+    state.screen.active =
+      false;
+
+
+    if (screenShareBadge) {
+
+      screenShareBadge.classList.remove(
+        "show"
+      );
+
+    }
+
+
+    const button =
+      $("#screenCaptureBtn");
+
+    if (button) {
+
+      button.textContent =
+        "Screen Capture";
+
+      button.classList.remove(
+        "active"
+      );
+
+    }
+
+
+    if (
+      state.main.type ===
+      "screen"
+    ) {
+
+      state.main.type =
+        mainVideo.src
+          ? "video"
+          : mainImage.src
+            ? "image"
+            : "none";
+
+    }
+
+
+    renderCompositionFrame();
+
+    updateStatus();
+
+  }
+
+
+  /* =======================================================
+     MENTOR VIDEO
+     ======================================================= */
+
+  function showMentorVideo(file) {
+
+    if (!file) {
+      return;
+    }
+
+    cleanupUrl(
+      state.mentor.objectUrl
+    );
+
+    const url =
+      URL.createObjectURL(file);
+
+    state.mentor.objectUrl =
+      url;
+
+    mentorVideo.src =
+      url;
+
+    mentorVideo.style.display =
+      "block";
+
+    mentorCameraVideo.style.display =
+      "none";
+
+    mentorAICanvas.style.display =
+      "none";
+
+    mentorPlaceholder.style.display =
+      "none";
+
+    state.mentor.type =
+      "video";
+
+    mentorSourceLabel.textContent =
+      "Mentor Video";
+
+    mentorVideo.play().catch(
+      () => {}
+    );
+
+    renderCompositionFrame();
+
+  }
+
+
+  /* =======================================================
+     CAMERA
+     ======================================================= */
+
+  async function loadCameraDevices() {
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.enumerateDevices
+    ) {
+      return [];
+    }
+
+    try {
+
+      const devices =
+        await navigator.mediaDevices
+          .enumerateDevices();
+
+      state.camera.devices =
+        devices.filter(
+          device =>
+            device.kind ===
+            "videoinput"
+        );
+
+      return state.camera.devices;
+
+    } catch (error) {
+
+      console.warn(
+        "Camera device enumeration failed:",
+        error
+      );
+
+      return [];
+
+    }
+
+  }
+
+
+  async function startCamera() {
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      showToast(
+        "Camera access is not supported."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      stopCamera(false);
+
+
+      await loadCameraDevices();
+
+
+      const devices =
+        state.camera.devices;
+
+
+      let deviceId =
+        devices[
+          state.camera.deviceIndex
+        ]?.deviceId;
+
+
+      const constraints = {
+
+        audio: false,
+
+        video: deviceId
+          ? {
+              deviceId: {
+                exact:
+                  deviceId
+              },
+
+              width: {
+                ideal: 1280
+              },
+
+              height: {
+                ideal: 720
+              }
+            }
+
+          : {
+              width: {
+                ideal: 1280
+              },
+
+              height: {
+                ideal: 720
+              }
+            }
+
+      };
+
+
+      const stream =
+        await navigator.mediaDevices
+          .getUserMedia(
+            constraints
+          );
+
+
+      state.camera.stream =
+        stream;
+
+
+      mentorCameraVideo.srcObject =
+        stream;
+
+      mentorCameraVideo.style.display =
+        "block";
+
+      mentorVideo.style.display =
+        "none";
+
+      mentorAICanvas.style.display =
+        "none";
+
+      mentorPlaceholder.style.display =
+        "none";
+
+
+      state.mentor.type =
+        "camera";
+
+
+      mentorSourceLabel.textContent =
+        "Camera";
+
+
+      try {
+
+        await mentorCameraVideo.play();
+
+      } catch {}
+
+
+      /*
+       * Reinitialize segmentation.
+       */
+      setupAI();
+
+      updateCameraStatus(
+        true,
+        "Camera live"
+      );
+
+
+      showToast(
+        "Camera started."
+      );
+
+
+      renderCompositionFrame();
+
+    } catch (error) {
+
+      console.error(
+        "Camera start error:",
+        error
+      );
+
+      updateCameraStatus(
+        false,
+        "Camera unavailable"
+      );
+
+      showToast(
+        "Camera permission was not granted."
+      );
+
+    }
+
+  }
+
+
+  function stopCamera(showMessage = true) {
+
+    if (state.camera.stream) {
+
+      state.camera.stream
+        .getTracks()
+        .forEach(
+          track => {
+
+            try {
+              track.stop();
+            } catch {}
+
+          }
+        );
+
+    }
+
+
+    state.camera.stream =
+      null;
+
+
+    try {
+
+      mentorCameraVideo.pause();
+
+    } catch {}
+
+
+    mentorCameraVideo.srcObject =
+      null;
+
+
+    if (
+      state.mentor.type ===
+      "camera"
+    ) {
+
+      state.mentor.type =
+        "none";
+
+      mentorCameraVideo.style.display =
+        "none";
+
+      mentorAICanvas.style.display =
+        "none";
+
+      mentorPlaceholder.style.display =
+        "flex";
+
+      mentorSourceLabel.textContent =
+        "Mentor";
+
+    }
+
+
+    updateCameraStatus(
+      false,
+      "Camera stopped"
+    );
+
+
+    if (showMessage) {
+
+      showToast(
+        "Camera stopped."
+      );
+
+    }
+
+
+    renderCompositionFrame();
+
+  }
+
+
+  async function switchCamera() {
+
+    await loadCameraDevices();
+
+    const count =
+      state.camera.devices.length;
+
+    if (count < 2) {
+
+      showToast(
+        "Only one camera is available."
+      );
+
+      return;
+
+    }
+
+
+    state.camera.deviceIndex =
+      (
+        state.camera.deviceIndex +
+        1
+      ) % count;
+
+
+    await startCamera();
+
+  }
+
+
+  function updateCameraStatus(
+    online,
+    text
+  ) {
+
+    const status =
+      $("#cameraStatus");
+
+    const dot =
+      $("#cameraStatusDot");
+
+    const bottomDot =
+      $("#bottomCameraDot");
+
+
+    if (status) {
+
+      status.textContent =
+        text;
+
+    }
+
+
+    dot?.classList.toggle(
+      "online",
+      online
+    );
+
+    bottomDot?.classList.toggle(
+      "green",
+      online
     );
 
   }
 
 
-  if (uploadVideoBtn) {
+  /* =======================================================
+     AI SEGMENTATION
+     ======================================================= */
 
-    uploadVideoBtn.addEventListener(
+  function setupAI() {
+
+    if (
+      typeof SelfieSegmentation ===
+      "undefined"
+    ) {
+
+      console.warn(
+        "MediaPipe Selfie Segmentation not loaded."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      state.ai.segmentation
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const segmentation =
+        new SelfieSegmentation({
+          locateFile: file =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+        });
+
+
+      segmentation.setOptions({
+        modelSelection: 1
+      });
+
+
+      segmentation.onResults(
+        results => {
+
+          processSegmentation(
+            results
+          );
+
+        }
+      );
+
+
+      state.ai.segmentation =
+        segmentation;
+
+      state.ai.ready =
+        true;
+
+    } catch (error) {
+
+      console.error(
+        "AI initialization failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  async function processCameraAI() {
+
+    if (
+      !state.ai.ready ||
+      !state.ai.segmentation ||
+      !state.camera.stream
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      state.ai.processing
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      mentorCameraVideo.readyState <
+      2
+    ) {
+
+      return;
+
+    }
+
+
+    state.ai.processing =
+      true;
+
+
+    try {
+
+      await state.ai.segmentation.send({
+        image:
+          mentorCameraVideo
+      });
+
+    } catch (error) {
+
+      console.warn(
+        "Segmentation frame failed:",
+        error
+      );
+
+    } finally {
+
+      state.ai.processing =
+        false;
+
+    }
+
+  }
+
+
+  function processSegmentation(
+    results
+  ) {
+
+    if (
+      !results ||
+      !results.image ||
+      !results.segmentationMask
+    ) {
+
+      return;
+
+    }
+
+
+    const source =
+      results.image;
+
+    const mask =
+      results.segmentationMask;
+
+
+    const width =
+      source.videoWidth ||
+      source.width ||
+      640;
+
+    const height =
+      source.videoHeight ||
+      source.height ||
+      360;
+
+
+    ensureAICanvases(
+      width,
+      height
+    );
+
+
+    const sourceContext =
+      state.ai.sourceContext;
+
+    const maskContext =
+      state.ai.maskContext;
+
+    const personCanvas =
+      state.ai.personCanvas;
+
+    const personContext =
+      state.ai.personContext;
+
+
+    sourceContext.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    maskContext.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    sourceContext.drawImage(
+      source,
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    maskContext.drawImage(
+      mask,
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    const sourceData =
+      sourceContext.getImageData(
+        0,
+        0,
+        width,
+        height
+      );
+
+
+    const maskData =
+      maskContext.getImageData(
+        0,
+        0,
+        width,
+        height
+      );
+
+
+    const personData =
+      personContext.createImageData(
+        width,
+        height
+      );
+
+
+    const src =
+      sourceData.data;
+
+    const maskPixels =
+      maskData.data;
+
+    const dst =
+      personData.data;
+
+
+    /*
+     * MediaPipe foreground confidence.
+     *
+     * The mask's red channel is used.
+     *
+     * Alpha is softened around the edge
+     * to reduce harsh cutouts.
+     */
+
+    for (
+      let i = 0;
+      i < src.length;
+      i += 4
+    ) {
+
+      const confidence =
+        maskPixels[i] / 255;
+
+
+      const alpha =
+        Math.max(
+          0,
+          Math.min(
+            1,
+            (
+              confidence -
+              0.15
+            ) / 0.65
+          )
+        );
+
+
+      dst[i] =
+        src[i];
+
+      dst[i + 1] =
+        src[i + 1];
+
+      dst[i + 2] =
+        src[i + 2];
+
+      dst[i + 3] =
+        Math.round(
+          alpha * 255
+        );
+
+    }
+
+
+    personContext.putImageData(
+      personData,
+      0,
+      0
+    );
+
+
+    state.ai.lastResults =
+      results;
+
+
+    if (
+      state.ai.mode !==
+      "original"
+    ) {
+
+      drawAIResult();
+
+    }
+
+  }
+
+
+  function ensureAICanvases(
+    width,
+    height
+  ) {
+
+    if (
+      !state.ai.personCanvas
+    ) {
+
+      state.ai.personCanvas =
+        document.createElement(
+          "canvas"
+        );
+
+      state.ai.personContext =
+        state.ai.personCanvas
+          .getContext(
+            "2d"
+          );
+
+    }
+
+
+    if (
+      !aiSourceCanvas ||
+      !aiMaskCanvas
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      state.ai.personCanvas.width !==
+      width ||
+      state.ai.personCanvas.height !==
+      height
+    ) {
+
+      state.ai.personCanvas.width =
+        width;
+
+      state.ai.personCanvas.height =
+        height;
+
+      aiSourceCanvas.width =
+        width;
+
+      aiSourceCanvas.height =
+        height;
+
+      aiMaskCanvas.width =
+        width;
+
+      aiMaskCanvas.height =
+        height;
+
+    }
+
+
+    state.ai.sourceContext =
+      aiSourceCanvas.getContext(
+        "2d"
+      );
+
+    state.ai.maskContext =
+      aiMaskCanvas.getContext(
+        "2d"
+      );
+
+  }
+
+
+  function drawAIResult() {
+
+    if (
+      !state.ai.personCanvas ||
+      !mentorAICanvas
+    ) {
+
+      return;
+
+    }
+
+
+    const canvas =
+      mentorAICanvas;
+
+    const context =
+      canvas.getContext(
+        "2d"
+      );
+
+
+    const width =
+      state.ai.personCanvas.width;
+
+    const height =
+      state.ai.personCanvas.height;
+
+
+    if (
+      width <= 0 ||
+      height <= 0
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      canvas.width !== width ||
+      canvas.height !== height
+    ) {
+
+      canvas.width =
+        width;
+
+      canvas.height =
+        height;
+
+    }
+
+
+    /*
+     * Background first.
+     */
+
+    if (
+      state.ai.mode ===
+      "blur"
+    ) {
+
+      drawBlurredCameraBackground(
+        context,
+        width,
+        height
+      );
+
+    }
+
+    else if (
+      state.ai.mode ===
+      "image"
+    ) {
+
+      if (
+        state.ai.backgroundImage
+      ) {
+
+        drawCoverImage(
+          context,
+          state.ai.backgroundImage,
+          0,
+          0,
+          width,
+          height
+        );
+
+      } else {
+
+        context.fillStyle =
+          "#d9eafa";
+
+        context.fillRect(
+          0,
+          0,
+          width,
+          height
+        );
+
+      }
+
+    }
+
+    else if (
+      state.ai.mode ===
+      "color"
+    ) {
+
+      const color =
+        $("#backgroundColor")
+          ?.value ||
+        "#d9eafa";
+
+      context.fillStyle =
+        color;
+
+      context.fillRect(
+        0,
+        0,
+        width,
+        height
+      );
+
+    }
+
+    else if (
+      state.ai.mode ===
+      "remove"
+    ) {
+
+      /*
+       * Transparent background.
+       */
+
+      context.clearRect(
+        0,
+        0,
+        width,
+        height
+      );
+
+    }
+
+    else {
+
+      /*
+       * Original.
+       */
+
+      context.drawImage(
+        mentorCameraVideo,
+        0,
+        0,
+        width,
+        height
+      );
+
+    }
+
+
+    /*
+     * Person on top.
+     */
+
+    if (
+      state.ai.mode !==
+      "original"
+    ) {
+
+      context.drawImage(
+        state.ai.personCanvas,
+        0,
+        0,
+        width,
+        height
+      );
+
+    }
+
+
+    mentorAICanvas.style.display =
+      "block";
+
+    mentorCameraVideo.style.display =
+      "none";
+
+  }
+
+
+  function drawBlurredCameraBackground(
+    context,
+    width,
+    height
+  ) {
+
+    context.save();
+
+    context.filter =
+      "blur(18px)";
+
+    context.drawImage(
+      mentorCameraVideo,
+      -15,
+      -15,
+      width + 30,
+      height + 30
+    );
+
+    context.restore();
+
+  }
+
+
+  function drawCoverImage(
+    context,
+    image,
+    x,
+    y,
+    width,
+    height
+  ) {
+
+    const iw =
+      image.naturalWidth ||
+      image.width;
+
+    const ih =
+      image.naturalHeight ||
+      image.height;
+
+
+    if (
+      !iw ||
+      !ih
+    ) {
+
+      return;
+
+    }
+
+
+    const scale =
+      Math.max(
+        width / iw,
+        height / ih
+      );
+
+
+    const sw =
+      iw * scale;
+
+    const sh =
+      ih * scale;
+
+
+    context.drawImage(
+      image,
+      x +
+        (
+          width -
+          sw
+        ) / 2,
+      y +
+        (
+          height -
+          sh
+        ) / 2,
+      sw,
+      sh
+    );
+
+  }
+
+
+  function setBackgroundMode(
+    mode
+  ) {
+
+    state.ai.mode =
+      mode;
+
+
+    const buttons = [
+      ["#bgOriginalBtn", "original"],
+      ["#bgRemoveBtn", "remove"],
+      ["#bgBlurBtn", "blur"],
+      ["#bgImageBtn", "image"],
+      ["#bgColorBtn", "color"]
+    ];
+
+
+    buttons.forEach(
+      ([selector, value]) => {
+
+        $(selector)?.classList.toggle(
+          "active",
+          value === mode
+        );
+
+      }
+    );
+
+
+    state.ai.enabled =
+      mode !==
+      "original";
+
+
+    if (
+      state.ai.enabled &&
+      state.camera.stream
+    ) {
+
+      setupAI();
+
+    }
+
+
+    if (
+      mode === "image" &&
+      !state.ai.backgroundImage
+    ) {
+
+      backgroundImageUpload?.click();
+
+      return;
+
+    }
+
+
+    renderCompositionFrame();
+
+  }
+
+
+  /* =======================================================
+     AUDIO ENGINE
+     ======================================================= */
+
+  async function initializeAudioContext() {
+
+    if (
+      state.audio.context
+    ) {
+
+      if (
+        state.audio.context.state ===
+        "suspended"
+      ) {
+
+        await state.audio.context.resume();
+
+      }
+
+      return;
+
+    }
+
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+
+    if (!AudioContextClass) {
+
+      showToast(
+        "Web Audio is not supported."
+      );
+
+      return;
+
+    }
+
+
+    const context =
+      new AudioContextClass();
+
+
+    const destination =
+      context.createMediaStreamDestination();
+
+
+    state.audio.context =
+      context;
+
+    state.audio.destination =
+      destination;
+
+
+    state.audio.initialized =
+      true;
+
+
+    /*
+     * Main video source
+     */
+
+    if (
+      mainVideo
+    ) {
+
+      try {
+
+        const source =
+          context.createMediaElementSource(
+            mainVideo
+          );
+
+
+        const gain =
+          context.createGain();
+
+
+        source.connect(
+          gain
+        );
+
+
+        gain.connect(
+          destination
+        );
+
+
+        /*
+         * Also connect to speakers.
+         * Main volume controls playback.
+         */
+
+        gain.connect(
+          context.destination
+        );
+
+
+        state.audio.mainSource =
+          source;
+
+        state.audio.mainGain =
+          gain;
+
+
+      } catch (error) {
+
+        /*
+         * createMediaElementSource can only
+         * be created once for an element.
+         */
+
+        console.warn(
+          "Main audio source setup:",
+          error
+        );
+
+      }
+
+    }
+
+
+    await initializeMicrophone();
+
+  }
+
+
+  async function initializeMainAudio() {
+
+    await initializeAudioContext();
+
+    updateMainAudio();
+
+  }
+
+
+  async function initializeMicrophone() {
+
+    if (
+      state.audio.micStream
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      updateMicStatus(
+        false,
+        "Microphone unavailable"
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const stream =
+        await navigator.mediaDevices
+          .getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            },
+            video: false
+          });
+
+
+      state.audio.micStream =
+        stream;
+
+
+      const context =
+        state.audio.context;
+
+
+      if (!context) {
+        return;
+      }
+
+
+      const source =
+        context.createMediaStreamSource(
+          stream
+        );
+
+
+      const gain =
+        context.createGain();
+
+
+      const monitorGain =
+        context.createGain();
+
+
+      source.connect(
+        gain
+      );
+
+
+      gain.connect(
+        state.audio.destination
+      );
+
+
+      /*
+       * Monitoring path.
+       */
+
+      gain.connect(
+        monitorGain
+      );
+
+
+      monitorGain.connect(
+        context.destination
+      );
+
+
+      state.audio.micSource =
+        source;
+
+      state.audio.micGain =
+        gain;
+
+      state.audio.monitorGain =
+        monitorGain;
+
+
+      /*
+       * Default monitor off.
+       */
+
+      monitorGain.gain.value =
+        0;
+
+
+      updateMicStatus(
+        true,
+        "Microphone ready"
+      );
+
+
+      updateMicControls();
+
+    } catch (error) {
+
+      console.warn(
+        "Microphone access failed:",
+        error
+      );
+
+      updateMicStatus(
+        false,
+        "Microphone permission denied"
+      );
+
+    }
+
+  }
+
+
+  function updateMainAudio() {
+
+    if (
+      !state.audio.mainGain
+    ) {
+
+      return;
+
+    }
+
+
+    const enabled =
+      $("#mainVideoAudioCheckbox")
+        ?.checked !== false;
+
+
+    const volume =
+      Number(
+        $("#mainVideoVolume")
+          ?.value || 100
+      ) / 100;
+
+
+    state.audio.mainGain.gain.value =
+      enabled
+        ? volume
+        : 0;
+
+
+    if (mainVideo) {
+
+      mainVideo.muted =
+        false;
+
+    }
+
+  }
+
+
+  function updateMicControls() {
+
+    if (
+      !state.audio.micGain
+    ) {
+
+      return;
+
+    }
+
+
+    const enabled =
+      $("#micEnabled")
+        ?.checked !== false;
+
+
+    const volume =
+      Number(
+        $("#micVolume")
+          ?.value || 100
+      ) / 100;
+
+
+    state.audio.micGain.gain.value =
+      enabled
+        ? volume
+        : 0;
+
+
+    const monitor =
+      $("#micMonitor")
+        ?.checked === true;
+
+
+    if (
+      state.audio.monitorGain
+    ) {
+
+      state.audio.monitorGain.gain.value =
+        monitor
+          ? volume
+          : 0;
+
+    }
+
+  }
+
+
+  function updateMicStatus(
+    online,
+    text
+  ) {
+
+    const status =
+      document.querySelector(
+        "[data-mic-status]"
+      );
+
+    const dot =
+      $("#micStatusDot");
+
+    const bottomDot =
+      $("#bottomMicDot");
+
+
+    if (status) {
+
+      status.textContent =
+        text;
+
+    }
+
+
+    dot?.classList.toggle(
+      "online",
+      online
+    );
+
+    bottomDot?.classList.toggle(
+      "green",
+      online
+    );
+
+  }
+
+
+  function setupAudioControls() {
+
+    const mainAudio =
+      $("#mainVideoAudioCheckbox");
+
+    const mainVolume =
+      $("#mainVideoVolume");
+
+    const mainVolumeValue =
+      $("#mainVolumeValue");
+
+    const micVolume =
+      $("#micVolume");
+
+    const micVolumeValue =
+      $("#micVolumeValue");
+
+    const micEnabled =
+      $("#micEnabled");
+
+    const micMonitor =
+      $("#micMonitor");
+
+
+    mainAudio?.addEventListener(
+      "change",
+      updateMainAudio
+    );
+
+
+    mainVolume?.addEventListener(
+      "input",
+      () => {
+
+        if (mainVolumeValue) {
+
+          mainVolumeValue.textContent =
+            `${mainVolume.value}%`;
+
+        }
+
+        updateMainAudio();
+
+      }
+    );
+
+
+    micVolume?.addEventListener(
+      "input",
+      () => {
+
+        if (micVolumeValue) {
+
+          micVolumeValue.textContent =
+            `${micVolume.value}%`;
+
+        }
+
+        updateMicControls();
+
+      }
+    );
+
+
+    micEnabled?.addEventListener(
+      "change",
+      async () => {
+
+        await initializeAudioContext();
+
+        updateMicControls();
+
+      }
+    );
+
+
+    micMonitor?.addEventListener(
+      "change",
+      async () => {
+
+        await initializeAudioContext();
+
+        updateMicControls();
+
+      }
+    );
+
+
+    /*
+     * Browser usually requires user interaction
+     * before AudioContext starts.
+     */
+
+    document.addEventListener(
+      "pointerdown",
+      () => {
+
+        initializeAudioContext()
+          .catch(
+            () => {}
+          );
+
+      },
+      {
+        once: true
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     RECORDING
+     ======================================================= */
+
+  function setupRecordingSettings() {
+
+    const resolution =
+      $("#recordingResolution");
+
+    const fps =
+      $("#recordingFPS");
+
+
+    resolution?.addEventListener(
+      "change",
+      () => {
+
+        if (
+          $("#advancedResolution")
+        ) {
+
+          $("#advancedResolution")
+            .value =
+            resolution.value;
+
+        }
+
+
+        if (
+          !state.recording.active
+        ) {
+
+          applyRecordingResolution();
+
+          renderCompositionFrame();
+
+        }
+
+      }
+    );
+
+
+    fps?.addEventListener(
+      "change",
+      () => {
+
+        if (
+          $("#advancedFPS")
+        ) {
+
+          $("#advancedFPS")
+            .value =
+            fps.value;
+
+        }
+
+
+        state.recording.fps =
+          getSelectedFPS();
+
+      }
+    );
+
+
+    $("#recordingBitrate")
+      ?.addEventListener(
+        "change",
+        () => {
+
+          state.recording.bitrate =
+            getSelectedBitrate();
+
+        }
+      );
+
+
+    $("#advancedResolution")
+      ?.addEventListener(
+        "change",
+        event => {
+
+          if (
+            resolution
+          ) {
+
+            resolution.value =
+              event.target.value;
+
+          }
+
+          if (
+            !state.recording.active
+          ) {
+
+            applyRecordingResolution();
+
+            renderCompositionFrame();
+
+          }
+
+        }
+      );
+
+
+    $("#advancedFPS")
+      ?.addEventListener(
+        "change",
+        event => {
+
+          if (fps) {
+
+            fps.value =
+              event.target.value;
+
+          }
+
+          state.recording.fps =
+            getSelectedFPS();
+
+        }
+      );
+
+  }
+
+
+  async function startRecording() {
+
+    if (
+      state.recording.active
+    ) {
+
+      if (
+        state.recording.paused
+      ) {
+
+        resumeRecording();
+
+      } else {
+
+        pauseRecording();
+
+      }
+
+      return;
+
+    }
+
+
+    try {
+
+      applyRecordingResolution();
+
+      state.recording.fps =
+        getSelectedFPS();
+
+      state.recording.bitrate =
+        getSelectedBitrate();
+
+
+      await initializeAudioContext();
+
+
+      /*
+       * Ensure microphone exists.
+       */
+
+      if (
+        $("#micEnabled")
+          ?.checked !== false &&
+        !state.audio.micStream
+      ) {
+
+        await initializeMicrophone();
+
+      }
+
+
+      renderCompositionFrame();
+
+
+      const canvas =
+        state.composition.canvas;
+
+
+      /*
+       * captureStream creates the video track.
+       */
+
+      const canvasStream =
+        canvas.captureStream(
+          state.recording.fps
+        );
+
+
+      state.recording.canvasStream =
+        canvasStream;
+
+
+      const finalStream =
+        new MediaStream();
+
+
+      /*
+       * Canvas video.
+       */
+
+      canvasStream
+        .getVideoTracks()
+        .forEach(
+          track =>
+            finalStream.addTrack(
+              track
+            )
+        );
+
+
+      /*
+       * Mixed Web Audio.
+       */
+
+      if (
+        state.audio.destination
+      ) {
+
+        state.audio.destination
+          .stream
+          .getAudioTracks()
+          .forEach(
+            track =>
+              finalStream.addTrack(
+                track
+              )
+          );
+
+      }
+
+
+      state.recording.finalStream =
+        finalStream;
+
+
+      const mimeType =
+        chooseMimeType();
+
+
+      state.recording.mimeType =
+        mimeType;
+
+
+      const options = {
+        mimeType,
+
+        videoBitsPerSecond:
+          state.recording.bitrate
+      };
+
+
+      let recorder;
+
+
+      try {
+
+        recorder =
+          new MediaRecorder(
+            finalStream,
+            options
+          );
+
+      } catch (error) {
+
+        console.warn(
+          "Preferred MediaRecorder failed:",
+          error
+        );
+
+
+        recorder =
+          new MediaRecorder(
+            finalStream
+          );
+
+      }
+
+
+      state.recording.recorder =
+        recorder;
+
+
+      state.recording.chunks =
+        [];
+
+      state.recording.blob =
+        null;
+
+
+      recorder.ondataavailable =
+        event => {
+
+          if (
+            event.data &&
+            event.data.size > 0
+          ) {
+
+            state.recording.chunks
+              .push(
+                event.data
+              );
+
+          }
+
+        };
+
+
+      recorder.onerror =
+        event => {
+
+          console.error(
+            "MediaRecorder error:",
+            event.error
+          );
+
+          showToast(
+            "Recording error occurred."
+          );
+
+        };
+
+
+      recorder.onstop =
+        () => {
+
+          finalizeRecording();
+
+        };
+
+
+      recorder.onstart =
+        () => {
+
+          state.recording.active =
+            true;
+
+          state.recording.paused =
+            false;
+
+          state.recording.timerStart =
+            performance.now();
+
+          state.recording.elapsedBeforePause =
+            0;
+
+          startRecordingTimer();
+
+          updateRecordingUI();
+
+          updateStatus();
+
+          /*
+           * Start teleprompter if requested.
+           */
+
+          if (
+            state.teleprompter
+              .startWithRecording
+          ) {
+
+            playTeleprompter();
+
+          }
+
+          showToast(
+            `Recording started — ${state.recording.width}×${state.recording.height} @ ${state.recording.fps} FPS`
+          );
+
+        };
+
+
+      recorder.start(
+        1000
+      );
+
+
+      /*
+       * Make sure rendering is continuous.
+       */
+
+      state.recording.renderLoop =
+        true;
+
+      startRenderLoop();
+
+    } catch (error) {
+
+      console.error(
+        "Start recording failed:",
+        error
+      );
+
+      cleanupRecordingStream();
+
+      showToast(
+        "Could not start recording."
+      );
+
+    }
+
+  }
+
+
+  function pauseRecording() {
+
+    const recorder =
+      state.recording.recorder;
+
+
+    if (
+      !recorder ||
+      recorder.state !==
+      "recording"
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      recorder.pause();
+
+      state.recording.paused =
+        true;
+
+      state.recording.pausedAt =
+        performance.now();
+
+
+      stopRecordingTimer();
+
+      updateRecordingUI();
+
+      showToast(
+        "Recording paused."
+      );
+
+    } catch (error) {
+
+      console.warn(
+        "Pause failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  function resumeRecording() {
+
+    const recorder =
+      state.recording.recorder;
+
+
+    if (
+      !recorder ||
+      recorder.state !==
+      "paused"
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const pausedDuration =
+        performance.now() -
+        state.recording.pausedAt;
+
+
+      state.recording.elapsedBeforePause +=
+        pausedDuration;
+
+
+      recorder.resume();
+
+      state.recording.paused =
+        false;
+
+      startRecordingTimer();
+
+      updateRecordingUI();
+
+      showToast(
+        "Recording resumed."
+      );
+
+    } catch (error) {
+
+      console.warn(
+        "Resume failed:",
+        error
+      );
+
+    }
+
+  }
+
+
+  function stopRecording() {
+
+    const recorder =
+      state.recording.recorder;
+
+
+    if (
+      !recorder
+    ) {
+
+      return;
+
+    }
+
+
+    if (
+      recorder.state ===
+        "recording" ||
+      recorder.state ===
+        "paused"
+    ) {
+
+      try {
+
+        recorder.stop();
+
+      } catch (error) {
+
+        console.warn(
+          "Stop recording failed:",
+          error
+        );
+
+      }
+
+    }
+
+  }
+
+
+  function finalizeRecording() {
+
+    stopRecordingTimer();
+
+
+    state.recording.active =
+      false;
+
+    state.recording.paused =
+      false;
+
+
+    const blob =
+      new Blob(
+        state.recording.chunks,
+        {
+          type:
+            state.recording.mimeType ||
+            "video/webm"
+        }
+      );
+
+
+    state.recording.blob =
+      blob;
+
+
+    cleanupRecordingStream();
+
+
+    state.recording.renderLoop =
+      false;
+
+
+    updateRecordingUI();
+
+    updateStatus();
+
+
+    if (
+      state.teleprompter.playing
+    ) {
+
+      pauseTeleprompter();
+
+    }
+
+
+    showRecordingPreview(
+      blob
+    );
+
+
+    showToast(
+      "Recording finished."
+    );
+
+  }
+
+
+  function cleanupRecordingStream() {
+
+    if (
+      state.recording.canvasStream
+    ) {
+
+      state.recording.canvasStream
+        .getTracks()
+        .forEach(
+          track => {
+
+            try {
+              track.stop();
+            } catch {}
+
+          }
+        );
+
+    }
+
+
+    state.recording.canvasStream =
+      null;
+
+
+    /*
+     * Do not stop microphone/camera.
+     * They belong to the studio.
+     */
+
+    state.recording.finalStream =
+      null;
+
+  }
+
+
+  function chooseMimeType() {
+
+    const candidates = [
+
+      "video/webm;codecs=vp9,opus",
+
+      "video/webm;codecs=vp8,opus",
+
+      "video/webm"
+
+    ];
+
+
+    for (
+      const type of candidates
+    ) {
+
+      if (
+        window.MediaRecorder &&
+        MediaRecorder.isTypeSupported(
+          type
+        )
+      ) {
+
+        return type;
+
+      }
+
+    }
+
+
+    return "";
+
+  }
+
+
+  /* =======================================================
+     RECORDING TIMER
+     ======================================================= */
+
+  function startRecordingTimer() {
+
+    stopRecordingTimer();
+
+
+    state.recording.timerId =
+      setInterval(
+        updateRecordingTimer,
+        250
+      );
+
+
+    updateRecordingTimer();
+
+  }
+
+
+  function stopRecordingTimer() {
+
+    if (
+      state.recording.timerId
+    ) {
+
+      clearInterval(
+        state.recording.timerId
+      );
+
+      state.recording.timerId =
+        null;
+
+    }
+
+  }
+
+
+  function getRecordingElapsed() {
+
+    if (
+      !state.recording.timerStart
+    ) {
+
+      return 0;
+
+    }
+
+
+    const now =
+      performance.now();
+
+
+    let elapsed =
+      now -
+      state.recording.timerStart;
+
+
+    elapsed -=
+      state.recording.elapsedBeforePause;
+
+
+    if (
+      state.recording.paused
+    ) {
+
+      elapsed =
+        state.recording.pausedAt -
+        state.recording.timerStart -
+        state.recording.elapsedBeforePause;
+
+    }
+
+
+    return Math.max(
+      0,
+      elapsed
+    );
+
+  }
+
+
+  function updateRecordingTimer() {
+
+    const elapsed =
+      getRecordingElapsed();
+
+
+    const seconds =
+      Math.floor(
+        elapsed / 1000
+      );
+
+
+    const text =
+      formatTime(
+        seconds
+      );
+
+
+    if (
+      recordingOverlayTime
+    ) {
+
+      recordingOverlayTime.textContent =
+        text;
+
+    }
+
+
+    $$(
+      "[data-recording-time]"
+    ).forEach(
+      element => {
+
+        element.textContent =
+          text;
+
+      }
+    );
+
+  }
+
+
+  function formatTime(
+    totalSeconds
+  ) {
+
+    const hours =
+      Math.floor(
+        totalSeconds / 3600
+      );
+
+    const minutes =
+      Math.floor(
+        (
+          totalSeconds % 3600
+        ) / 60
+      );
+
+    const seconds =
+      totalSeconds % 60;
+
+
+    return [
+      hours,
+      minutes,
+      seconds
+    ]
+      .map(
+        value =>
+          String(
+            value
+          ).padStart(
+            2,
+            "0"
+          )
+      )
+      .join(":");
+
+  }
+
+
+  /* =======================================================
+     RECORDING UI
+     ======================================================= */
+
+  function updateRecordingUI() {
+
+    const recordBtn =
+      $("#recordBtn");
+
+    const toolbarRecord =
+      $("#toolbarRecordBtn");
+
+
+    if (
+      state.recording.active
+    ) {
+
+      recordingOverlay?.classList.add(
+        "show"
+      );
+
+
+      if (
+        state.recording.paused
+      ) {
+
+        recordingOverlayText.textContent =
+          "PAUSED";
+
+        recordingOverlayText.style.color =
+          "#ffcf78";
+
+        recordBtn?.classList.remove(
+          "recording"
+        );
+
+        if (recordBtn) {
+
+          recordBtn.innerHTML =
+            "▶ Resume";
+
+        }
+
+        if (toolbarRecord) {
+
+          toolbarRecord.innerHTML =
+            "▶ Resume";
+
+        }
+
+      } else {
+
+        recordingOverlayText.textContent =
+          "RECORDING";
+
+        recordingOverlayText.style.color =
+          "#ff9aa7";
+
+        recordBtn?.classList.add(
+          "recording"
+        );
+
+        if (recordBtn) {
+
+          recordBtn.innerHTML =
+            "❚❚ Pause";
+
+        }
+
+        if (toolbarRecord) {
+
+          toolbarRecord.innerHTML =
+            "❚❚ Pause";
+
+        }
+
+      }
+
+    } else {
+
+      recordingOverlay?.classList.remove(
+        "show"
+      );
+
+
+      recordBtn?.classList.remove(
+        "recording"
+      );
+
+
+      if (recordBtn) {
+
+        recordBtn.innerHTML =
+          "● Record";
+
+      }
+
+
+      if (toolbarRecord) {
+
+        toolbarRecord.innerHTML =
+          "● Record";
+
+      }
+
+    }
+
+  }
+
+
+  /* =======================================================
+     RECORDING PREVIEW
+     ======================================================= */
+
+  function showRecordingPreview(
+    blob
+  ) {
+
+    closeRecordingPreview();
+
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    state.recording.url =
+      url;
+
+
+    const overlay =
+      document.createElement(
+        "div"
+      );
+
+
+    overlay.id =
+      "recordingPreviewModal";
+
+
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:100000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,.84);
+      backdrop-filter:blur(15px);
+    `;
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.style.cssText = `
+      width:min(950px,96vw);
+      max-height:92vh;
+      overflow:auto;
+      background:#0d1520;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 30px 100px rgba(0,0,0,.6);
+      padding:16px;
+    `;
+
+
+    const header =
+      document.createElement(
+        "div"
+      );
+
+
+    header.style.cssText = `
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+      gap:10px;
+    `;
+
+
+    const title =
+      document.createElement(
+        "strong"
+      );
+
+
+    title.textContent =
+      "Recording Preview";
+
+
+    title.style.cssText = `
+      font-size:15px;
+    `;
+
+
+    const info =
+      document.createElement(
+        "span"
+      );
+
+
+    info.textContent =
+      `${state.recording.width}×${state.recording.height} • ${state.recording.fps} FPS`;
+
+
+    info.style.cssText = `
+      color:#7f8ea2;
+      font-size:9px;
+    `;
+
+
+    header.appendChild(
+      title
+    );
+
+    header.appendChild(
+      info
+    );
+
+
+    const video =
+      document.createElement(
+        "video"
+      );
+
+
+    video.src =
+      url;
+
+    video.controls =
+      true;
+
+    video.playsInline =
+      true;
+
+    video.style.cssText = `
+      display:block;
+      width:100%;
+      max-height:65vh;
+      object-fit:contain;
+      background:#05080e;
+      border-radius:12px;
+    `;
+
+
+    const actions =
+      document.createElement(
+        "div"
+      );
+
+
+    actions.style.cssText = `
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    `;
+
+
+    const download =
+      document.createElement(
+        "a"
+      );
+
+
+    download.href =
+      url;
+
+    download.download =
+      `personal-course-studio-${Date.now()}.webm`;
+
+    download.textContent =
+      "⬇ Download";
+
+    download.style.cssText = `
+      height:38px;
+      display:inline-flex;
+      align-items:center;
+      padding:0 14px;
+      border-radius:9px;
+      background:#3da4ff;
+      color:white;
+      text-decoration:none;
+      font-size:10px;
+      font-weight:700;
+    `;
+
+
+    const again =
+      document.createElement(
+        "button"
+      );
+
+
+    again.textContent =
+      "● Record Again";
+
+    stylePreviewButton(
+      again
+    );
+
+
+    again.addEventListener(
       "click",
       () => {
 
-        if (mainVideoInput) {
-          mainVideoInput.click();
+        closeRecordingPreview();
+
+        startRecording();
+
+      }
+    );
+
+
+    const deleteButton =
+      document.createElement(
+        "button"
+      );
+
+
+    deleteButton.textContent =
+      "Delete";
+
+    stylePreviewButton(
+      deleteButton,
+      true
+    );
+
+
+    deleteButton.addEventListener(
+      "click",
+      () => {
+
+        state.recording.blob =
+          null;
+
+        state.recording.chunks =
+          [];
+
+        closeRecordingPreview();
+
+        showToast(
+          "Recording deleted."
+        );
+
+      }
+    );
+
+
+    const close =
+      document.createElement(
+        "button"
+      );
+
+
+    close.textContent =
+      "Close";
+
+    stylePreviewButton(
+      close
+    );
+
+
+    close.addEventListener(
+      "click",
+      closeRecordingPreview
+    );
+
+
+    actions.appendChild(
+      download
+    );
+
+    actions.appendChild(
+      again
+    );
+
+    actions.appendChild(
+      deleteButton
+    );
+
+    actions.appendChild(
+      close
+    );
+
+
+    card.appendChild(
+      header
+    );
+
+    card.appendChild(
+      video
+    );
+
+    card.appendChild(
+      actions
+    );
+
+
+    overlay.appendChild(
+      card
+    );
+
+
+    document.body.appendChild(
+      overlay
+    );
+
+
+    state.recording.preview =
+      overlay;
+
+  }
+
+
+  function stylePreviewButton(
+    button,
+    danger = false
+  ) {
+
+    button.style.cssText = `
+      height:38px;
+      padding:0 13px;
+      border-radius:9px;
+      border:1px solid rgba(255,255,255,.08);
+      background:${
+        danger
+          ? "rgba(255,79,100,.1)"
+          : "rgba(255,255,255,.06)"
+      };
+      color:${
+        danger
+          ? "#ff7182"
+          : "#cbd6e3"
+      };
+      cursor:pointer;
+      font-size:10px;
+    `;
+
+  }
+
+
+  function closeRecordingPreview() {
+
+    if (
+      state.recording.preview
+    ) {
+
+      state.recording.preview.remove();
+
+      state.recording.preview =
+        null;
+
+    }
+
+
+    if (
+      state.recording.url
+    ) {
+
+      cleanupUrl(
+        state.recording.url
+      );
+
+      state.recording.url =
+        null;
+
+    }
+
+  }
+
+
+  /* =======================================================
+     CONTINUOUS RENDER LOOP
+     ======================================================= */
+
+  function startRenderLoop() {
+
+    if (
+      state.render.running
+    ) {
+
+      return;
+
+    }
+
+
+    state.render.running =
+      true;
+
+
+    const frame =
+      () => {
+
+        renderFrame();
+
+
+        state.render.raf =
+          requestAnimationFrame(
+            frame
+          );
+
+      };
+
+
+    state.render.raf =
+      requestAnimationFrame(
+        frame
+      );
+
+  }
+
+
+  function renderFrame() {
+
+    /*
+     * AI camera processing.
+     */
+
+    if (
+      state.camera.stream &&
+      state.ai.enabled
+    ) {
+
+      processCameraAI();
+
+    }
+
+
+    /*
+     * Update AI composition.
+     */
+
+    if (
+      state.camera.stream &&
+      state.ai.enabled &&
+      state.ai.lastResults
+    ) {
+
+      drawAIResult();
+
+    }
+
+
+    /*
+     * Draw final composition.
+     */
+
+    renderCompositionFrame();
+
+
+    /*
+     * Keep canvas capture stream alive.
+     */
+
+    if (
+      state.recording.active &&
+      state.recording.canvasStream
+    ) {
+
+      const track =
+        state.recording.canvasStream
+          .getVideoTracks()[0];
+
+
+      if (
+        track &&
+        typeof track.requestFrame ===
+        "function"
+      ) {
+
+        /*
+         * captureStream(fps) already captures
+         * automatically. requestFrame is used
+         * when supported as an extra guarantee.
+         */
+
+        try {
+          track.requestFrame();
+        } catch {}
+
+      }
+
+    }
+
+  }
+
+
+  /* =======================================================
+     COMPOSITION RENDER
+     ======================================================= */
+
+  function renderCompositionFrame() {
+
+    const canvas =
+      state.composition.canvas;
+
+    const context =
+      state.composition.context;
+
+
+    if (
+      !canvas ||
+      !context
+    ) {
+
+      return;
+
+    }
+
+
+    const width =
+      canvas.width;
+
+    const height =
+      canvas.height;
+
+
+    context.save();
+
+    context.fillStyle =
+      "#10141d";
+
+    context.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    /*
+     * Main stage.
+     */
+
+    drawMainStage(
+      context,
+      width,
+      height
+    );
+
+
+    /*
+     * Mentor overlay.
+     */
+
+    drawMentorOverlay(
+      context,
+      width,
+      height
+    );
+
+
+    /*
+     * Brand.
+     */
+
+    drawBrand(
+      context,
+      width,
+      height
+    );
+
+
+    context.restore();
+
+  }
+
+
+  function drawMainStage(
+    context,
+    width,
+    height
+  ) {
+
+    if (
+      state.main.type ===
+      "screen"
+    ) {
+
+      const video =
+        state.screen.video;
+
+
+      if (
+        video &&
+        video.readyState >= 2
+      ) {
+
+        drawCoverVideo(
+          context,
+          video,
+          0,
+          0,
+          width,
+          height
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    if (
+      state.main.type ===
+      "video"
+    ) {
+
+      if (
+        mainVideo.readyState >= 2
+      ) {
+
+        drawCoverVideo(
+          context,
+          mainVideo,
+          0,
+          0,
+          width,
+          height
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    if (
+      state.main.type ===
+      "image"
+    ) {
+
+      if (
+        mainImage.complete &&
+        mainImage.naturalWidth
+      ) {
+
+        drawCoverImage(
+          context,
+          mainImage,
+          0,
+          0,
+          width,
+          height
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    /*
+     * Empty stage.
+     */
+
+    const gradient =
+      context.createLinearGradient(
+        0,
+        0,
+        width,
+        height
+      );
+
+
+    gradient.addColorStop(
+      0,
+      "#111c2a"
+    );
+
+    gradient.addColorStop(
+      1,
+      "#080d15"
+    );
+
+
+    context.fillStyle =
+      gradient;
+
+    context.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    context.fillStyle =
+      "rgba(255,255,255,.55)";
+
+    context.font =
+      `${Math.max(
+        22,
+        width * .025
+      )}px Inter, Arial`;
+
+
+    context.textAlign =
+      "center";
+
+    context.textBaseline =
+      "middle";
+
+
+    context.fillText(
+      "Personal Course Studio",
+      width / 2,
+      height / 2
+    );
+
+  }
+
+
+  function drawCoverVideo(
+    context,
+    video,
+    x,
+    y,
+    width,
+    height
+  ) {
+
+    const vw =
+      video.videoWidth ||
+      width;
+
+    const vh =
+      video.videoHeight ||
+      height;
+
+
+    const scale =
+      Math.max(
+        width / vw,
+        height / vh
+      );
+
+
+    const dw =
+      vw * scale;
+
+    const dh =
+      vh * scale;
+
+
+    context.drawImage(
+      video,
+      x +
+        (
+          width -
+          dw
+        ) / 2,
+      y +
+        (
+          height -
+          dh
+        ) / 2,
+      dw,
+      dh
+    );
+
+  }
+
+
+  /* =======================================================
+     MENTOR COMPOSITION
+     ======================================================= */
+
+  function drawMentorOverlay(
+    context,
+    width,
+    height
+  ) {
+
+    if (
+      !mentorCard
+    ) {
+
+      return;
+
+    }
+
+
+    const stageRect =
+      stage?.getBoundingClientRect();
+
+
+    const cardRect =
+      mentorCard.getBoundingClientRect();
+
+
+    if (
+      !stageRect ||
+      !cardRect ||
+      stageRect.width <= 0
+    ) {
+
+      return;
+
+    }
+
+
+    const x =
+      (
+        cardRect.left -
+        stageRect.left
+      ) /
+      stageRect.width *
+      width;
+
+
+    const y =
+      (
+        cardRect.top -
+        stageRect.top
+      ) /
+      stageRect.height *
+      height;
+
+
+    const cardWidth =
+      cardRect.width /
+      stageRect.width *
+      width;
+
+
+    const cardHeight =
+      cardRect.height /
+      stageRect.height *
+      height;
+
+
+    context.save();
+
+
+    /*
+     * Shadow.
+     */
+
+    context.shadowColor =
+      "rgba(0,0,0,.45)";
+
+    context.shadowBlur =
+      25;
+
+    context.shadowOffsetY =
+      10;
+
+
+    /*
+     * Rounded clipping.
+     */
+
+    roundedRectPath(
+      context,
+      x,
+      y,
+      cardWidth,
+      cardHeight,
+      Math.min(
+        22,
+        cardWidth * .08
+      )
+    );
+
+
+    context.clip();
+
+
+    /*
+     * Camera with AI.
+     */
+
+    if (
+      state.mentor.type ===
+      "camera"
+    ) {
+
+      if (
+        state.ai.enabled &&
+        mentorAICanvas.style.display !==
+        "none"
+      ) {
+
+        context.drawImage(
+          mentorAICanvas,
+          x,
+          y,
+          cardWidth,
+          cardHeight
+        );
+
+      } else if (
+        mentorCameraVideo.readyState >= 2
+      ) {
+
+        context.drawImage(
+          mentorCameraVideo,
+          x,
+          y,
+          cardWidth,
+          cardHeight
+        );
+
+      }
+
+    }
+
+    /*
+     * Uploaded mentor video.
+     */
+
+    else if (
+      state.mentor.type ===
+      "video"
+    ) {
+
+      if (
+        mentorVideo.readyState >= 2
+      ) {
+
+        context.drawImage(
+          mentorVideo,
+          x,
+          y,
+          cardWidth,
+          cardHeight
+        );
+
+      }
+
+    }
+
+    /*
+     * Empty mentor.
+     */
+
+    else {
+
+      context.fillStyle =
+        "#111923";
+
+      context.fillRect(
+        x,
+        y,
+        cardWidth,
+        cardHeight
+      );
+
+      context.fillStyle =
+        "rgba(255,255,255,.55)";
+
+      context.font =
+        `${Math.max(
+          11,
+          cardWidth * .06
+        )}px Inter, Arial`;
+
+      context.textAlign =
+        "center";
+
+      context.textBaseline =
+        "middle";
+
+      context.fillText(
+        "Mentor",
+        x +
+          cardWidth / 2,
+        y +
+          cardHeight / 2
+      );
+
+    }
+
+
+    context.restore();
+
+  }
+
+
+  function roundedRectPath(
+    context,
+    x,
+    y,
+    width,
+    height,
+    radius
+  ) {
+
+    const r =
+      Math.min(
+        radius,
+        width / 2,
+        height / 2
+      );
+
+
+    context.beginPath();
+
+    context.moveTo(
+      x + r,
+      y
+    );
+
+    context.arcTo(
+      x + width,
+      y,
+      x + width,
+      y + height,
+      r
+    );
+
+    context.arcTo(
+      x + width,
+      y + height,
+      x,
+      y + height,
+      r
+    );
+
+    context.arcTo(
+      x,
+      y + height,
+      x,
+      y,
+      r
+    );
+
+    context.arcTo(
+      x,
+      y,
+      x + width,
+      y,
+      r
+    );
+
+    context.closePath();
+
+  }
+
+
+  function drawBrand(
+    context,
+    width,
+    height
+  ) {
+
+    const name =
+      state.settings.brandName ||
+      "Personal Course Studio";
+
+
+    const fontSize =
+      Math.max(
+        14,
+        width * .009
+      );
+
+
+    context.font =
+      `700 ${fontSize}px Inter, Arial`;
+
+
+    const textWidth =
+      context.measureText(
+        name
+      ).width;
+
+
+    const paddingX =
+      fontSize * .8;
+
+    const paddingY =
+      fontSize * .6;
+
+
+    const boxWidth =
+      textWidth +
+      paddingX * 2;
+
+    const boxHeight =
+      fontSize +
+      paddingY * 2;
+
+
+    const x =
+      width * .02;
+
+    const y =
+      height -
+      boxHeight -
+      height * .025;
+
+
+    context.fillStyle =
+      "rgba(4,7,12,.72)";
+
+
+    roundedRectPath(
+      context,
+      x,
+      y,
+      boxWidth,
+      boxHeight,
+      12
+    );
+
+
+    context.fill();
+
+
+    context.fillStyle =
+      "#ffffff";
+
+
+    context.textAlign =
+      "left";
+
+    context.textBaseline =
+      "middle";
+
+
+    context.fillText(
+      name,
+      x + paddingX,
+      y + boxHeight / 2
+    );
+
+  }
+
+
+  /* =======================================================
+     PLAYBACK CONTROLS
+     ======================================================= */
+
+  function playMain() {
+
+    if (
+      state.main.type ===
+      "video"
+    ) {
+
+      mainVideo.play().catch(
+        () => {}
+      );
+
+      return;
+
+    }
+
+
+    if (
+      state.main.type ===
+      "screen" &&
+      state.screen.video
+    ) {
+
+      state.screen.video.play()
+        .catch(
+          () => {}
+        );
+
+    }
+
+  }
+
+
+  function pauseMain() {
+
+    if (
+      state.main.type ===
+      "video"
+    ) {
+
+      mainVideo.pause();
+
+    }
+
+
+    if (
+      state.main.type ===
+      "screen" &&
+      state.screen.video
+    ) {
+
+      state.screen.video.pause();
+
+    }
+
+  }
+
+
+  /* =======================================================
+     TELEPROMPTER
+     ======================================================= */
+
+  function setupTeleprompter() {
+
+    createTeleprompterUI();
+
+  }
+
+
+  function createTeleprompterUI() {
+
+    if (
+      $("#teleprompterModal")
+    ) {
+
+      return;
+
+    }
+
+
+    const modal =
+      document.createElement(
+        "div"
+      );
+
+
+    modal.id =
+      "teleprompterModal";
+
+
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:99998;
+      display:none;
+      background:rgba(0,0,0,.76);
+      backdrop-filter:blur(12px);
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    `;
+
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.style.cssText = `
+      width:min(1100px,96vw);
+      height:min(760px,92vh);
+      display:flex;
+      flex-direction:column;
+      background:#0d1520;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 30px 100px rgba(0,0,0,.6);
+    `;
+
+
+    const header =
+      document.createElement(
+        "div"
+      );
+
+
+    header.style.cssText = `
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    `;
+
+
+    const title =
+      document.createElement(
+        "strong"
+      );
+
+
+    title.textContent =
+      "Teleprompter";
+
+
+    title.style.cssText =
+      "font-size:14px;";
+
+
+    const controls =
+      document.createElement(
+        "div"
+      );
+
+
+    controls.style.cssText = `
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    `;
+
+
+    const upload =
+      document.createElement(
+        "input"
+      );
+
+
+    upload.type =
+      "file";
+
+    upload.accept =
+      ".txt,text/plain";
+
+    upload.hidden =
+      true;
+
+
+    const uploadButton =
+      makeTeleButton(
+        "Upload TXT"
+      );
+
+
+    const playButton =
+      makeTeleButton(
+        "▶ Play"
+      );
+
+
+    const pauseButton =
+      makeTeleButton(
+        "❚❚ Pause"
+      );
+
+
+    const resetButton =
+      makeTeleButton(
+        "Reset"
+      );
+
+
+    const closeButton =
+      makeTeleButton(
+        "Close"
+      );
+
+
+    const speed =
+      document.createElement(
+        "select"
+      );
+
+
+    speed.innerHTML = `
+      <option value="1">Slow</option>
+      <option value="2" selected>Normal</option>
+      <option value="3">Fast</option>
+      <option value="5">Very Fast</option>
+    `;
+
+
+    styleTeleControl(
+      speed
+    );
+
+
+    const fontSize =
+      document.createElement(
+        "input"
+      );
+
+
+    fontSize.type =
+      "range";
+
+    fontSize.min =
+      "18";
+
+    fontSize.max =
+      "64";
+
+    fontSize.value =
+      String(
+        state.teleprompter.fontSize
+      );
+
+
+    styleTeleControl(
+      fontSize
+    );
+
+
+    const opacity =
+      document.createElement(
+        "input"
+      );
+
+
+    opacity.type =
+      "range";
+
+    opacity.min =
+      "30";
+
+    opacity.max =
+      "100";
+
+    opacity.value =
+      String(
+        state.teleprompter.opacity *
+        100
+      );
+
+
+    styleTeleControl(
+      opacity
+    );
+
+
+    const startWithRecording =
+      document.createElement(
+        "label"
+      );
+
+
+    startWithRecording.style.cssText = `
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      color:#9ba9bb;
+      font-size:9px;
+    `;
+
+
+    const startCheckbox =
+      document.createElement(
+        "input"
+      );
+
+
+    startCheckbox.type =
+      "checkbox";
+
+
+    startWithRecording.appendChild(
+      startCheckbox
+    );
+
+
+    startWithRecording.append(
+      "Start with recording"
+    );
+
+
+    const showRecording =
+      document.createElement(
+        "label"
+      );
+
+
+    showRecording.style.cssText = `
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      color:#9ba9bb;
+      font-size:9px;
+    `;
+
+
+    const showCheckbox =
+      document.createElement(
+        "input"
+      );
+
+
+    showCheckbox.type =
+      "checkbox";
+
+    showCheckbox.checked =
+      true;
+
+
+    showRecording.appendChild(
+      showCheckbox
+    );
+
+
+    showRecording.append(
+      "Show while recording"
+    );
+
+
+    controls.append(
+      uploadButton,
+      playButton,
+      pauseButton,
+      resetButton,
+      speed,
+      fontSize,
+      opacity,
+      startWithRecording,
+      showRecording,
+      closeButton
+    );
+
+
+    const viewport =
+      document.createElement(
+        "div"
+      );
+
+
+    viewport.style.cssText = `
+      flex:1;
+      overflow:hidden;
+      position:relative;
+      background:#05080e;
+    `;
+
+
+    const content =
+      document.createElement(
+        "div"
+      );
+
+
+    content.style.cssText = `
+      position:absolute;
+      inset:0;
+      overflow-y:auto;
+      padding:70px 8%;
+      color:white;
+      font-size:${state.teleprompter.fontSize}px;
+      line-height:1.65;
+      text-align:center;
+      white-space:pre-wrap;
+      opacity:${state.teleprompter.opacity};
+      scroll-behavior:auto;
+    `;
+
+
+    content.textContent =
+      "Upload a TXT file or enter your script here.";
+
+
+    content.contentEditable =
+      "true";
+
+
+    viewport.appendChild(
+      content
+    );
+
+
+    card.appendChild(
+      header
+    );
+
+    card.appendChild(
+      viewport
+    );
+
+
+    modal.appendChild(
+      card
+    );
+
+    document.body.appendChild(
+      modal
+    );
+
+
+    modal.appendChild(
+      upload
+    );
+
+
+    uploadButton.addEventListener(
+      "click",
+      () =>
+        upload.click()
+    );
+
+
+    upload.addEventListener(
+      "change",
+      async event => {
+
+        const file =
+          event.target.files?.[0];
+
+        if (!file) {
+          return;
+        }
+
+
+        try {
+
+          const text =
+            await file.text();
+
+          content.textContent =
+            text;
+
+          state.teleprompter.text =
+            text;
+
+        } catch {}
+
+      }
+    );
+
+
+    playButton.addEventListener(
+      "click",
+      playTeleprompter
+    );
+
+
+    pauseButton.addEventListener(
+      "click",
+      pauseTeleprompter
+    );
+
+
+    resetButton.addEventListener(
+      "click",
+      () => {
+
+        content.scrollTop =
+          0;
+
+      }
+    );
+
+
+    closeButton.addEventListener(
+      "click",
+      closeTeleprompter
+    );
+
+
+    speed.addEventListener(
+      "change",
+      () => {
+
+        state.teleprompter.speed =
+          Number(
+            speed.value
+          );
+
+      }
+    );
+
+
+    fontSize.addEventListener(
+      "input",
+      () => {
+
+        state.teleprompter.fontSize =
+          Number(
+            fontSize.value
+          );
+
+        content.style.fontSize =
+          `${fontSize.value}px`;
+
+      }
+    );
+
+
+    opacity.addEventListener(
+      "input",
+      () => {
+
+        state.teleprompter.opacity =
+          Number(
+            opacity.value
+          ) / 100;
+
+        content.style.opacity =
+          String(
+            state.teleprompter.opacity
+          );
+
+      }
+    );
+
+
+    startCheckbox.addEventListener(
+      "change",
+      () => {
+
+        state.teleprompter
+          .startWithRecording =
+          startCheckbox.checked;
+
+      }
+    );
+
+
+    showCheckbox.addEventListener(
+      "change",
+      () => {
+
+        state.teleprompter
+          .showWhileRecording =
+          showCheckbox.checked;
+
+      }
+    );
+
+
+    content.addEventListener(
+      "input",
+      () => {
+
+        state.teleprompter.text =
+          content.innerText;
+
+      }
+    );
+
+
+    state.teleprompter.elements = {
+      modal,
+      content,
+      upload,
+      speed,
+      fontSize,
+      opacity,
+      startCheckbox,
+      showCheckbox
+    };
+
+  }
+
+
+  function makeTeleButton(
+    text
+  ) {
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+    button.type =
+      "button";
+
+    button.textContent =
+      text;
+
+    styleTeleControl(
+      button
+    );
+
+    return button;
+
+  }
+
+
+  function styleTeleControl(
+    element
+  ) {
+
+    element.style.cssText += `
+      height:32px;
+      padding:0 8px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.08);
+      background:#111b28;
+      color:#bfcbd9;
+      font-size:9px;
+      cursor:pointer;
+    `;
+
+  }
+
+
+  function openTeleprompter() {
+
+    const modal =
+      state.teleprompter
+        .elements?.modal;
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.style.display =
+      "flex";
+
+
+    state.teleprompter.open =
+      true;
+
+  }
+
+
+  function closeTeleprompter() {
+
+    const modal =
+      state.teleprompter
+        .elements?.modal;
+
+
+    if (!modal) {
+      return;
+    }
+
+
+    modal.style.display =
+      "none";
+
+
+    state.teleprompter.open =
+      false;
+
+  }
+
+
+  function playTeleprompter() {
+
+    const content =
+      state.teleprompter
+        .elements?.content;
+
+
+    if (!content) {
+      return;
+    }
+
+
+    openTeleprompter();
+
+
+    state.teleprompter.playing =
+      true;
+
+
+    let last =
+      performance.now();
+
+
+    const loop =
+      now => {
+
+        if (
+          !state.teleprompter.playing
+        ) {
+
+          return;
+
+        }
+
+
+        const delta =
+          now -
+          last;
+
+
+        last =
+          now;
+
+
+        const pixels =
+          (
+            state.teleprompter.speed *
+            delta
+          ) / 1000;
+
+
+        content.scrollTop +=
+          pixels;
+
+
+        requestAnimationFrame(
+          loop
+        );
+
+      };
+
+
+    requestAnimationFrame(
+      loop
+    );
+
+  }
+
+
+  function pauseTeleprompter() {
+
+    state.teleprompter.playing =
+      false;
+
+  }
+
+
+  /* =======================================================
+     SETTINGS
+     ======================================================= */
+
+  function setupSettings() {
+
+    const modal =
+      $("#settingsModal");
+
+    const open =
+      $("#settingsBtn");
+
+    const close =
+      $("#closeSettingsBtn");
+
+    const closeFooter =
+      $("#closeSettingsFooterBtn");
+
+    const save =
+      $("#saveSettingsBtn");
+
+    open?.addEventListener(
+      "click",
+      () => {
+
+        modal?.classList.add(
+          "show"
+        );
+
+        modal?.removeAttribute(
+          "hidden"
+        );
+
+      }
+    );
+
+
+    close?.addEventListener(
+      "click",
+      closeSettings
+    );
+
+
+    closeFooter?.addEventListener(
+      "click",
+      closeSettings
+    );
+
+
+    save?.addEventListener(
+      "click",
+      saveSettings
+    );
+
+  }
+
+
+  function closeSettings() {
+
+    const modal =
+      $("#settingsModal");
+
+    modal?.classList.remove(
+      "show"
+    );
+
+    modal?.setAttribute(
+      "hidden",
+      ""
+    );
+
+  }
+
+
+  function saveSettings() {
+
+    const input =
+      $("#brandNameInput");
+
+
+    const name =
+      input?.value.trim() ||
+      "Personal Course Studio";
+
+
+    state.settings.brandName =
+      name;
+
+
+    $$(
+      "[data-brand-name]"
+    ).forEach(
+      element => {
+
+        element.textContent =
+          name;
+
+      }
+    );
+
+
+    try {
+
+      localStorage.setItem(
+        "courseStudioSettings",
+        JSON.stringify(
+          state.settings
+        )
+      );
+
+    } catch {}
+
+
+    closeSettings();
+
+    renderCompositionFrame();
+
+    showToast(
+      "Settings saved."
+    );
+
+  }
+
+
+  function restoreSettings() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          "courseStudioSettings"
+        );
+
+
+      if (raw) {
+
+        const saved =
+          JSON.parse(raw);
+
+
+        if (
+          saved.brandName
+        ) {
+
+          state.settings.brandName =
+            saved.brandName;
+
+        }
+
+      }
+
+    } catch {}
+
+
+    const input =
+      $("#brandNameInput");
+
+
+    if (input) {
+
+      input.value =
+        state.settings.brandName;
+
+    }
+
+
+    $$(
+      "[data-brand-name]"
+    ).forEach(
+      element => {
+
+        element.textContent =
+          state.settings.brandName;
+
+      }
+    );
+
+  }
+
+
+  function restoreRecordingSettings() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          "courseStudioRecordingSettings"
+        );
+
+
+      if (!raw) {
+        return;
+      }
+
+
+      const saved =
+        JSON.parse(raw);
+
+
+      if (
+        saved.resolution
+      ) {
+
+        if (
+          $("#recordingResolution")
+        ) {
+
+          $("#recordingResolution")
+            .value =
+            saved.resolution;
+
+        }
+
+        if (
+          $("#advancedResolution")
+        ) {
+
+          $("#advancedResolution")
+            .value =
+            saved.resolution;
+
+        }
+
+      }
+
+
+      if (
+        saved.fps
+      ) {
+
+        if (
+          $("#recordingFPS")
+        ) {
+
+          $("#recordingFPS")
+            .value =
+            saved.fps;
+
+        }
+
+        if (
+          $("#advancedFPS")
+        ) {
+
+          $("#advancedFPS")
+            .value =
+            saved.fps;
+
+        }
+
+      }
+
+
+      if (
+        saved.bitrate &&
+        $("#recordingBitrate")
+      ) {
+
+        $("#recordingBitrate")
+          .value =
+          saved.bitrate;
+
+      }
+
+
+      applyRecordingResolution();
+
+    } catch (error) {
+
+      console.warn(
+        "Could not restore recording settings:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =======================================================
+     FILE HANDLERS
+     ======================================================= */
+
+  function setupFiles() {
+
+    $("#uploadMainBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          mainFileInput?.click()
+      );
+
+
+    $("#uploadVideoBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          mainVideoInput?.click()
+      );
+
+
+    $("#uploadMentorBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          mentorFileInput?.click()
+      );
+
+
+    mainFileInput?.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files?.[0];
+
+        showMainImage(
+          file
+        );
+
+      }
+    );
+
+
+    mainVideoInput?.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files?.[0];
+
+        showMainVideo(
+          file
+        );
+
+      }
+    );
+
+
+    mentorFileInput?.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files?.[0];
+
+        showMentorVideo(
+          file
+        );
+
+      }
+    );
+
+
+    backgroundImageUpload?.addEventListener(
+      "change",
+      event => {
+
+        const file =
+          event.target.files?.[0];
+
+        if (!file) {
+          return;
+        }
+
+
+        const image =
+          new Image();
+
+
+        image.onload =
+          () => {
+
+            state.ai.backgroundImage =
+              image;
+
+            state.ai.mode =
+              "image";
+
+            updateBackgroundButtons();
+
+            renderCompositionFrame();
+
+            showToast(
+              "Custom background applied."
+            );
+
+          };
+
+
+        image.src =
+          URL.createObjectURL(
+            file
+          );
+
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     BUTTONS
+     ======================================================= */
+
+  function setupButtons() {
+
+    $("#mainPlayBtn")
+      ?.addEventListener(
+        "click",
+        playMain
+      );
+
+
+    $("#mainPauseBtn")
+      ?.addEventListener(
+        "click",
+        pauseMain
+      );
+
+
+    $("#startCameraBtn")
+      ?.addEventListener(
+        "click",
+        startCamera
+      );
+
+
+    $("#stopCameraBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          stopCamera()
+      );
+
+
+    $("#startCameraSideBtn")
+      ?.addEventListener(
+        "click",
+        startCamera
+      );
+
+
+    $("#stopCameraSideBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          stopCamera()
+      );
+
+
+    $("#switchCameraSideBtn")
+      ?.addEventListener(
+        "click",
+        switchCamera
+      );
+
+
+    $("#recordBtn")
+      ?.addEventListener(
+        "click",
+        startRecording
+      );
+
+
+    $("#toolbarRecordBtn")
+      ?.addEventListener(
+        "click",
+        startRecording
+      );
+
+
+    /*
+     * AI buttons
+     */
+
+    $("#bgOriginalBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          setBackgroundMode(
+            "original"
+          )
+      );
+
+
+    $("#bgRemoveBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          setBackgroundMode(
+            "remove"
+          )
+      );
+
+
+    $("#bgBlurBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          setBackgroundMode(
+            "blur"
+          )
+      );
+
+
+    $("#bgImageBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          setBackgroundMode(
+            "image"
+          )
+      );
+
+
+    $("#bgColorBtn")
+      ?.addEventListener(
+        "click",
+        () =>
+          setBackgroundMode(
+            "color"
+          )
+      );
+
+
+    $("#backgroundColor")
+      ?.addEventListener(
+        "input",
+        () => {
+
+          if (
+            state.ai.mode ===
+            "color"
+          ) {
+
+            renderCompositionFrame();
+
+          }
+
+        }
+      );
+
+
+    $("#backgroundColorPicker")
+      ?.addEventListener(
+        "input",
+        event => {
+
+          const input =
+            $("#backgroundColor");
+
+          if (input) {
+
+            input.value =
+              event.target.value;
+
+          }
+
+          if (
+            state.ai.mode ===
+            "color"
+          ) {
+
+            renderCompositionFrame();
+
+          }
+
+        }
+      );
+
+
+    /*
+     * Teleprompter
+     */
+
+    $("#openTeleprompterTopBtn")
+      ?.addEventListener(
+        "click",
+        openTeleprompter
+      );
+
+
+    $("#openTeleprompterBtn")
+      ?.addEventListener(
+        "click",
+        openTeleprompter
+      );
+
+
+    $("#openTeleprompterSide")
+      ?.addEventListener(
+        "click",
+        openTeleprompter
+      );
+
+  }
+
+
+  function updateBackgroundButtons() {
+
+    const buttons = [
+      ["#bgOriginalBtn", "original"],
+      ["#bgRemoveBtn", "remove"],
+      ["#bgBlurBtn", "blur"],
+      ["#bgImageBtn", "image"],
+      ["#bgColorBtn", "color"]
+    ];
+
+
+    buttons.forEach(
+      ([selector, mode]) => {
+
+        $(selector)?.classList.toggle(
+          "active",
+          state.ai.mode ===
+          mode
+        );
+
+      }
+    );
+
+  }
+
+
+  /* =======================================================
+     MENTOR DRAG + RESIZE
+     ======================================================= */
+
+  function setupMentorDragResize() {
+
+    if (
+      !mentorCard
+    ) {
+
+      return;
+
+    }
+
+
+    let dragging =
+      false;
+
+    let resizing =
+      false;
+
+    let startX =
+      0;
+
+    let startY =
+      0;
+
+    let startLeft =
+      0;
+
+    let startTop =
+      0;
+
+    let startWidth =
+      0;
+
+    let startHeight =
+      0;
+
+
+    mentorCard.addEventListener(
+      "pointerdown",
+      event => {
+
+        if (
+          event.target ===
+          $("#mentorResize")
+        ) {
+
+          resizing =
+            true;
+
+        } else {
+
+          dragging =
+            true;
+
+        }
+
+
+        mentorCard.setPointerCapture(
+          event.pointerId
+        );
+
+
+        const rect =
+          mentorCard.getBoundingClientRect();
+
+
+        const stageRect =
+          stage.getBoundingClientRect();
+
+
+        startX =
+          event.clientX;
+
+        startY =
+          event.clientY;
+
+
+        startLeft =
+          rect.left -
+          stageRect.left;
+
+        startTop =
+          rect.top -
+          stageRect.top;
+
+
+        startWidth =
+          rect.width;
+
+        startHeight =
+          rect.height;
+
+
+        mentorCard.classList.add(
+          "dragging"
+        );
+
+        event.preventDefault();
+
+      }
+    );
+
+
+    mentorCard.addEventListener(
+      "pointermove",
+      event => {
+
+        if (
+          !dragging &&
+          !resizing
+        ) {
+
+          return;
+
+        }
+
+
+        const stageRect =
+          stage.getBoundingClientRect();
+
+
+        const dx =
+          event.clientX -
+          startX;
+
+        const dy =
+          event.clientY -
+          startY;
+
+
+        if (
+          dragging
+        ) {
+
+          let left =
+            startLeft +
+            dx;
+
+          let top =
+            startTop +
+            dy;
+
+
+          const maxLeft =
+            stageRect.width -
+            mentorCard.offsetWidth;
+
+          const maxTop =
+            stageRect.height -
+            mentorCard.offsetHeight;
+
+
+          left =
+            Math.max(
+              0,
+              Math.min(
+                left,
+                maxLeft
+              )
+            );
+
+
+          top =
+            Math.max(
+              0,
+              Math.min(
+                top,
+                maxTop
+              )
+            );
+
+
+          mentorCard.style.left =
+            `${left}px`;
+
+          mentorCard.style.top =
+            `${top}px`;
+
+          mentorCard.style.right =
+            "auto";
+
+          mentorCard.style.bottom =
+            "auto";
+
+        }
+
+
+        if (
+          resizing
+        ) {
+
+          let width =
+            startWidth +
+            dx;
+
+          let height =
+            startHeight +
+            dy;
+
+
+          const minWidth =
+            130;
+
+          const minHeight =
+            90;
+
+
+          const maxWidth =
+            stageRect.width *
+            .45;
+
+
+          const maxHeight =
+            stageRect.height *
+            .70;
+
+
+          width =
+            Math.max(
+              minWidth,
+              Math.min(
+                width,
+                maxWidth
+              )
+            );
+
+
+          height =
+            Math.max(
+              minHeight,
+              Math.min(
+                height,
+                maxHeight
+              )
+            );
+
+
+          mentorCard.style.width =
+            `${width}px`;
+
+          mentorCard.style.height =
+            `${height}px`;
+
+        }
+
+
+        renderCompositionFrame();
+
+      }
+    );
+
+
+    mentorCard.addEventListener(
+      "pointerup",
+      event => {
+
+        dragging =
+          false;
+
+        resizing =
+          false;
+
+
+        mentorCard.classList.remove(
+          "dragging"
+        );
+
+
+        try {
+
+          mentorCard.releasePointerCapture(
+            event.pointerId
+          );
+
+        } catch {}
+
+
+        saveMentorPosition();
+
+      }
+    );
+
+
+    mentorCard.addEventListener(
+      "pointercancel",
+      () => {
+
+        dragging =
+          false;
+
+        resizing =
+          false;
+
+        mentorCard.classList.remove(
+          "dragging"
+        );
+
+      }
+    );
+
+  }
+
+
+  function saveMentorPosition() {
+
+    try {
+
+      localStorage.setItem(
+        "courseStudioMentorPosition",
+        JSON.stringify({
+          left:
+            mentorCard.style.left,
+
+          top:
+            mentorCard.style.top,
+
+          right:
+            mentorCard.style.right,
+
+          bottom:
+            mentorCard.style.bottom,
+
+          width:
+            mentorCard.style.width,
+
+          height:
+            mentorCard.style.height
+        })
+      );
+
+    } catch {}
+
+  }
+
+
+  function restoreMentorPosition() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          "courseStudioMentorPosition"
+        );
+
+
+      if (!raw) {
+        return;
+      }
+
+
+      const saved =
+        JSON.parse(raw);
+
+
+      if (
+        saved.left
+      ) {
+
+        mentorCard.style.left =
+          saved.left;
+
+      }
+
+      if (
+        saved.top
+      ) {
+
+        mentorCard.style.top =
+          saved.top;
+
+      }
+
+      if (
+        saved.right
+      ) {
+
+        mentorCard.style.right =
+          saved.right;
+
+      }
+
+      if (
+        saved.bottom
+      ) {
+
+        mentorCard.style.bottom =
+          saved.bottom;
+
+      }
+
+      if (
+        saved.width
+      ) {
+
+        mentorCard.style.width =
+          saved.width;
+
+      }
+
+      if (
+        saved.height
+      ) {
+
+        mentorCard.style.height =
+          saved.height;
+
+      }
+
+    } catch {}
+
+  }
+
+
+  function renderMentorState() {
+
+    restoreMentorPosition();
+
+    mentorPlaceholder.style.display =
+      state.mentor.type ===
+      "none"
+        ? "flex"
+        : "none";
+
+  }
+
+
+  /* =======================================================
+     FULLSCREEN
+     ======================================================= */
+
+  function setupFullscreen() {
+
+    $("#fullscreenStageBtn")
+      ?.addEventListener(
+        "click",
+        toggleStageFullscreen
+      );
+
+
+    $("#fullscreenStageSideBtn")
+      ?.addEventListener(
+        "click",
+        toggleStageFullscreen
+      );
+
+
+    $("#fullscreenStudioBtn")
+      ?.addEventListener(
+        "click",
+        toggleStudioFullscreen
+      );
+
+
+    $("#fullscreenStudioSideBtn")
+      ?.addEventListener(
+        "click",
+        toggleStudioFullscreen
+      );
+
+
+    document.addEventListener(
+      "fullscreenchange",
+      updateFullscreenStatus
+    );
+
+  }
+
+
+  async function toggleStageFullscreen() {
+
+    /*
+     * Prefer native fullscreen.
+     */
+
+    if (
+      document.fullscreenElement
+    ) {
+
+      try {
+        await document.exitFullscreen();
+      } catch {}
+
+      return;
+
+    }
+
+
+    if (
+      stage?.requestFullscreen
+    ) {
+
+      try {
+
+        await stage.requestFullscreen();
+
+        return;
+
+      } catch (error) {
+
+        console.warn(
+          "Native stage fullscreen failed:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * CSS fallback.
+     */
+
+    document.body.classList.toggle(
+      "stage-only-fullscreen"
+    );
+
+    document.body.classList.remove(
+      "studio-fullscreen"
+    );
+
+  }
+
+
+  async function toggleStudioFullscreen() {
+
+    if (
+      document.fullscreenElement
+    ) {
+
+      try {
+        await document.exitFullscreen();
+      } catch {}
+
+      return;
+
+    }
+
+
+    const app =
+      document.querySelector(
+        ".studio-app"
+      );
+
+
+    if (
+      app?.requestFullscreen
+    ) {
+
+      try {
+
+        await app.requestFullscreen();
+
+        return;
+
+      } catch (error) {
+
+        console.warn(
+          "Native studio fullscreen failed:",
+          error
+        );
+
+      }
+
+    }
+
+
+    document.body.classList.toggle(
+      "studio-fullscreen"
+    );
+
+    document.body.classList.remove(
+      "stage-only-fullscreen"
+    );
+
+  }
+
+
+  function updateFullscreenStatus() {
+
+    const fullscreen =
+      Boolean(
+        document.fullscreenElement
+      );
+
+
+    if (
+      !fullscreen
+    ) {
+
+      document.body.classList.remove(
+        "stage-only-fullscreen"
+      );
+
+      document.body.classList.remove(
+        "studio-fullscreen"
+      );
+
+    }
+
+  }
+
+
+  /* =======================================================
+     KEYBOARD SHORTCUTS
+     ======================================================= */
+
+  function setupKeyboard() {
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        /*
+         * Do not trigger shortcuts while
+         * typing into fields.
+         */
+
+        const target =
+          event.target;
+
+        const typing =
+          target instanceof
+            HTMLInputElement ||
+          target instanceof
+            HTMLTextAreaElement ||
+          target instanceof
+            HTMLSelectElement ||
+          target?.isContentEditable;
+
+
+        /*
+         * Escape
+         */
+
+        if (
+          event.key ===
+          "Escape"
+        ) {
+
+          closeTeleprompter();
+
+          closeRecordingPreview();
+
+          closeSettings();
+
+          return;
+
+        }
+
+
+        if (
+          typing
+        ) {
+
+          return;
+
+        }
+
+
+        /*
+         * Ctrl + Enter
+         * Start recording
+         */
+
+        if (
+          event.ctrlKey &&
+          event.key ===
+            "Enter"
+        ) {
+
+          event.preventDefault();
+
+          if (
+            !state.recording.active
+          ) {
+
+            startRecording();
+
+          }
+
+          return;
+
+        }
+
+
+        /*
+         * Ctrl + Shift + R
+         */
+
+        if (
+          event.ctrlKey &&
+          event.shiftKey &&
+          event.key.toLowerCase() ===
+            "r"
+        ) {
+
+          event.preventDefault();
+
+          if (
+            !state.recording.active
+          ) {
+
+            startRecording();
+
+          } else {
+
+            stopRecording();
+
+          }
+
+          return;
+
+        }
+
+
+        /*
+         * Ctrl + Shift + S
+         */
+
+        if (
+          event.ctrlKey &&
+          event.shiftKey &&
+          event.key.toLowerCase() ===
+            "s"
+        ) {
+
+          event.preventDefault();
+
+          if (
+            !state.screen.active
+          ) {
+
+            startScreenCapture();
+
+          } else {
+
+            stopScreenCapture();
+
+          }
+
+          return;
+
+        }
+
+
+        /*
+         * Ctrl + Shift + F
+         */
+
+        if (
+          event.ctrlKey &&
+          event.shiftKey &&
+          event.key.toLowerCase() ===
+            "f"
+        ) {
+
+          event.preventDefault();
+
+          toggleStageFullscreen();
+
+          return;
+
+        }
+
+
+        /*
+         * Space
+         */
+
+        if (
+          event.code ===
+          "Space"
+        ) {
+
+          event.preventDefault();
+
+          if (
+            state.recording.active
+          ) {
+
+            if (
+              state.recording.paused
+            ) {
+
+              resumeRecording();
+
+            } else {
+
+              pauseRecording();
+
+            }
+
+          } else {
+
+            if (
+              state.main.type ===
+              "video"
+            ) {
+
+              if (
+                mainVideo.paused
+              ) {
+
+                playMain();
+
+              } else {
+
+                pauseMain();
+
+              }
+
+            }
+
+          }
+
         }
 
       }
@@ -313,74 +6755,484 @@ function setupMainControls() {
   }
 
 
-  if (mainVideoInput) {
+  /* =======================================================
+     STUDENTS
+     ======================================================= */
 
-    mainVideoInput.addEventListener(
-      "change",
-      handleMainVideoUpload
-    );
+  function setupStudents() {
 
-  }
+    const add =
+      $("#addStudentBtn");
 
 
-  if (mainPlayBtn) {
-
-    mainPlayBtn.addEventListener(
+    add?.addEventListener(
       "click",
-      playMainVideo
+      () => {
+
+        const name =
+          prompt(
+            "Student name:"
+          );
+
+
+        if (
+          !name ||
+          !name.trim()
+        ) {
+
+          return;
+
+        }
+
+
+        addStudent(
+          name.trim()
+        );
+
+      }
+    );
+
+
+    restoreStudents();
+
+  }
+
+
+  function getStudents() {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem(
+          "courseStudioStudents"
+        ) || "[]"
+      );
+
+    } catch {
+
+      return [];
+
+    }
+
+  }
+
+
+  function saveStudents(
+    students
+  ) {
+
+    try {
+
+      localStorage.setItem(
+        "courseStudioStudents",
+        JSON.stringify(
+          students
+        )
+      );
+
+    } catch {}
+
+  }
+
+
+  function addStudent(
+    name
+  ) {
+
+    const students =
+      getStudents();
+
+
+    students.push({
+      id:
+        Date.now(),
+      name
+    });
+
+
+    saveStudents(
+      students
+    );
+
+
+    renderStudents();
+
+  }
+
+
+  function removeStudent(
+    id
+  ) {
+
+    const students =
+      getStudents()
+        .filter(
+          student =>
+            student.id !==
+            id
+        );
+
+
+    saveStudents(
+      students
+    );
+
+
+    renderStudents();
+
+  }
+
+
+  function restoreStudents() {
+
+    renderStudents();
+
+  }
+
+
+  function renderStudents() {
+
+    const container =
+      $("#studentsList");
+
+
+    if (!container) {
+      return;
+    }
+
+
+    const students =
+      getStudents();
+
+
+    container.innerHTML =
+      "";
+
+
+    if (
+      students.length ===
+      0
+    ) {
+
+      container.innerHTML = `
+        <div
+          style="
+            padding:18px;
+            text-align:center;
+            opacity:.55;
+            font-size:12px;
+          "
+        >
+          No students added
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    students.forEach(
+      student => {
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+
+        row.className =
+          "student-row";
+
+
+        row.innerHTML = `
+          <span style="flex:1;">
+            ${escapeHtml(
+              student.name
+            )}
+          </span>
+
+          <button
+            type="button"
+            style="
+              background:transparent;
+              color:#ff7182;
+              cursor:pointer;
+              border:0;
+              font-size:12px;
+            "
+          >
+            ×
+          </button>
+        `;
+
+
+        row
+          .querySelector(
+            "button"
+          )
+          .addEventListener(
+            "click",
+            () =>
+              removeStudent(
+                student.id
+              )
+          );
+
+
+        container.appendChild(
+          row
+        );
+
+      }
     );
 
   }
 
 
-  if (mainPauseBtn) {
+  /* =======================================================
+     STATUS
+     ======================================================= */
 
-    mainPauseBtn.addEventListener(
-      "click",
-      pauseMainVideo
+  function updateStatus() {
+
+    const system =
+      $("#systemStatus");
+
+    const dot =
+      $("#systemStatusDot");
+
+
+    if (
+      state.recording.active
+    ) {
+
+      if (
+        state.recording.paused
+      ) {
+
+        if (system) {
+          system.textContent =
+            "Recording Paused";
+        }
+
+        dot?.classList.remove(
+          "green"
+        );
+
+      } else {
+
+        if (system) {
+          system.textContent =
+            "Recording";
+        }
+
+        dot?.classList.add(
+          "red"
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    if (
+      state.screen.active
+    ) {
+
+      if (system) {
+        system.textContent =
+          "Screen Capture Active";
+      }
+
+      dot?.classList.add(
+        "green"
+      );
+
+      dot?.classList.remove(
+        "red"
+      );
+
+      return;
+
+    }
+
+
+    if (system) {
+      system.textContent =
+        "Studio Ready";
+    }
+
+
+    dot?.classList.add(
+      "green"
+    );
+
+    dot?.classList.remove(
+      "red"
     );
 
   }
 
+
+  /* =======================================================
+     TOAST
+     ======================================================= */
+
+  function showToast(
+    message
+  ) {
+
+    let toast =
+      $("#studioToast");
+
+
+    if (!toast) {
+
+      toast =
+        document.createElement(
+          "div"
+        );
+
+
+      toast.id =
+        "studioToast";
+
+
+      toast.style.cssText = `
+        position:fixed;
+        left:50%;
+        bottom:75px;
+        transform:translateX(-50%);
+        z-index:100010;
+        max-width:90vw;
+        padding:10px 14px;
+        border-radius:10px;
+        background:rgba(10,16,25,.94);
+        border:1px solid rgba(255,255,255,.1);
+        box-shadow:0 12px 40px rgba(0,0,0,.4);
+        color:#e7eef7;
+        font-size:10px;
+        pointer-events:none;
+        opacity:0;
+        transition:.2s ease;
+      `;
+
+
+      document.body.appendChild(
+        toast
+      );
+
+    }
+
+
+    toast.textContent =
+      message;
+
+
+    toast.style.opacity =
+      "1";
+
+
+    clearTimeout(
+      toast._timer
+    );
+
+
+    toast._timer =
+      setTimeout(
+        () => {
+
+          toast.style.opacity =
+            "0";
+
+        },
+        2600
+      );
+
+  }
+
+
+  /* =======================================================
+     UTILITIES
+     ======================================================= */
+
+  function cleanupUrl(
+    url
+  ) {
+
+    if (!url) {
+      return;
+    }
+
+
+    try {
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    } catch {}
+
+  }
+
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value
+    )
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+
+  }
+
+
+  /* =======================================================
+     VIDEO EVENTS
+     ======================================================= */
 
   if (mainVideo) {
+
+    mainVideo.addEventListener(
+      "loadedmetadata",
+      () => {
+
+        hideWelcome();
+
+        renderCompositionFrame();
+
+      }
+    );
+
 
     mainVideo.addEventListener(
       "play",
       () => {
 
-        if (mainPlayBtn) {
-          mainPlayBtn.disabled = true;
-        }
-
-        if (mainPauseBtn) {
-          mainPauseBtn.disabled = false;
-        }
-
-        if (
-          CourseStudio.teleprompter &&
-          CourseStudio.teleprompter.startWithVideo
-        ) {
-
-          startTeleprompter();
-
-        }
-
-      }
-    );
-
-
-    mainVideo.addEventListener(
-      "pause",
-      () => {
-
-        if (mainPlayBtn) {
-          mainPlayBtn.disabled = false;
-        }
-
-        if (mainPauseBtn) {
-          mainPauseBtn.disabled = true;
-        }
+        hideWelcome();
 
       }
     );
@@ -390,6723 +7242,222 @@ function setupMainControls() {
       "ended",
       () => {
 
-        if (mainPlayBtn) {
-          mainPlayBtn.disabled = false;
-        }
-
-        if (mainPauseBtn) {
-          mainPauseBtn.disabled = true;
-        }
+        renderCompositionFrame();
 
       }
     );
 
   }
-
-}
-
-
-/* =========================================================
-   MAIN IMAGE UPLOAD
-   ========================================================= */
-
-function handleMainImageUpload(event) {
-
-  const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  if (!file.type.startsWith("image/")) {
-
-    showToast(
-      "Please select an image file."
-    );
-
-    return;
-  }
-
-
-  const url = URL.createObjectURL(file);
-
-  if (mainImage) {
-
-    mainImage.src = url;
-
-    mainImage.style.display = "block";
-
-  }
-
-
-  if (mainVideo) {
-
-    mainVideo.pause();
-
-    mainVideo.style.display = "none";
-
-  }
-
-
-  if (welcomeContent) {
-    welcomeContent.style.display = "none";
-  }
-
-
-  showToast(
-    "Main image loaded."
-  );
-
-}
-
-
-/* =========================================================
-   MAIN VIDEO UPLOAD
-   ========================================================= */
-
-function handleMainVideoUpload(event) {
-
-  const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  if (!file.type.startsWith("video/")) {
-
-    showToast(
-      "Please select a video file."
-    );
-
-    return;
-  }
-
-
-  const url = URL.createObjectURL(file);
-
-  if (mainVideo) {
-
-    mainVideo.src = url;
-
-    mainVideo.style.display = "block";
-
-    mainVideo.load();
-
-  }
-
-
-  if (mainImage) {
-
-    mainImage.style.display = "none";
-
-  }
-
-
-  if (welcomeContent) {
-    welcomeContent.style.display = "none";
-  }
-
-
-  showToast(
-    "Main video loaded."
-  );
-
-}
-
-
-/* =========================================================
-   MAIN VIDEO PLAY
-   ========================================================= */
-
-function playMainVideo() {
-
-  if (!mainVideo || !mainVideo.src) {
-
-    showToast(
-      "Upload a main video first."
-    );
-
-    return;
-  }
-
-
-  const promise = mainVideo.play();
-
-  if (
-    promise &&
-    typeof promise.catch === "function"
-  ) {
-
-    promise.catch(
-      (error) => {
-
-        console.warn(
-          "Main video play failed:",
-          error
-        );
-
-        showToast(
-          "Unable to play the video."
-        );
-
-      }
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   MAIN VIDEO PAUSE
-   ========================================================= */
-
-function pauseMainVideo() {
-
-  if (!mainVideo) {
-    return;
-  }
-
-  mainVideo.pause();
-
-}
-
-
-/* =========================================================
-   MENTOR CONTROLS
-   ========================================================= */
-
-function setupMentorControls() {
-
-  if (uploadMentorBtn) {
-
-    uploadMentorBtn.addEventListener(
-      "click",
-      () => {
-
-        if (mentorFileInput) {
-          mentorFileInput.click();
-        }
-
-      }
-    );
-
-  }
-
-
-  if (mentorFileInput) {
-
-    mentorFileInput.addEventListener(
-      "change",
-      handleMentorUpload
-    );
-
-  }
-
-
-  if (mentorCard) {
-
-    enableMentorDragging();
-
-  }
-
-
-  updateMentorVisual();
-
-}
-
-
-/* =========================================================
-   MENTOR VIDEO UPLOAD
-   ========================================================= */
-
-function handleMentorUpload(event) {
-
-  const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  if (!file.type.startsWith("video/")) {
-
-    showToast(
-      "Please select a video file."
-    );
-
-    return;
-  }
-
-
-  stopCamera();
-
-
-  const url = URL.createObjectURL(file);
 
 
   if (mentorVideo) {
 
-    mentorVideo.src = url;
-
-    mentorVideo.style.display = "block";
-
-    mentorVideo.muted = true;
-
-    mentorVideo.loop = true;
-
-    mentorVideo.playsInline = true;
-
-    mentorVideo.load();
-
-  }
-
-
-  if (mentorCameraVideo) {
-    mentorCameraVideo.style.display = "none";
-  }
-
-
-  if (mentorAICanvas) {
-    mentorAICanvas.style.display = "none";
-  }
-
-
-  if (mentorPlaceholder) {
-    mentorPlaceholder.style.display = "none";
-  }
-
-
-  CourseStudio.mentorSource = "video";
-
-
-  if (mentorSourceLabel) {
-
-    mentorSourceLabel.textContent =
-      "Mentor Video";
-
-  }
-
-
-  const promise =
-    mentorVideo?.play();
-
-
-  if (
-    promise &&
-    typeof promise.catch === "function"
-  ) {
-
-    promise.catch(
-      () => {}
-    );
-
-  }
-
-
-  showToast(
-    "Mentor video loaded."
-  );
-
-}
-
-
-/* =========================================================
-   CAMERA CONTROLS
-   ========================================================= */
-
-function setupCameraControls() {
-
-  const startButtons = [
-    startCameraBtn,
-    startCameraSideBtn
-  ].filter(Boolean);
-
-
-  const stopButtons = [
-    stopCameraBtn,
-    stopCameraSideBtn
-  ].filter(Boolean);
-
-
-  const switchButtons = [
-    switchCameraBtn,
-    switchCameraSideBtn
-  ].filter(Boolean);
-
-
-  startButtons.forEach(
-    (button) => {
-
-      button.addEventListener(
-        "click",
-        startCamera
-      );
-
-    }
-  );
-
-
-  stopButtons.forEach(
-    (button) => {
-
-      button.addEventListener(
-        "click",
-        stopCamera
-      );
-
-    }
-  );
-
-
-  switchButtons.forEach(
-    (button) => {
-
-      button.addEventListener(
-        "click",
-        switchCamera
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   START CAMERA
-   ========================================================= */
-
-async function startCamera() {
-
-  try {
-
-    stopCamera(false);
-
-
-    setCameraStatus(
-      "Requesting camera..."
-    );
-
-
-    const constraints = {
-
-      video: {
-
-        facingMode: {
-          ideal:
-            CourseStudio.currentCameraFacing
-        },
-
-        width: {
-          ideal: 1280
-        },
-
-        height: {
-          ideal: 720
-        }
-
-      },
-
-      audio: false
-
-    };
-
-
-    const stream =
-      await navigator.mediaDevices
-        .getUserMedia(
-          constraints
-        );
-
-
-    CourseStudio.cameraStream =
-      stream;
-
-
-    if (mentorCameraVideo) {
-
-      mentorCameraVideo.srcObject =
-        stream;
-
-      mentorCameraVideo.muted = true;
-
-      mentorCameraVideo.playsInline = true;
-
-      mentorCameraVideo.style.display =
-        "block";
-
-
-      const promise =
-        mentorCameraVideo.play();
-
-
-      if (
-        promise &&
-        typeof promise.catch === "function"
-      ) {
-
-        promise.catch(
-          () => {}
-        );
-
-      }
-
-    }
-
-
-    if (mentorVideo) {
-      mentorVideo.style.display =
-        "none";
-    }
-
-
-    if (mentorPlaceholder) {
-      mentorPlaceholder.style.display =
-        "none";
-    }
-
-
-    CourseStudio.mentorSource =
-      "camera";
-
-
-    if (mentorSourceLabel) {
-
-      mentorSourceLabel.textContent =
-        "Live Camera";
-
-    }
-
-
-    setCameraStatus(
-      "Camera connected"
-    );
-
-
-    updateUI();
-
-
-    await initializeSegmentation();
-
-
-    showToast(
-      "Camera started."
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Camera error:",
-      error
-    );
-
-
-    setCameraStatus(
-      "Camera permission denied"
-    );
-
-
-    showToast(
-      "Camera could not be started."
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   STOP CAMERA
-   ========================================================= */
-
-function stopCamera(
-  showMessage = true
-) {
-
-  if (CourseStudio.cameraStream) {
-
-    CourseStudio.cameraStream
-      .getTracks()
-      .forEach(
-        (track) => track.stop()
-      );
-
-  }
-
-
-  CourseStudio.cameraStream = null;
-
-
-  if (mentorCameraVideo) {
-
-    mentorCameraVideo.pause();
-
-    mentorCameraVideo.srcObject =
-      null;
-
-    mentorCameraVideo.style.display =
-      "none";
-
-  }
-
-
-  if (
-    CourseStudio.mentorSource ===
-    "camera"
-  ) {
-
-    CourseStudio.mentorSource =
-      "placeholder";
-
-  }
-
-
-  if (mentorAICanvas) {
-    mentorAICanvas.style.display =
-      "none";
-  }
-
-
-  if (
-    CourseStudio.mentorSource ===
-    "placeholder"
-  ) {
-
-    if (mentorPlaceholder) {
-
-      mentorPlaceholder.style.display =
-        "flex";
-
-    }
-
-    if (mentorSourceLabel) {
-
-      mentorSourceLabel.textContent =
-        "Mentor";
-
-    }
-
-  }
-
-
-  setCameraStatus(
-    "Camera stopped"
-  );
-
-
-  updateUI();
-
-
-  if (showMessage) {
-
-    showToast(
-      "Camera stopped."
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SWITCH CAMERA
-   ========================================================= */
-
-async function switchCamera() {
-
-  CourseStudio.currentCameraFacing =
-    CourseStudio.currentCameraFacing ===
-    "user"
-      ? "environment"
-      : "user";
-
-
-  if (
-    CourseStudio.cameraStream
-  ) {
-
-    await startCamera();
-
-  } else {
-
-    showToast(
-      "Camera will use the selected side when started."
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   CAMERA STATUS
-   ========================================================= */
-
-function setCameraStatus(message) {
-
-  if (!cameraStatus) {
-    return;
-  }
-
-  cameraStatus.textContent =
-    message;
-
-}
-
-
-/* =========================================================
-   MEDIA PIPE SELFIE SEGMENTATION
-   ========================================================= */
-
-async function initializeSegmentation() {
-
-  if (
-    CourseStudio.segmentationReady
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    typeof SelfieSegmentation ===
-    "undefined"
-  ) {
-
-    console.warn(
-      "MediaPipe SelfieSegmentation not found."
-    );
-
-    showToast(
-      "AI background library is not available."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    CourseStudio.segmentation =
-      new SelfieSegmentation({
-
-        locateFile: (
-          file
-        ) => {
-
-          return (
-            "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/" +
-            file
-          );
-
-        }
-
-      });
-
-
-    CourseStudio.segmentation.setOptions({
-
-      modelSelection: 1
-
-    });
-
-
-    CourseStudio.segmentation.onResults(
-      handleSegmentationResults
-    );
-
-
-    CourseStudio.segmentationReady =
-      true;
-
-
-    startSegmentationLoop();
-
-
-  } catch (error) {
-
-    console.error(
-      "Segmentation initialization failed:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SEGMENTATION LOOP
-   ========================================================= */
-
-function startSegmentationLoop() {
-
-  const loop = async () => {
-
-    if (
-      CourseStudio.cameraStream &&
-      CourseStudio.segmentation &&
-      mentorCameraVideo &&
-      mentorCameraVideo.readyState >= 2 &&
-      !CourseStudio.segmentationBusy
-    ) {
-
-      CourseStudio.segmentationBusy =
-        true;
-
-
-      try {
-
-        await CourseStudio.segmentation.send({
-          image: mentorCameraVideo
-        });
-
-      } catch (error) {
-
-        console.warn(
-          "Segmentation frame error:",
-          error
-        );
-
-      }
-
-
-      CourseStudio.segmentationBusy =
-        false;
-
-    }
-
-
-    requestAnimationFrame(
-      loop
-    );
-
-  };
-
-
-  requestAnimationFrame(
-    loop
-  );
-
-}
-
-
-/* =========================================================
-   AI SEGMENTATION RESULT
-   ========================================================= */
-
-function handleSegmentationResults(
-  results
-) {
-
-  if (
-    !mentorAICanvas ||
-    !results
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.backgroundMode ===
-    "original"
-  ) {
-
-    mentorAICanvas.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  if (
-    !results.image ||
-    !results.segmentationMask
-  ) {
-
-    return;
-
-  }
-
-
-  drawPersonWithBackground(
-    results.image,
-    results.segmentationMask
-  );
-
-
-  mentorAICanvas.style.display =
-    "block";
-
-
-  if (mentorCameraVideo) {
-
-    mentorCameraVideo.style.display =
-      "none";
-
-  }
-
-}
-
-
-/* =========================================================
-   AI CANVAS PREPARATION
-   ========================================================= */
-
-function prepareAICanvas(
-  width,
-  height
-) {
-
-  if (!mentorAICanvas) {
-    return null;
-  }
-
-
-  if (
-    mentorAICanvas.width !== width ||
-    mentorAICanvas.height !== height
-  ) {
-
-    mentorAICanvas.width =
-      width;
-
-    mentorAICanvas.height =
-      height;
-
-  }
-
-
-  return mentorAICanvas.getContext(
-    "2d",
-    {
-      willReadFrequently: true
-    }
-  );
-
-}
-
-
-/* =========================================================
-   PERSON CANVAS CACHE
-   ========================================================= */
-
-let personCanvas = null;
-let personCtx = null;
-
-let sourceCanvas = null;
-let sourceCtx = null;
-
-let maskCanvas = null;
-let maskCtx = null;
-
-
-function ensureSegmentationCanvases(
-  width,
-  height
-) {
-
-  if (!personCanvas) {
-
-    personCanvas =
-      document.createElement(
-        "canvas"
-      );
-
-    personCtx =
-      personCanvas.getContext(
-        "2d"
-      );
-
-  }
-
-
-  if (!sourceCanvas) {
-
-    sourceCanvas =
-      document.createElement(
-        "canvas"
-      );
-
-    sourceCtx =
-      sourceCanvas.getContext(
-        "2d",
-        {
-          willReadFrequently: true
-        }
-      );
-
-  }
-
-
-  if (!maskCanvas) {
-
-    maskCanvas =
-      document.createElement(
-        "canvas"
-      );
-
-    maskCtx =
-      maskCanvas.getContext(
-        "2d",
-        {
-          willReadFrequently: true
-        }
-      );
-
-  }
-
-
-  if (
-    personCanvas.width !== width ||
-    personCanvas.height !== height
-  ) {
-
-    personCanvas.width =
-      width;
-
-    personCanvas.height =
-      height;
-
-  }
-
-
-  if (
-    sourceCanvas.width !== width ||
-    sourceCanvas.height !== height
-  ) {
-
-    sourceCanvas.width =
-      width;
-
-    sourceCanvas.height =
-      height;
-
-  }
-
-
-  if (
-    maskCanvas.width !== width ||
-    maskCanvas.height !== height
-  ) {
-
-    maskCanvas.width =
-      width;
-
-    maskCanvas.height =
-      height;
-
-  }
-
-}
-
-
-/* =========================================================
-   DRAW PERSON + BACKGROUND
-   ========================================================= */
-
-function drawPersonWithBackground(
-  image,
-  mask
-) {
-
-  const width =
-    image.videoWidth ||
-    image.naturalWidth ||
-    image.width ||
-    640;
-
-
-  const height =
-    image.videoHeight ||
-    image.naturalHeight ||
-    image.height ||
-    360;
-
-
-  const ctx =
-    prepareAICanvas(
-      width,
-      height
-    );
-
-
-  if (!ctx) {
-    return;
-  }
-
-
-  ensureSegmentationCanvases(
-    width,
-    height
-  );
-
-
-  /* -----------------------------------------
-     SOURCE
-     ----------------------------------------- */
-
-  sourceCtx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  sourceCtx.drawImage(
-    image,
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /* -----------------------------------------
-     MASK
-     ----------------------------------------- */
-
-  maskCtx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  maskCtx.drawImage(
-    mask,
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  const sourceData =
-    sourceCtx.getImageData(
-      0,
-      0,
-      width,
-      height
-    );
-
-
-  const maskData =
-    maskCtx.getImageData(
-      0,
-      0,
-      width,
-      height
-    );
-
-
-  const personData =
-    personCtx.createImageData(
-      width,
-      height
-    );
-
-
-  for (
-    let i = 0;
-    i < sourceData.data.length;
-    i += 4
-  ) {
-
-    const confidence =
-      maskData.data[i] / 255;
-
-
-    /*
-      Soft edge.
-
-      Low confidence:
-      transparent.
-
-      High confidence:
-      visible.
-
-      This avoids harsh cut-out edges.
-    */
-
-    let alpha =
-      (confidence - 0.15) /
-      0.65;
-
-
-    alpha =
-      Math.max(
-        0,
-        Math.min(
-          1,
-          alpha
-        )
-      );
-
-
-    personData.data[i] =
-      sourceData.data[i];
-
-
-    personData.data[i + 1] =
-      sourceData.data[i + 1];
-
-
-    personData.data[i + 2] =
-      sourceData.data[i + 2];
-
-
-    personData.data[i + 3] =
-      Math.round(
-        alpha * 255
-      );
-
-  }
-
-
-  personCtx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  personCtx.putImageData(
-    personData,
-    0,
-    0
-  );
-
-
-  /* -----------------------------------------
-     BACKGROUND
-     ----------------------------------------- */
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  switch (
-    CourseStudio.backgroundMode
-  ) {
-
-    case "remove":
-
-      /*
-        Transparent background.
-      */
-
-      break;
-
-
-    case "blur":
-
-      drawBlurredBackground(
-        ctx,
-        image,
-        width,
-        height
-      );
-
-      break;
-
-
-    case "image":
-
-      drawCustomBackground(
-        ctx,
-        width,
-        height
-      );
-
-      break;
-
-
-    case "color":
-
-      ctx.fillStyle =
-        backgroundColor?.value ||
-        "#182235";
-
-      ctx.fillRect(
-        0,
-        0,
-        width,
-        height
-      );
-
-      break;
-
-
-    default:
-
-      /*
-        Fallback.
-      */
-
-      ctx.drawImage(
-        image,
-        0,
-        0,
-        width,
-        height
-      );
-
-      break;
-
-  }
-
-
-  /* -----------------------------------------
-     PERSON
-     ----------------------------------------- */
-
-  ctx.drawImage(
-    personCanvas,
-    0,
-    0,
-    width,
-    height
-  );
-
-}
-
-
-/* =========================================================
-   BLURRED BACKGROUND
-   ========================================================= */
-
-function drawBlurredBackground(
-  ctx,
-  image,
-  width,
-  height
-) {
-
-  ctx.save();
-
-  ctx.filter =
-    "blur(18px)";
-
-
-  const bleed =
-    30;
-
-
-  ctx.drawImage(
-    image,
-    -bleed,
-    -bleed,
-    width + bleed * 2,
-    height + bleed * 2
-  );
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   CUSTOM BACKGROUND
-   ========================================================= */
-
-function drawCustomBackground(
-  ctx,
-  width,
-  height
-) {
-
-  if (
-    !CourseStudio.customBackgroundImage
-  ) {
-
-    ctx.fillStyle =
-      "#162033";
-
-    ctx.fillRect(
-      0,
-      0,
-      width,
-      height
-    );
-
-    return;
-
-  }
-
-
-  drawImageCover(
-    ctx,
-    CourseStudio.customBackgroundImage,
-    0,
-    0,
-    width,
-    height
-  );
-
-}
-
-
-/* =========================================================
-   BACKGROUND CONTROLS
-   ========================================================= */
-
-function setupBackgroundControls() {
-
-  if (bgOriginalBtn) {
-
-    bgOriginalBtn.addEventListener(
-      "click",
-      () => setBackgroundMode(
-        "original"
-      )
-    );
-
-  }
-
-
-  if (bgRemoveBtn) {
-
-    bgRemoveBtn.addEventListener(
-      "click",
-      () => setBackgroundMode(
-        "remove"
-      )
-    );
-
-  }
-
-
-  if (bgBlurBtn) {
-
-    bgBlurBtn.addEventListener(
-      "click",
-      () => setBackgroundMode(
-        "blur"
-      )
-    );
-
-  }
-
-
-  if (bgImageBtn) {
-
-    bgImageBtn.addEventListener(
-      "click",
-      () => {
-
-        if (backgroundImageUpload) {
-
-          backgroundImageUpload.click();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (bgColorBtn) {
-
-    bgColorBtn.addEventListener(
-      "click",
-      () => setBackgroundMode(
-        "color"
-      )
-    );
-
-  }
-
-
-  if (backgroundColor) {
-
-    backgroundColor.addEventListener(
-      "input",
-      () => {
-
-        if (
-          CourseStudio.backgroundMode ===
-          "color"
-        ) {
-
-          renderCompositionFrame();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (backgroundImageUpload) {
-
-    backgroundImageUpload.addEventListener(
-      "change",
-      handleBackgroundImageUpload
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SET BACKGROUND MODE
-   ========================================================= */
-
-function setBackgroundMode(
-  mode
-) {
-
-  CourseStudio.backgroundMode =
-    mode;
-
-
-  setActiveButton(
-    [
-      bgOriginalBtn,
-      bgRemoveBtn,
-      bgBlurBtn,
-      bgImageBtn,
-      bgColorBtn
-    ],
-    mode
-  );
-
-
-  if (
-    mode === "original"
-  ) {
-
-    if (
-      CourseStudio.cameraStream
-    ) {
-
-      if (mentorCameraVideo) {
-
-        mentorCameraVideo.style.display =
-          "block";
-
-      }
-
-    }
-
-
-    if (mentorAICanvas) {
-
-      mentorAICanvas.style.display =
-        "none";
-
-    }
-
-  } else {
-
-    if (
-      CourseStudio.cameraStream
-    ) {
-
-      if (mentorCameraVideo) {
-
-        mentorCameraVideo.style.display =
-          "none";
-
-      }
-
-      if (mentorAICanvas) {
-
-        mentorAICanvas.style.display =
-          "block";
-
-      }
-
-    }
-
-  }
-
-
-  renderCompositionFrame();
-
-}
-
-
-/* =========================================================
-   ACTIVE BUTTON
-   ========================================================= */
-
-function setActiveButton(
-  buttons,
-  mode
-) {
-
-  const mapping = {
-
-    original: bgOriginalBtn,
-    remove: bgRemoveBtn,
-    blur: bgBlurBtn,
-    image: bgImageBtn,
-    color: bgColorBtn
-
-  };
-
-
-  buttons.forEach(
-    (button) => {
-
-      if (!button) {
-        return;
-      }
-
-      button.classList.remove(
-        "active"
-      );
-
-    }
-  );
-
-
-  const active =
-    mapping[mode];
-
-
-  if (active) {
-
-    active.classList.add(
-      "active"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   BACKGROUND IMAGE UPLOAD
-   ========================================================= */
-
-function handleBackgroundImageUpload(
-  event
-) {
-
-  const file =
-    event.target.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  if (
-    !file.type.startsWith(
-      "image/"
-    )
-  ) {
-
-    showToast(
-      "Please select an image."
-    );
-
-    return;
-
-  }
-
-
-  const image =
-    new Image();
-
-
-  image.onload = () => {
-
-    CourseStudio.customBackgroundImage =
-      image;
-
-
-    setBackgroundMode(
-      "image"
-    );
-
-
-    showToast(
-      "Custom background applied."
-    );
-
-  };
-
-
-  image.src =
-    URL.createObjectURL(
-      file
-    );
-
-}
-
-
-/* =========================================================
-   MENTOR DRAGGING
-   ========================================================= */
-
-function enableMentorDragging() {
-
-  if (!mentorCard) {
-    return;
-  }
-
-
-  let dragging = false;
-
-  let startX = 0;
-  let startY = 0;
-
-  let initialX = 0;
-  let initialY = 0;
-
-
-  mentorCard.addEventListener(
-    "pointerdown",
-    (event) => {
-
-      if (
-        event.target === mentorResize
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        event.target.closest(
-          "button,input,select,textarea"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      dragging = true;
-
-
-      mentorCard.setPointerCapture(
-        event.pointerId
-      );
-
-
-      const rect =
-        mentorCard.getBoundingClientRect();
-
-
-      startX =
-        event.clientX;
-
-      startY =
-        event.clientY;
-
-
-      initialX =
-        rect.left;
-
-      initialY =
-        rect.top;
-
-
-      mentorCard.style.transition =
-        "none";
-
-
-      event.preventDefault();
-
-    }
-  );
-
-
-  mentorCard.addEventListener(
-    "pointermove",
-    (event) => {
-
-      if (!dragging) {
-        return;
-      }
-
-
-      const dx =
-        event.clientX -
-        startX;
-
-
-      const dy =
-        event.clientY -
-        startY;
-
-
-      const stageRect =
-        stage?.getBoundingClientRect();
-
-
-      if (!stageRect) {
-        return;
-      }
-
-
-      let newLeft =
-        initialX -
-        stageRect.left +
-        dx;
-
-
-      let newTop =
-        initialY -
-        stageRect.top +
-        dy;
-
-
-      const cardRect =
-        mentorCard.getBoundingClientRect();
-
-
-      const maxLeft =
-        stageRect.width -
-        cardRect.width;
-
-
-      const maxTop =
-        stageRect.height -
-        cardRect.height;
-
-
-      newLeft =
-        Math.max(
-          0,
-          Math.min(
-            newLeft,
-            maxLeft
-          )
-        );
-
-
-      newTop =
-        Math.max(
-          0,
-          Math.min(
-            newTop,
-            maxTop
-          )
-        );
-
-
-      mentorCard.style.left =
-        `${newLeft}px`;
-
-
-      mentorCard.style.top =
-        `${newTop}px`;
-
-
-      mentorCard.style.right =
-        "auto";
-
-
-      mentorCard.style.bottom =
-        "auto";
-
-
-      CourseStudio.mentorX =
-        newLeft;
-
-
-      CourseStudio.mentorY =
-        newTop;
-
-
-      saveMentorPosition();
-
-    }
-  );
-
-
-  const stopDragging =
-    (event) => {
-
-      if (!dragging) {
-        return;
-      }
-
-
-      dragging = false;
-
-
-      try {
-
-        mentorCard.releasePointerCapture(
-          event.pointerId
-        );
-
-      } catch (_) {}
-
-
-      mentorCard.style.transition =
-        "";
-
-
-      saveMentorPosition();
-
-    };
-
-
-  mentorCard.addEventListener(
-    "pointerup",
-    stopDragging
-  );
-
-
-  mentorCard.addEventListener(
-    "pointercancel",
-    stopDragging
-  );
-
-}
-
-
-/* =========================================================
-   MENTOR SIZE
-   ========================================================= */
-
-function restoreMentorSize() {
-
-  if (!mentorCard) {
-    return;
-  }
-
-
-  const width =
-    parseInt(
-      localStorage.getItem(
-        "courseStudioMentorWidth"
-      ),
-      10
-    );
-
-
-  const height =
-    parseInt(
-      localStorage.getItem(
-        "courseStudioMentorHeight"
-      ),
-      10
-    );
-
-
-  if (
-    Number.isFinite(width)
-  ) {
-
-    mentorCard.style.width =
-      `${width}px`;
-
-    CourseStudio.mentorWidth =
-      width;
-
-  }
-
-
-  if (
-    Number.isFinite(height)
-  ) {
-
-    mentorCard.style.height =
-      `${height}px`;
-
-    CourseStudio.mentorHeight =
-      height;
-
-  }
-
-
-  const x =
-    parseFloat(
-      localStorage.getItem(
-        "courseStudioMentorX"
-      )
-    );
-
-
-  const y =
-    parseFloat(
-      localStorage.getItem(
-        "courseStudioMentorY"
-      )
-    );
-
-
-  if (
-    Number.isFinite(x)
-  ) {
-
-    mentorCard.style.left =
-      `${x}px`;
-
-    mentorCard.style.right =
-      "auto";
-
-    CourseStudio.mentorX =
-      x;
-
-  }
-
-
-  if (
-    Number.isFinite(y)
-  ) {
-
-    mentorCard.style.top =
-      `${y}px`;
-
-    mentorCard.style.bottom =
-      "auto";
-
-    CourseStudio.mentorY =
-      y;
-
-  }
-
-}
-
-
-/* =========================================================
-   SAVE MENTOR POSITION
-   ========================================================= */
-
-function saveMentorPosition() {
-
-  if (!mentorCard) {
-    return;
-  }
-
-
-  const rect =
-    mentorCard.getBoundingClientRect();
-
-
-  const stageRect =
-    stage?.getBoundingClientRect();
-
-
-  if (!stageRect) {
-    return;
-  }
-
-
-  const x =
-    rect.left -
-    stageRect.left;
-
-
-  const y =
-    rect.top -
-    stageRect.top;
-
-
-  localStorage.setItem(
-    "courseStudioMentorX",
-    String(x)
-  );
-
-
-  localStorage.setItem(
-    "courseStudioMentorY",
-    String(y)
-  );
-
-}
-
-
-/* =========================================================
-   UPDATE MENTOR VISUAL
-   ========================================================= */
-
-function updateMentorVisual() {
-
-  if (!mentorCard) {
-    return;
-  }
-
-
-  if (
-    CourseStudio.mentorSource ===
-    "placeholder"
-  ) {
-
-    if (mentorPlaceholder) {
-
-      mentorPlaceholder.style.display =
-        "flex";
-
-    }
-
-    if (mentorVideo) {
-
-      mentorVideo.style.display =
-        "none";
-
-    }
-
-    if (mentorCameraVideo) {
-
-      mentorCameraVideo.style.display =
-        "none";
-
-    }
-
-    if (mentorAICanvas) {
-
-      mentorAICanvas.style.display =
-        "none";
-
-    }
-
-  }
-
-}
-
-
-/* =========================================================
-   COMPOSITION CANVAS
-   ========================================================= */
-
-function createCompositionCanvas() {
-
-  CourseStudio.compositionCanvas =
-    document.createElement(
-      "canvas"
-    );
-
-
-  CourseStudio.compositionCanvas.width =
-    1920;
-
-
-  CourseStudio.compositionCanvas.height =
-    1080;
-
-
-  CourseStudio.compositionCtx =
-    CourseStudio.compositionCanvas.getContext(
-      "2d"
-    );
-
-}
-
-
-/* =========================================================
-   RENDER COMPOSITION LOOP
-   ========================================================= */
-
-function renderCompositionLoop() {
-
-  renderCompositionFrame();
-
-
-  setTimeout(
-    () => {
-
-      requestAnimationFrame(
-        renderCompositionLoop
-      );
-
-    },
-    30
-  );
-
-}
-
-
-/* =========================================================
-   RENDER COMPOSITION FRAME
-   ========================================================= */
-
-function renderCompositionFrame() {
-
-  const canvas =
-    CourseStudio.compositionCanvas;
-
-
-  const ctx =
-    CourseStudio.compositionCtx;
-
-
-  if (!canvas || !ctx) {
-    return;
-  }
-
-
-  const width =
-    canvas.width;
-
-
-  const height =
-    canvas.height;
-
-
-  /* -----------------------------------------
-     BACKGROUND
-     ----------------------------------------- */
-
-  ctx.fillStyle =
-    "#10131b";
-
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  /* -----------------------------------------
-     MAIN MEDIA
-     ----------------------------------------- */
-
-  drawMainStage(
-    ctx,
-    width,
-    height
-  );
-
-
-  /* -----------------------------------------
-     MENTOR
-     ----------------------------------------- */
-
-  drawMentorOverlay(
-    ctx,
-    width,
-    height
-  );
-
-
-  /* -----------------------------------------
-     BRAND
-     ----------------------------------------- */
-
-  drawBrandBadge(
-    ctx,
-    width,
-    height
-  );
-
-}
-
-
-/* =========================================================
-   DRAW MAIN STAGE
-   ========================================================= */
-
-function drawMainStage(
-  ctx,
-  width,
-  height
-) {
-
-  if (
-    mainVideo &&
-    mainVideo.style.display !== "none" &&
-    mainVideo.readyState >= 2
-  ) {
-
-    drawMediaCover(
-      ctx,
-      mainVideo,
-      0,
-      0,
-      width,
-      height
-    );
-
-
-    return;
-
-  }
-
-
-  if (
-    mainImage &&
-    mainImage.style.display !== "none" &&
-    mainImage.complete &&
-    mainImage.naturalWidth > 0
-  ) {
-
-    drawImageCover(
-      ctx,
-      mainImage,
-      0,
-      0,
-      width,
-      height
-    );
-
-
-    return;
-
-  }
-
-
-  drawStudioWelcome(
-    ctx,
-    width,
-    height
-  );
-
-}
-
-
-/* =========================================================
-   DRAW WELCOME
-   ========================================================= */
-
-function drawStudioWelcome(
-  ctx,
-  width,
-  height
-) {
-
-  ctx.fillStyle =
-    "#10151f";
-
-
-  ctx.fillRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  ctx.fillStyle =
-    "#ffffff";
-
-
-  ctx.textAlign =
-    "center";
-
-
-  ctx.font =
-    "700 54px Arial";
-
-
-  ctx.fillText(
-    "Personal Course Studio",
-    width / 2,
-    height / 2 - 20
-  );
-
-
-  ctx.fillStyle =
-    "rgba(255,255,255,.55)";
-
-
-  ctx.font =
-    "400 24px Arial";
-
-
-  ctx.fillText(
-    "Upload a slide, image or video to begin",
-    width / 2,
-    height / 2 + 30
-  );
-
-
-  ctx.textAlign =
-    "left";
-
-}
-
-
-/* =========================================================
-   DRAW MENTOR OVERLAY
-   ========================================================= */
-
-function drawMentorOverlay(
-  ctx,
-  width,
-  height
-) {
-
-  if (!mentorCard) {
-    return;
-  }
-
-
-  if (
-    CourseStudio.mentorSource ===
-    "placeholder"
-  ) {
-
-    return;
-
-  }
-
-
-  const stageRect =
-    stage?.getBoundingClientRect();
-
-
-  if (!stageRect) {
-    return;
-  }
-
-
-  const cardRect =
-    mentorCard.getBoundingClientRect();
-
-
-  const scaleX =
-    width /
-    stageRect.width;
-
-
-  const scaleY =
-    height /
-    stageRect.height;
-
-
-  const x =
-    (
-      cardRect.left -
-      stageRect.left
-    ) *
-    scaleX;
-
-
-  const y =
-    (
-      cardRect.top -
-      stageRect.top
-    ) *
-    scaleY;
-
-
-  const w =
-    cardRect.width *
-    scaleX;
-
-
-  const h =
-    cardRect.height *
-    scaleY;
-
-
-  ctx.save();
-
-
-  ctx.shadowColor =
-    "rgba(0,0,0,.45)";
-
-
-  ctx.shadowBlur =
-    35;
-
-
-  ctx.shadowOffsetY =
-    12;
-
-
-  ctx.fillStyle =
-    "rgba(0,0,0,.25)";
-
-
-  roundedRect(
-    ctx,
-    x,
-    y,
-    w,
-    h,
-    24
-  );
-
-
-  ctx.fill();
-
-
-  ctx.shadowColor =
-    "transparent";
-
-
-  /* -----------------------------------------
-     Mentor media
-     ----------------------------------------- */
-
-  let media =
-    null;
-
-
-  if (
-    CourseStudio.mentorSource ===
-    "camera"
-  ) {
-
-    if (
-      CourseStudio.backgroundMode !==
-      "original" &&
-      mentorAICanvas &&
-      mentorAICanvas.style.display !==
-        "none"
-    ) {
-
-      media =
-        mentorAICanvas;
-
-    } else {
-
-      media =
-        mentorCameraVideo;
-
-    }
-
-  } else if (
-    CourseStudio.mentorSource ===
-    "video"
-  ) {
-
-    media =
-      mentorVideo;
-
-  }
-
-
-  if (media) {
-
-    const hasSize =
-      (
-        media.videoWidth ||
-        media.naturalWidth ||
-        media.width
-      ) > 0;
-
-
-    if (hasSize) {
-
-      drawMediaCover(
-        ctx,
-        media,
-        x,
-        y,
-        w,
-        h,
-        true
-      );
-
-    }
-
-  }
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   DRAW BRAND BADGE
-   ========================================================= */
-
-function drawBrandBadge(
-  ctx,
-  width,
-  height
-) {
-
-  if (!brandBadge) {
-    return;
-  }
-
-
-  const text =
-    brandBadge.textContent ||
-    localStorage.getItem(
-      "courseStudioBrandName"
-    ) ||
-    "Personal Course Studio";
-
-
-  if (!text.trim()) {
-    return;
-  }
-
-
-  const paddingX =
-    22;
-
-
-  const paddingY =
-    12;
-
-
-  ctx.save();
-
-
-  ctx.font =
-    "600 22px Arial";
-
-
-  const metrics =
-    ctx.measureText(
-      text
-    );
-
-
-  const badgeWidth =
-    metrics.width +
-    paddingX * 2;
-
-
-  const badgeHeight =
-    52;
-
-
-  const x =
-    32;
-
-
-  const y =
-    height -
-    badgeHeight -
-    32;
-
-
-  ctx.fillStyle =
-    "rgba(0,0,0,.58)";
-
-
-  roundedRect(
-    ctx,
-    x,
-    y,
-    badgeWidth,
-    badgeHeight,
-    14
-  );
-
-
-  ctx.fill();
-
-
-  ctx.fillStyle =
-    "#ffffff";
-
-
-  ctx.textAlign =
-    "left";
-
-
-  ctx.textBaseline =
-    "middle";
-
-
-  ctx.fillText(
-    text,
-    x + paddingX,
-    y + badgeHeight / 2
-  );
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   MEDIA COVER
-   ========================================================= */
-
-function drawMediaCover(
-  ctx,
-  media,
-  x,
-  y,
-  width,
-  height,
-  rounded = false
-) {
-
-  const mediaWidth =
-    media.videoWidth ||
-    media.naturalWidth ||
-    media.width;
-
-
-  const mediaHeight =
-    media.videoHeight ||
-    media.naturalHeight ||
-    media.height;
-
-
-  if (
-    !mediaWidth ||
-    !mediaHeight
-  ) {
-
-    return;
-
-  }
-
-
-  const scale =
-    Math.max(
-      width / mediaWidth,
-      height / mediaHeight
-    );
-
-
-  const drawWidth =
-    mediaWidth *
-    scale;
-
-
-  const drawHeight =
-    mediaHeight *
-    scale;
-
-
-  const drawX =
-    x +
-    (
-      width -
-      drawWidth
-    ) / 2;
-
-
-  const drawY =
-    y +
-    (
-      height -
-      drawHeight
-    ) / 2;
-
-
-  ctx.save();
-
-
-  if (rounded) {
-
-    roundedRect(
-      ctx,
-      x,
-      y,
-      width,
-      height,
-      24
-    );
-
-    ctx.clip();
-
-  }
-
-
-  ctx.drawImage(
-    media,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
-  );
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   IMAGE COVER
-   ========================================================= */
-
-function drawImageCover(
-  ctx,
-  image,
-  x,
-  y,
-  width,
-  height
-) {
-
-  const imageWidth =
-    image.naturalWidth ||
-    image.width;
-
-
-  const imageHeight =
-    image.naturalHeight ||
-    image.height;
-
-
-  if (
-    !imageWidth ||
-    !imageHeight
-  ) {
-
-    return;
-
-  }
-
-
-  const scale =
-    Math.max(
-      width / imageWidth,
-      height / imageHeight
-    );
-
-
-  const drawWidth =
-    imageWidth *
-    scale;
-
-
-  const drawHeight =
-    imageHeight *
-    scale;
-
-
-  const drawX =
-    x +
-    (
-      width -
-      drawWidth
-    ) / 2;
-
-
-  const drawY =
-    y +
-    (
-      height -
-      drawHeight
-    ) / 2;
-
-
-  ctx.drawImage(
-    image,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
-  );
-
-}
-
-
-/* =========================================================
-   ROUNDED RECT
-   ========================================================= */
-
-function roundedRect(
-  ctx,
-  x,
-  y,
-  width,
-  height,
-  radius
-) {
-
-  const r =
-    Math.min(
-      radius,
-      width / 2,
-      height / 2
-    );
-
-
-  ctx.beginPath();
-
-
-  ctx.moveTo(
-    x + r,
-    y
-  );
-
-
-  ctx.arcTo(
-    x + width,
-    y,
-    x + width,
-    y + height,
-    r
-  );
-
-
-  ctx.arcTo(
-    x + width,
-    y + height,
-    x,
-    y + height,
-    r
-  );
-
-
-  ctx.arcTo(
-    x,
-    y + height,
-    x,
-    y,
-    r
-  );
-
-
-  ctx.arcTo(
-    x,
-    y,
-    x + width,
-    y,
-    r
-  );
-
-
-  ctx.closePath();
-
-}
-
-
-/* =========================================================
-   AUDIO MIX
-   ========================================================= */
-
-async function prepareAudioMix() {
-
-  if (
-    !CourseStudio.audioContext
-  ) {
-
-    CourseStudio.audioContext =
-      new (
-        window.AudioContext ||
-        window.webkitAudioContext
-      )();
-
-  }
-
-
-  const audioContext =
-    CourseStudio.audioContext;
-
-
-  if (
-    audioContext.state ===
-    "suspended"
-  ) {
-
-    await audioContext.resume();
-
-  }
-
-
-  if (
-    !CourseStudio.audioDestination
-  ) {
-
-    CourseStudio.audioDestination =
-      audioContext.createMediaStreamDestination();
-
-  }
-
-
-  /* -----------------------------------------
-     Main video audio
-     ----------------------------------------- */
-
-  if (
-    mainVideo &&
-    mainVideo.src &&
-    mainVideoAudioCheckbox?.checked
-  ) {
-
-    const source =
-      getOrCreateAudioSource(
-        mainVideo
-      );
-
-
-    if (source) {
-
-      try {
-
-        source.connect(
-          CourseStudio.audioDestination
-        );
-
-      } catch (_) {}
-
-    }
-
-  }
-
-
-  /* -----------------------------------------
-     Mentor video audio
-     ----------------------------------------- */
-
-  if (
-    mentorVideo &&
-    mentorVideo.src &&
-    CourseStudio.mentorSource ===
-      "video"
-  ) {
-
-    const source =
-      getOrCreateAudioSource(
-        mentorVideo
-      );
-
-
-    if (source) {
-
-      try {
-
-        source.connect(
-          CourseStudio.audioDestination
-        );
-
-      } catch (_) {}
-
-    }
-
-  }
-
-
-  /* -----------------------------------------
-     Microphone
-     ----------------------------------------- */
-
-  try {
-
-    CourseStudio.microphoneStream =
-      await navigator.mediaDevices
-        .getUserMedia({
-
-          audio: {
-
-            echoCancellation: true,
-
-            noiseSuppression: true,
-
-            autoGainControl: true
-
-          },
-
-          video: false
-
-        });
-
-
-    const micSource =
-      audioContext.createMediaStreamSource(
-        CourseStudio.microphoneStream
-      );
-
-
-    micSource.connect(
-      CourseStudio.audioDestination
-    );
-
-
-    CourseStudio.microphoneAudioSource =
-      micSource;
-
-
-    updateMicStatus(
-      "Microphone connected"
-    );
-
-
-  } catch (error) {
-
-    console.warn(
-      "Microphone unavailable:",
-      error
-    );
-
-
-    CourseStudio.microphoneStream =
-      null;
-
-
-    updateMicStatus(
-      "Microphone unavailable — recording video only"
-    );
-
-  }
-
-
-  return CourseStudio.audioDestination.stream;
-
-}
-
-
-/* =========================================================
-   AUDIO SOURCE CACHE
-   ========================================================= */
-
-function getOrCreateAudioSource(
-  media
-) {
-
-  if (
-    CourseStudio.audioSources.has(
-      media
-    )
-  ) {
-
-    return CourseStudio.audioSources.get(
-      media
-    );
-
-  }
-
-
-  try {
-
-    const source =
-      CourseStudio.audioContext
-        .createMediaElementSource(
-          media
-        );
-
-
-    CourseStudio.audioSources.set(
-      media,
-      source
-    );
-
-
-    return source;
-
-  } catch (error) {
-
-    console.warn(
-      "Could not create audio source:",
-      error
-    );
-
-
-    return null;
-
-  }
-
-}
-
-
-/* =========================================================
-   MICROPHONE STATUS
-   ========================================================= */
-
-function updateMicStatus(
-  message
-) {
-
-  const element =
-    document.querySelector(
-      "[data-mic-status]"
-    );
-
-
-  if (element) {
-
-    element.textContent =
-      message;
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING UI
-   ========================================================= */
-
-let recordingControls =
-  null;
-
-
-let recordingTimerElement =
-  null;
-
-
-let recordingPauseButton =
-  null;
-
-
-function createRecordingControls() {
-
-  if (recordingControls) {
-    return;
-  }
-
-
-  recordingControls =
-    document.createElement(
-      "div"
-    );
-
-
-  recordingControls.id =
-    "courseStudioRecordingControls";
-
-
-  recordingControls.innerHTML = `
-
-    <div
-      class="cstudio-recording-bar"
-      style="
-        position:fixed;
-        left:50%;
-        bottom:22px;
-        transform:translateX(-50%);
-        z-index:99990;
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding:10px 14px;
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:16px;
-        background:rgba(10,13,20,.92);
-        backdrop-filter:blur(18px);
-        box-shadow:0 18px 50px rgba(0,0,0,.45);
-        color:#fff;
-        font-family:Arial,sans-serif;
-      "
-    >
-
-      <span
-        style="
-          width:10px;
-          height:10px;
-          border-radius:50%;
-          background:#ff3b5c;
-          box-shadow:0 0 14px rgba(255,59,92,.8);
-        "
-      ></span>
-
-      <strong
-        data-recording-time
-        style="
-          min-width:65px;
-          text-align:center;
-          font-size:14px;
-        "
-      >
-        00:00
-      </strong>
-
-      <button
-        type="button"
-        data-recording-pause
-        style="
-          border:0;
-          border-radius:10px;
-          padding:9px 13px;
-          cursor:pointer;
-          background:#fff;
-          color:#111;
-          font-weight:700;
-        "
-      >
-        Pause
-      </button>
-
-      <button
-        type="button"
-        data-recording-stop
-        style="
-          border:0;
-          border-radius:10px;
-          padding:9px 13px;
-          cursor:pointer;
-          background:#ff3b5c;
-          color:#fff;
-          font-weight:700;
-        "
-      >
-        Stop
-      </button>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    recordingControls
-  );
-
-
-  recordingTimerElement =
-    recordingControls.querySelector(
-      "[data-recording-time]"
-    );
-
-
-  recordingPauseButton =
-    recordingControls.querySelector(
-      "[data-recording-pause]"
-    );
-
-
-  const stopButton =
-    recordingControls.querySelector(
-      "[data-recording-stop]"
-    );
-
-
-  recordingPauseButton?.addEventListener(
-    "click",
-    toggleRecordingPause
-  );
-
-
-  stopButton?.addEventListener(
-    "click",
-    stopRecording
-  );
-
-}
-
-
-/* =========================================================
-   REMOVE RECORDING CONTROLS
-   ========================================================= */
-
-function removeRecordingControls() {
-
-  if (
-    recordingControls
-  ) {
-
-    recordingControls.remove();
-
-  }
-
-
-  recordingControls =
-    null;
-
-
-  recordingTimerElement =
-    null;
-
-
-  recordingPauseButton =
-    null;
-
-}
-
-
-/* =========================================================
-   START RECORDING
-   ========================================================= */
-
-async function startRecording() {
-
-  if (
-    CourseStudio.recording
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    createRecordingControls();
-
-
-    CourseStudio.recordedChunks =
-      [];
-
-
-    const audioStream =
-      await prepareAudioMix();
-
-
-    const videoStream =
-      CourseStudio.compositionCanvas
-        .captureStream(
-          30
-        );
-
-
-    const combinedStream =
-      new MediaStream();
-
-
-    videoStream
-      .getVideoTracks()
-      .forEach(
-        (track) => {
-
-          combinedStream.addTrack(
-            track
-          );
-
-        }
-      );
-
-
-    if (audioStream) {
-
-      audioStream
-        .getAudioTracks()
-        .forEach(
-          (track) => {
-
-            combinedStream.addTrack(
-              track
-            );
-
-          }
-        );
-
-    }
-
-
-    CourseStudio.recordingStream =
-      combinedStream;
-
-
-    const mimeType =
-      getSupportedRecordingMimeType();
-
-
-    const options = {};
-
-
-    if (mimeType) {
-
-      options.mimeType =
-        mimeType;
-
-    }
-
-
-    options.videoBitsPerSecond =
-      6000000;
-
-
-    options.audioBitsPerSecond =
-      192000;
-
-
-    CourseStudio.mediaRecorder =
-      new MediaRecorder(
-        combinedStream,
-        options
-      );
-
-
-    CourseStudio.mediaRecorder.ondataavailable =
-      (event) => {
-
-        if (
-          event.data &&
-          event.data.size > 0
-        ) {
-
-          CourseStudio.recordedChunks
-            .push(
-              event.data
-            );
-
-        }
-
-      };
-
-
-    CourseStudio.mediaRecorder.onerror =
-      (event) => {
-
-        console.error(
-          "MediaRecorder error:",
-          event
-        );
-
-
-        showToast(
-          "Recording error occurred."
-        );
-
-      };
-
-
-    CourseStudio.mediaRecorder.onstop =
-      handleRecordingStopped;
-
-
-    CourseStudio.mediaRecorder.onpause =
-      () => {
-
-        CourseStudio.recordingPaused =
-          true;
-
-        updateRecordingPauseButton();
-
-      };
-
-
-    CourseStudio.mediaRecorder.onresume =
-      () => {
-
-        CourseStudio.recordingPaused =
-          false;
-
-        updateRecordingPauseButton();
-
-      };
-
-
-    CourseStudio.mediaRecorder.start(
-      1000
-    );
-
-
-    CourseStudio.recording =
-      true;
-
-
-    CourseStudio.recordingPaused =
-      false;
-
-
-    CourseStudio.recordingStartTime =
-      performance.now();
-
-
-    CourseStudio.recordingPausedAt =
-      0;
-
-
-    CourseStudio.recordingPausedTotal =
-      0;
-
-
-    startRecordingTimer();
-
-
-    updateRecordingButton();
-
-
-    if (
-      CourseStudio.teleprompter &&
-      CourseStudio.teleprompter.startWithRecord
-    ) {
-
-      startTeleprompter();
-
-    }
-
-
-    showToast(
-      "Recording started."
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Recording failed:",
-      error
-    );
-
-
-    CourseStudio.recording =
-      false;
-
-
-    removeRecordingControls();
-
-
-    cleanupRecordingResources();
-
-
-    showToast(
-      "Could not start recording."
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING MIME
-   ========================================================= */
-
-function getSupportedRecordingMimeType() {
-
-  const types = [
-
-    "video/webm;codecs=vp9,opus",
-
-    "video/webm;codecs=vp8,opus",
-
-    "video/webm"
-
-  ];
-
-
-  for (
-    const type of types
-  ) {
-
-    if (
-      MediaRecorder.isTypeSupported(
-        type
-      )
-    ) {
-
-      return type;
-
-    }
-
-  }
-
-
-  return "";
-
-}
-
-
-/* =========================================================
-   RECORDING TIMER
-   ========================================================= */
-
-function startRecordingTimer() {
-
-  clearInterval(
-    CourseStudio.recordingTimerInterval
-  );
-
-
-  CourseStudio.recordingTimerInterval =
-    setInterval(
-      updateRecordingTimer,
-      250
-    );
-
-
-  updateRecordingTimer();
-
-}
-
-
-/* =========================================================
-   UPDATE TIMER
-   ========================================================= */
-
-function updateRecordingTimer() {
-
-  if (
-    !CourseStudio.recording
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.recordingPaused
-  ) {
-
-    return;
-
-  }
-
-
-  const now =
-    performance.now();
-
-
-  const elapsed =
-    now -
-    CourseStudio.recordingStartTime -
-    CourseStudio.recordingPausedTotal;
-
-
-  const seconds =
-    Math.max(
-      0,
-      Math.floor(
-        elapsed / 1000
-      )
-    );
-
-
-  if (
-    recordingTimerElement
-  ) {
-
-    recordingTimerElement.textContent =
-      formatTime(
-        seconds
-      );
-
-  }
-
-}
-
-
-/* =========================================================
-   FORMAT TIME
-   ========================================================= */
-
-function formatTime(
-  seconds
-) {
-
-  const total =
-    Math.max(
-      0,
-      Math.floor(
-        seconds
-      )
-    );
-
-
-  const hours =
-    Math.floor(
-      total / 3600
-    );
-
-
-  const minutes =
-    Math.floor(
-      (
-        total % 3600
-      ) / 60
-    );
-
-
-  const secs =
-    total % 60;
-
-
-  if (hours > 0) {
-
-    return [
-
-      String(hours)
-        .padStart(2, "0"),
-
-      String(minutes)
-        .padStart(2, "0"),
-
-      String(secs)
-        .padStart(2, "0")
-
-    ].join(":");
-
-  }
-
-
-  return [
-
-    String(minutes)
-      .padStart(2, "0"),
-
-    String(secs)
-      .padStart(2, "0")
-
-  ].join(":");
-
-}
-
-
-/* =========================================================
-   TOGGLE RECORDING PAUSE
-   ========================================================= */
-
-function toggleRecordingPause() {
-
-  if (
-    !CourseStudio.mediaRecorder
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.mediaRecorder.state ===
-    "recording"
-  ) {
-
-    CourseStudio.recordingPausedAt =
-      performance.now();
-
-
-    CourseStudio.mediaRecorder.pause();
-
-
-    if (
-      CourseStudio.teleprompter
-    ) {
-
-      pauseTeleprompter();
-
-    }
-
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.mediaRecorder.state ===
-    "paused"
-  ) {
-
-    if (
-      CourseStudio.recordingPausedAt
-    ) {
-
-      CourseStudio.recordingPausedTotal +=
-        performance.now() -
-        CourseStudio.recordingPausedAt;
-
-    }
-
-
-    CourseStudio.recordingPausedAt =
-      0;
-
-
-    CourseStudio.mediaRecorder.resume();
-
-
-    if (
-      CourseStudio.teleprompter &&
-      CourseStudio.teleprompter.autoResumeAfterRecordingPause
-    ) {
-
-      startTeleprompter();
-
-    }
-
-  }
-
-}
-
-
-/* =========================================================
-   UPDATE PAUSE BUTTON
-   ========================================================= */
-
-function updateRecordingPauseButton() {
-
-  if (
-    !recordingPauseButton
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.recordingPaused
-  ) {
-
-    recordingPauseButton.textContent =
-      "Resume";
-
-  } else {
-
-    recordingPauseButton.textContent =
-      "Pause";
-
-  }
-
-}
-
-
-/* =========================================================
-   STOP RECORDING
-   ========================================================= */
-
-function stopRecording() {
-
-  if (
-    !CourseStudio.mediaRecorder
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    CourseStudio.mediaRecorder.state ===
-      "inactive"
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    CourseStudio.mediaRecorder.stop();
-
-  } catch (error) {
-
-    console.warn(
-      "Stop recording error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING STOPPED
-   ========================================================= */
-
-function handleRecordingStopped() {
-
-  CourseStudio.recording =
-    false;
-
-
-  CourseStudio.recordingPaused =
-    false;
-
-
-  clearInterval(
-    CourseStudio.recordingTimerInterval
-  );
-
-
-  CourseStudio.recordingTimerInterval =
-    null;
-
-
-  if (
-    CourseStudio.teleprompter
-  ) {
-
-    stopTeleprompter();
-
-  }
-
-
-  const chunks =
-    CourseStudio.recordedChunks;
-
-
-  if (
-    !chunks ||
-    chunks.length === 0
-  ) {
-
-    cleanupRecordingResources();
-
-    removeRecordingControls();
-
-
-    showToast(
-      "No recording data was created."
-    );
-
-
-    return;
-
-  }
-
-
-  const mimeType =
-    CourseStudio.mediaRecorder?.mimeType ||
-    "video/webm";
-
-
-  const blob =
-    new Blob(
-      chunks,
-      {
-        type: mimeType
-      }
-    );
-
-
-  showRecordingPreview(
-    blob
-  );
-
-
-  cleanupRecordingResources();
-
-  removeRecordingControls();
-
-
-  updateRecordingButton();
-
-}
-
-
-/* =========================================================
-   CLEAN RECORDING RESOURCES
-   ========================================================= */
-
-function cleanupRecordingResources() {
-
-  if (
-    CourseStudio.microphoneStream
-  ) {
-
-    CourseStudio.microphoneStream
-      .getTracks()
-      .forEach(
-        (track) => track.stop()
-      );
-
-  }
-
-
-  CourseStudio.microphoneStream =
-    null;
-
-
-  CourseStudio.microphoneAudioSource =
-    null;
-
-
-  if (
-    CourseStudio.recordingStream
-  ) {
-
-    CourseStudio.recordingStream
-      .getTracks()
-      .forEach(
-        (track) => {
-
-          try {
-            track.stop();
-          } catch (_) {}
-
-        }
-      );
-
-  }
-
-
-  CourseStudio.recordingStream =
-    null;
-
-
-  CourseStudio.mediaRecorder =
-    null;
-
-}
-
-
-/* =========================================================
-   RECORDING BUTTON UI
-   ========================================================= */
-
-function updateRecordingButton() {
-
-  if (!recordBtn) {
-    return;
-  }
-
-
-  if (
-    CourseStudio.recording
-  ) {
-
-    recordBtn.classList.add(
-      "recording"
-    );
-
-
-    recordBtn.setAttribute(
-      "aria-label",
-      "Stop recording"
-    );
-
-
-  } else {
-
-    recordBtn.classList.remove(
-      "recording"
-    );
-
-
-    recordBtn.setAttribute(
-      "aria-label",
-      "Start recording"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   RECORDING PREVIEW MODAL
-   ========================================================= */
-
-let previewModal =
-  null;
-
-
-let previewVideo =
-  null;
-
-
-let previewBlob =
-  null;
-
-
-let previewUrl =
-  null;
-
-
-function createPreviewModal() {
-
-  if (previewModal) {
-    return;
-  }
-
-
-  previewModal =
-    document.createElement(
-      "div"
-    );
-
-
-  previewModal.id =
-    "courseStudioRecordingPreview";
-
-
-  previewModal.innerHTML = `
-
-    <div
-      style="
-        position:fixed;
-        inset:0;
-        z-index:999999;
-        background:rgba(0,0,0,.82);
-        backdrop-filter:blur(14px);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:24px;
-      "
-      data-preview-backdrop
-    >
-
-      <div
-        style="
-          width:min(1100px,100%);
-          max-height:92vh;
-          overflow:auto;
-          background:#111722;
-          border:1px solid rgba(255,255,255,.1);
-          border-radius:22px;
-          box-shadow:0 30px 100px rgba(0,0,0,.55);
-          color:#fff;
-          padding:20px;
-          font-family:Arial,sans-serif;
-        "
-      >
-
-        <div
-          style="
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:16px;
-          "
-        >
-
-          <div>
-
-            <div
-              style="
-                font-size:20px;
-                font-weight:800;
-              "
-            >
-              Recording Preview
-            </div>
-
-            <div
-              style="
-                color:rgba(255,255,255,.55);
-                font-size:13px;
-                margin-top:4px;
-              "
-            >
-              Review your course recording before saving.
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            data-preview-close
-            style="
-              width:40px;
-              height:40px;
-              border:0;
-              border-radius:12px;
-              cursor:pointer;
-              background:rgba(255,255,255,.08);
-              color:#fff;
-              font-size:20px;
-            "
-          >
-            ×
-          </button>
-
-        </div>
-
-
-        <video
-          data-preview-video
-          controls
-          playsinline
-          style="
-            display:block;
-            width:100%;
-            max-height:65vh;
-            border-radius:16px;
-            background:#000;
-          "
-        ></video>
-
-
-        <div
-          style="
-            display:flex;
-            flex-wrap:wrap;
-            gap:10px;
-            margin-top:16px;
-          "
-        >
-
-          <button
-            type="button"
-            data-preview-download
-            style="
-              border:0;
-              border-radius:12px;
-              padding:12px 16px;
-              cursor:pointer;
-              background:#fff;
-              color:#111;
-              font-weight:800;
-            "
-          >
-            Download Recording
-          </button>
-
-
-          <button
-            type="button"
-            data-preview-again
-            style="
-              border:1px solid rgba(255,255,255,.12);
-              border-radius:12px;
-              padding:12px 16px;
-              cursor:pointer;
-              background:rgba(255,255,255,.06);
-              color:#fff;
-              font-weight:700;
-            "
-          >
-            Record Again
-          </button>
-
-
-          <button
-            type="button"
-            data-preview-delete
-            style="
-              border:1px solid rgba(255,80,100,.25);
-              border-radius:12px;
-              padding:12px 16px;
-              cursor:pointer;
-              background:rgba(255,80,100,.08);
-              color:#ff9bab;
-              font-weight:700;
-            "
-          >
-            Delete
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    previewModal
-  );
-
-
-  previewVideo =
-    previewModal.querySelector(
-      "[data-preview-video]"
-    );
-
-
-  previewModal.querySelector(
-    "[data-preview-close]"
-  )?.addEventListener(
-    "click",
-    closePreview
-  );
-
-
-  previewModal.querySelector(
-    "[data-preview-download]"
-  )?.addEventListener(
-    "click",
-    downloadPreview
-  );
-
-
-  previewModal.querySelector(
-    "[data-preview-again]"
-  )?.addEventListener(
-    "click",
-    () => {
-
-      closePreview();
-
-      startRecording();
-
-    }
-  );
-
-
-  previewModal.querySelector(
-    "[data-preview-delete]"
-  )?.addEventListener(
-    "click",
-    () => {
-
-      closePreview();
-
-      previewBlob =
-        null;
-
-      showToast(
-        "Recording deleted."
-      );
-
-    }
-  );
-
-
-  previewModal.querySelector(
-    "[data-preview-backdrop]"
-  )?.addEventListener(
-    "click",
-    (event) => {
-
-      if (
-        event.target ===
-        event.currentTarget
-      ) {
-
-        closePreview();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   SHOW PREVIEW
-   ========================================================= */
-
-function showRecordingPreview(
-  blob
-) {
-
-  createPreviewModal();
-
-
-  if (previewUrl) {
-
-    URL.revokeObjectURL(
-      previewUrl
-    );
-
-  }
-
-
-  previewBlob =
-    blob;
-
-
-  previewUrl =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  if (previewVideo) {
-
-    previewVideo.src =
-      previewUrl;
-
-    previewVideo.load();
-
-  }
-
-
-  if (previewModal) {
-
-    previewModal.style.display =
-      "block";
-
-  }
-
-}
-
-
-/* =========================================================
-   CLOSE PREVIEW
-   ========================================================= */
-
-function closePreview() {
-
-  if (!previewModal) {
-    return;
-  }
-
-
-  previewModal.style.display =
-    "none";
-
-
-  if (previewVideo) {
-
-    previewVideo.pause();
-
-  }
-
-}
-
-
-/* =========================================================
-   DOWNLOAD PREVIEW
-   ========================================================= */
-
-function downloadPreview() {
-
-  if (!previewBlob) {
-
-    showToast(
-      "No recording available."
-    );
-
-    return;
-
-  }
-
-
-  const url =
-    URL.createObjectURL(
-      previewBlob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  const now =
-    new Date();
-
-
-  const date =
-    now.toISOString()
-      .slice(0, 10);
-
-
-  const time =
-    now.toTimeString()
-      .slice(0, 8)
-      .replace(
-        /:/g,
-        "-"
-      );
-
-
-  link.href =
-    url;
-
-
-  link.download =
-    `Personal-Course-Studio-${date}_${time}.webm`;
-
-
-  document.body.appendChild(
-    link
-  );
-
-
-  link.click();
-
-
-  link.remove();
-
-
-  setTimeout(
-    () => {
-
-      URL.revokeObjectURL(
-        url
-      );
-
-    },
-    1000
-  );
-
-
-  showToast(
-    "Recording download started."
-  );
-
-}
-
-
-/* =========================================================
-   RECORD BUTTON
-   ========================================================= */
-
-if (recordBtn) {
-
-  recordBtn.addEventListener(
-    "click",
-    () => {
-
-      if (
-        CourseStudio.recording
-      ) {
-
-        stopRecording();
-
-      } else {
-
-        startRecording();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   STUDENTS
-   ========================================================= */
-
-function setupStudentControls() {
-
-  if (addStudentBtn) {
-
-    addStudentBtn.addEventListener(
-      "click",
-      addStudent
-    );
-
-  }
-
-
-  renderStudents();
-
-}
-
-
-/* =========================================================
-   DEFAULT STUDENTS
-   ========================================================= */
-
-function getStudents() {
-
-  try {
-
-    const data =
-      JSON.parse(
-        localStorage.getItem(
-          "courseStudioStudents"
-        ) || "[]"
-      );
-
-
-    if (
-      Array.isArray(data)
-    ) {
-
-      return data;
-
-    }
-
-  } catch (_) {}
-
-
-  return [];
-
-}
-
-
-/* =========================================================
-   SAVE STUDENTS
-   ========================================================= */
-
-function saveStudents(
-  students
-) {
-
-  localStorage.setItem(
-    "courseStudioStudents",
-    JSON.stringify(
-      students
-    )
-  );
-
-}
-
-
-/* =========================================================
-   ADD STUDENT
-   ========================================================= */
-
-function addStudent() {
-
-  const name =
-    prompt(
-      "Enter student name:"
-    );
-
-
-  if (
-    !name ||
-    !name.trim()
-  ) {
-
-    return;
-
-  }
-
-
-  const students =
-    getStudents();
-
-
-  students.push({
-    id: Date.now(),
-    name: name.trim()
-  });
-
-
-  saveStudents(
-    students
-  );
-
-
-  renderStudents();
-
-}
-
-
-/* =========================================================
-   REMOVE STUDENT
-   ========================================================= */
-
-function removeStudent(
-  id
-) {
-
-  const students =
-    getStudents()
-      .filter(
-        (student) =>
-          student.id !== id
-      );
-
-
-  saveStudents(
-    students
-  );
-
-
-  renderStudents();
-
-}
-
-
-/* =========================================================
-   RENDER STUDENTS
-   ========================================================= */
-
-function renderStudents() {
-
-  if (!studentsList) {
-    return;
-  }
-
-
-  const students =
-    getStudents();
-
-
-  studentsList.innerHTML =
-    "";
-
-
-  if (
-    students.length === 0
-  ) {
-
-    studentsList.innerHTML = `
-
-      <div
-        style="
-          padding:12px;
-          color:rgba(255,255,255,.45);
-          font-size:13px;
-        "
-      >
-        No students added yet.
-      </div>
-
-    `;
-
-    return;
-
-  }
-
-
-  students.forEach(
-    (student) => {
-
-      const item =
-        document.createElement(
-          "div"
-        );
-
-
-      item.style.cssText = `
-
-        display:flex;
-        align-items:center;
-        gap:10px;
-        padding:9px;
-        border-radius:12px;
-        background:rgba(255,255,255,.04);
-        margin-bottom:7px;
-
-      `;
-
-
-      item.innerHTML = `
-
-        <span
-          style="
-            width:9px;
-            height:9px;
-            border-radius:50%;
-            background:#35d07f;
-            box-shadow:0 0 10px rgba(53,208,127,.5);
-          "
-        ></span>
-
-        <span
-          style="
-            flex:1;
-            min-width:0;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-          "
-        >
-          ${escapeHTML(
-            student.name
-          )}
-        </span>
-
-        <button
-          type="button"
-          data-remove-student
-          style="
-            border:0;
-            background:transparent;
-            color:rgba(255,255,255,.45);
-            cursor:pointer;
-          "
-          aria-label="Remove student"
-        >
-          ×
-        </button>
-
-      `;
-
-
-      item.querySelector(
-        "[data-remove-student]"
-      )?.addEventListener(
-        "click",
-        () => {
-
-          removeStudent(
-            student.id
-          );
-
-        }
-      );
-
-
-      studentsList.appendChild(
-        item
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   SETTINGS
-   ========================================================= */
-
-function setupSettingsControls() {
-
-  if (settingsBtn) {
-
-    settingsBtn.addEventListener(
-      "click",
-      openSettings
-    );
-
-  }
-
-
-  closeSettingsBtn?.addEventListener(
-    "click",
-    closeSettings
-  );
-
-
-  closeSettingsFooterBtn?.addEventListener(
-    "click",
-    closeSettings
-  );
-
-
-  saveSettingsBtn?.addEventListener(
-    "click",
-    saveSettings
-  );
-
-
-  settingsModal?.addEventListener(
-    "click",
-    (event) => {
-
-      if (
-        event.target ===
-        settingsModal
-      ) {
-
-        closeSettings();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   OPEN SETTINGS
-   ========================================================= */
-
-function openSettings() {
-
-  if (!settingsModal) {
-    return;
-  }
-
-
-  if (brandNameInput) {
-
-    brandNameInput.value =
-      localStorage.getItem(
-        "courseStudioBrandName"
-      ) ||
-      "Personal Course Studio";
-
-  }
-
-
-  settingsModal.style.display =
-    "flex";
-
-}
-
-
-/* =========================================================
-   CLOSE SETTINGS
-   ========================================================= */
-
-function closeSettings() {
-
-  if (!settingsModal) {
-    return;
-  }
-
-
-  settingsModal.style.display =
-    "none";
-
-}
-
-
-/* =========================================================
-   SAVE SETTINGS
-   ========================================================= */
-
-function saveSettings() {
-
-  const brand =
-    brandNameInput?.value.trim() ||
-    "Personal Course Studio";
-
-
-  localStorage.setItem(
-    "courseStudioBrandName",
-    brand
-  );
-
-
-  if (brandBadge) {
-
-    brandBadge.textContent =
-      brand;
-
-  }
-
-
-  closeSettings();
-
-
-  showToast(
-    "Settings saved."
-  );
-
-}
-
-
-/* =========================================================
-   RESTORE SETTINGS
-   ========================================================= */
-
-function restoreSettings() {
-
-  const brand =
-    localStorage.getItem(
-      "courseStudioBrandName"
-    ) ||
-    "Personal Course Studio";
-
-
-  if (brandBadge) {
-
-    brandBadge.textContent =
-      brand;
-
-  }
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER
-   ========================================================= */
-
-function createTeleprompter() {
-
-  if (
-    CourseStudio.teleprompter
-  ) {
-
-    return CourseStudio.teleprompter;
-
-  }
-
-
-  const state = {
-
-    panel: null,
-
-    textarea: null,
-
-    fileInput: null,
-
-    playButton: null,
-
-    resetButton: null,
-
-    speedInput: null,
-
-    fontInput: null,
-
-    opacityInput: null,
-
-    startRecordCheckbox: null,
-
-    startVideoCheckbox: null,
-
-    showWhileRecordingCheckbox: null,
-
-    progress: null,
-
-    speedValue: null,
-
-    fontValue: null,
-
-    opacityValue: null,
-
-    isPlaying: false,
-
-    scrollSpeed: 0.55,
-
-    fontSize: 34,
-
-    opacity: 0.88,
-
-    startWithRecord: true,
-
-    startWithVideo: false,
-
-    showWhileRecording: true,
-
-    autoResumeAfterRecordingPause: true
-
-  };
-
-
-  const panel =
-    document.createElement(
-      "div"
-    );
-
-
-  panel.id =
-    "courseStudioTeleprompter";
-
-
-  panel.innerHTML = `
-
-    <div
-      data-teleprompter-window
-      style="
-        position:fixed;
-        top:80px;
-        right:24px;
-        width:min(520px,calc(100vw - 32px));
-        height:min(680px,calc(100vh - 120px));
-        z-index:99980;
-        display:none;
-        flex-direction:column;
-        overflow:hidden;
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:22px;
-        background:rgba(9,12,18,.96);
-        backdrop-filter:blur(20px);
-        box-shadow:0 30px 100px rgba(0,0,0,.5);
-        color:#fff;
-        font-family:Arial,sans-serif;
-      "
-    >
-
-      <div
-        style="
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:10px;
-          padding:14px 16px;
-          border-bottom:1px solid rgba(255,255,255,.08);
-        "
-      >
-
-        <div>
-
-          <div
-            style="
-              font-size:15px;
-              font-weight:800;
-            "
-          >
-            Teleprompter
-          </div>
-
-          <div
-            style="
-              font-size:11px;
-              color:rgba(255,255,255,.45);
-              margin-top:3px;
-            "
-          >
-            Script guide — not included in final video
-          </div>
-
-        </div>
-
-
-        <div
-          style="
-            display:flex;
-            gap:6px;
-          "
-        >
-
-          <button
-            type="button"
-            data-tele-minimize
-            style="
-              width:34px;
-              height:34px;
-              border:0;
-              border-radius:9px;
-              background:rgba(255,255,255,.07);
-              color:#fff;
-              cursor:pointer;
-            "
-          >
-            −
-          </button>
-
-
-          <button
-            type="button"
-            data-tele-close
-            style="
-              width:34px;
-              height:34px;
-              border:0;
-              border-radius:9px;
-              background:rgba(255,255,255,.07);
-              color:#fff;
-              cursor:pointer;
-            "
-          >
-            ×
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <div
-        data-teleprompter-content
-        style="
-          position:relative;
-          flex:1;
-          min-height:0;
-          overflow:hidden;
-          background:
-            radial-gradient(
-              circle at 50% 20%,
-              rgba(80,140,255,.08),
-              transparent 55%
-            );
-        "
-      >
-
-        <div
-          style="
-            position:absolute;
-            left:14px;
-            right:14px;
-            top:50%;
-            height:1px;
-            background:rgba(90,180,255,.35);
-            pointer-events:none;
-            z-index:4;
-          "
-        ></div>
-
-
-        <div
-          data-teleprompter-scroll
-          style="
-            position:absolute;
-            inset:0;
-            overflow-y:auto;
-            padding:220px 32px 360px;
-            scrollbar-width:thin;
-          "
-        >
-
-          <div
-            data-teleprompter-text
-            style="
-              white-space:pre-wrap;
-              line-height:1.6;
-              text-align:center;
-              font-size:34px;
-              font-weight:650;
-              color:#fff;
-              opacity:.88;
-              word-break:break-word;
-              text-shadow:0 2px 12px rgba(0,0,0,.45);
-            "
-          >
-            Paste your class script here...
-          </div>
-
-        </div>
-
-
-        <div
-          style="
-            position:absolute;
-            left:0;
-            right:0;
-            bottom:0;
-            height:90px;
-            pointer-events:none;
-            background:linear-gradient(
-              to bottom,
-              transparent,
-              rgba(9,12,18,.96)
-            );
-            z-index:3;
-          "
-        ></div>
-
-      </div>
-
-
-      <div
-        data-tele-settings
-        style="
-          border-top:1px solid rgba(255,255,255,.08);
-          padding:12px;
-          background:rgba(255,255,255,.025);
-        "
-      >
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-          "
-        >
-
-          <label
-            style="
-              font-size:11px;
-              color:rgba(255,255,255,.6);
-            "
-          >
-            Speed
-
-            <input
-              type="range"
-              data-tele-speed
-              min="0.05"
-              max="3"
-              step="0.05"
-              value="0.55"
-              style="width:100%;"
-            />
-
-            <span data-speed-value>
-              0.55
-            </span>
-          </label>
-
-
-          <label
-            style="
-              font-size:11px;
-              color:rgba(255,255,255,.6);
-            "
-          >
-            Font
-
-            <input
-              type="range"
-              data-tele-font
-              min="18"
-              max="72"
-              step="1"
-              value="34"
-              style="width:100%;"
-            />
-
-            <span data-font-value>
-              34px
-            </span>
-          </label>
-
-
-          <label
-            style="
-              font-size:11px;
-              color:rgba(255,255,255,.6);
-            "
-          >
-            Opacity
-
-            <input
-              type="range"
-              data-tele-opacity
-              min="0.25"
-              max="1"
-              step="0.01"
-              value="0.88"
-              style="width:100%;"
-            />
-
-            <span data-opacity-value>
-              88%
-            </span>
-          </label>
-
-
-          <label
-            style="
-              font-size:11px;
-              color:rgba(255,255,255,.6);
-            "
-          >
-            Script File
-
-            <button
-              type="button"
-              data-tele-upload
-              style="
-                width:100%;
-                margin-top:6px;
-                padding:8px;
-                border:1px solid rgba(255,255,255,.1);
-                border-radius:9px;
-                background:rgba(255,255,255,.06);
-                color:#fff;
-                cursor:pointer;
-              "
-            >
-              Upload .txt
-            </button>
-          </label>
-
-        </div>
-
-
-        <div
-          style="
-            display:flex;
-            flex-wrap:wrap;
-            gap:8px;
-            margin-top:10px;
-          "
-        >
-
-          <button
-            type="button"
-            data-tele-play
-            style="
-              border:0;
-              border-radius:10px;
-              padding:9px 13px;
-              cursor:pointer;
-              background:#fff;
-              color:#111;
-              font-weight:800;
-            "
-          >
-            Play
-          </button>
-
-
-          <button
-            type="button"
-            data-tele-reset
-            style="
-              border:1px solid rgba(255,255,255,.1);
-              border-radius:10px;
-              padding:9px 13px;
-              cursor:pointer;
-              background:rgba(255,255,255,.06);
-              color:#fff;
-              font-weight:700;
-            "
-          >
-            Reset
-          </button>
-
-        </div>
-
-
-        <div
-          style="
-            display:grid;
-            gap:6px;
-            margin-top:10px;
-          "
-        >
-
-          <label
-            style="
-              display:flex;
-              gap:8px;
-              align-items:center;
-              font-size:11px;
-              color:rgba(255,255,255,.7);
-            "
-          >
-
-            <input
-              type="checkbox"
-              data-tele-start-record
-              checked
-            />
-
-            Start teleprompter with recording
-
-          </label>
-
-
-          <label
-            style="
-              display:flex;
-              gap:8px;
-              align-items:center;
-              font-size:11px;
-              color:rgba(255,255,255,.7);
-            "
-          >
-
-            <input
-              type="checkbox"
-              data-tele-start-video
-            />
-
-            Start when main video plays
-
-          </label>
-
-
-          <label
-            style="
-              display:flex;
-              gap:8px;
-              align-items:center;
-              font-size:11px;
-              color:rgba(255,255,255,.7);
-            "
-          >
-
-            <input
-              type="checkbox"
-              data-tele-show-recording
-              checked
-            />
-
-            Keep visible while recording
-
-          </label>
-
-        </div>
-
-
-        <div
-          data-tele-progress
-          style="
-            margin-top:9px;
-            font-size:10px;
-            color:rgba(255,255,255,.38);
-            text-align:right;
-          "
-        >
-          0%
-        </div>
-
-      </div>
-
-
-      <input
-        type="file"
-        data-tele-file
-        accept=".txt,text/plain"
-        hidden
-      />
-
-      <textarea
-        data-tele-textarea
-        hidden
-      ></textarea>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(
-    panel
-  );
-
-
-  state.panel =
-    panel;
-
-
-  state.textarea =
-    panel.querySelector(
-      "[data-tele-textarea]"
-    );
-
-
-  state.fileInput =
-    panel.querySelector(
-      "[data-tele-file]"
-    );
-
-
-  state.playButton =
-    panel.querySelector(
-      "[data-tele-play]"
-    );
-
-
-  state.resetButton =
-    panel.querySelector(
-      "[data-tele-reset]"
-    );
-
-
-  state.speedInput =
-    panel.querySelector(
-      "[data-tele-speed]"
-    );
-
-
-  state.fontInput =
-    panel.querySelector(
-      "[data-tele-font]"
-    );
-
-
-  state.opacityInput =
-    panel.querySelector(
-      "[data-tele-opacity]"
-    );
-
-
-  state.startRecordCheckbox =
-    panel.querySelector(
-      "[data-tele-start-record]"
-    );
-
-
-  state.startVideoCheckbox =
-    panel.querySelector(
-      "[data-tele-start-video]"
-    );
-
-
-  state.showWhileRecordingCheckbox =
-    panel.querySelector(
-      "[data-tele-show-recording]"
-    );
-
-
-  state.speedValue =
-    panel.querySelector(
-      "[data-speed-value]"
-    );
-
-
-  state.fontValue =
-    panel.querySelector(
-      "[data-font-value]"
-    );
-
-
-  state.opacityValue =
-    panel.querySelector(
-      "[data-opacity-value]"
-    );
-
-
-  state.progress =
-    panel.querySelector(
-      "[data-tele-progress]"
-    );
-
-
-  state.scrollContainer =
-    panel.querySelector(
-      "[data-teleprompter-scroll]"
-    );
-
-
-  state.textElement =
-    panel.querySelector(
-      "[data-teleprompter-text]"
-    );
-
-
-  /* -----------------------------------------
-     Load saved script
-     ----------------------------------------- */
-
-  const savedScript =
-    localStorage.getItem(
-      "courseStudioTeleprompterScript"
-    );
-
-
-  if (
-    savedScript &&
-    state.textElement
-  ) {
-
-    state.textElement.textContent =
-      savedScript;
-
-  }
-
-
-  /* -----------------------------------------
-     Speed
-     ----------------------------------------- */
-
-  state.speedInput?.addEventListener(
-    "input",
-    () => {
-
-      state.scrollSpeed =
-        Number(
-          state.speedInput.value
-        );
-
-
-      if (state.speedValue) {
-
-        state.speedValue.textContent =
-          state.scrollSpeed.toFixed(
-            2
-          );
-
-      }
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Font
-     ----------------------------------------- */
-
-  state.fontInput?.addEventListener(
-    "input",
-    () => {
-
-      state.fontSize =
-        Number(
-          state.fontInput.value
-        );
-
-
-      if (state.textElement) {
-
-        state.textElement.style.fontSize =
-          `${state.fontSize}px`;
-
-      }
-
-
-      if (state.fontValue) {
-
-        state.fontValue.textContent =
-          `${state.fontSize}px`;
-
-      }
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Opacity
-     ----------------------------------------- */
-
-  state.opacityInput?.addEventListener(
-    "input",
-    () => {
-
-      state.opacity =
-        Number(
-          state.opacityInput.value
-        );
-
-
-      if (state.textElement) {
-
-        state.textElement.style.opacity =
-          state.opacity;
-
-      }
-
-
-      if (state.opacityValue) {
-
-        state.opacityValue.textContent =
-          `${Math.round(
-            state.opacity * 100
-          )}%`;
-
-      }
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Play
-     ----------------------------------------- */
-
-  state.playButton?.addEventListener(
-    "click",
-    () => {
-
-      if (
-        state.isPlaying
-      ) {
-
-        pauseTeleprompter();
-
-      } else {
-
-        startTeleprompter();
-
-      }
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Reset
-     ----------------------------------------- */
-
-  state.resetButton?.addEventListener(
-    "click",
-    resetTeleprompter
-  );
-
-
-  /* -----------------------------------------
-     Upload
-     ----------------------------------------- */
-
-  panel.querySelector(
-    "[data-tele-upload]"
-  )?.addEventListener(
-    "click",
-    () => {
-
-      state.fileInput?.click();
-
-    }
-  );
-
-
-  state.fileInput?.addEventListener(
-    "change",
-    handleTeleprompterFile
-  );
-
-
-  /* -----------------------------------------
-     Checkboxes
-     ----------------------------------------- */
-
-  state.startRecordCheckbox?.addEventListener(
-    "change",
-    () => {
-
-      state.startWithRecord =
-        state.startRecordCheckbox.checked;
-
-    }
-  );
-
-
-  state.startVideoCheckbox?.addEventListener(
-    "change",
-    () => {
-
-      state.startWithVideo =
-        state.startVideoCheckbox.checked;
-
-    }
-  );
-
-
-  state.showWhileRecordingCheckbox?.addEventListener(
-    "change",
-    () => {
-
-      state.showWhileRecording =
-        state.showWhileRecordingCheckbox.checked;
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Close
-     ----------------------------------------- */
-
-  panel.querySelector(
-    "[data-tele-close]"
-  )?.addEventListener(
-    "click",
-    closeTeleprompter
-  );
-
-
-  /* -----------------------------------------
-     Minimize
-     ----------------------------------------- */
-
-  panel.querySelector(
-    "[data-tele-minimize]"
-  )?.addEventListener(
-    "click",
-    () => {
-
-      const settings =
-        panel.querySelector(
-          "[data-tele-settings]"
-        );
-
-
-      if (!settings) {
-        return;
-      }
-
-
-      if (
-        settings.style.display ===
-        "none"
-      ) {
-
-        settings.style.display =
-          "block";
-
-      } else {
-
-        settings.style.display =
-          "none";
-
-      }
-
-    }
-  );
-
-
-  /* -----------------------------------------
-     Initial UI
-     ----------------------------------------- */
-
-  state.textElement.style.fontSize =
-    `${state.fontSize}px`;
-
-
-  state.textElement.style.opacity =
-    state.opacity;
-
-
-  state.speedValue.textContent =
-    state.scrollSpeed.toFixed(
-      2
-    );
-
-
-  state.fontValue.textContent =
-    `${state.fontSize}px`;
-
-
-  state.opacityValue.textContent =
-    `${Math.round(
-      state.opacity * 100
-    )}%`;
-
-
-  updateTeleprompterProgress();
-
-
-  CourseStudio.teleprompter =
-    state;
-
-
-  return state;
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER BUTTONS
-   ========================================================= */
-
-function setupTeleprompterButtons() {
-
-  const buttons = [
-    openTeleprompterTopBtn,
-    openTeleprompterBtn
-  ].filter(Boolean);
-
-
-  buttons.forEach(
-    (button) => {
-
-      button.addEventListener(
-        "click",
-        openTeleprompter
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   OPEN TELEPROMPTER
-   ========================================================= */
-
-function openTeleprompter() {
-
-  const tele =
-    CourseStudio.teleprompter ||
-    createTeleprompter();
-
-
-  if (!tele?.panel) {
-    return;
-  }
-
-
-  const windowElement =
-    tele.panel.querySelector(
-      "[data-teleprompter-window]"
-    );
-
-
-  if (!windowElement) {
-    return;
-  }
-
-
-  windowElement.style.display =
-    "flex";
-
-
-  updateTeleprompterProgress();
-
-}
-
-
-/* =========================================================
-   CLOSE TELEPROMPTER
-   ========================================================= */
-
-function closeTeleprompter() {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (!tele?.panel) {
-    return;
-  }
-
-
-  const windowElement =
-    tele.panel.querySelector(
-      "[data-teleprompter-window]"
-    );
-
-
-  if (windowElement) {
-
-    windowElement.style.display =
-      "none";
-
-  }
-
-
-  pauseTeleprompter();
-
-}
-
-
-/* =========================================================
-   START TELEPROMPTER
-   ========================================================= */
-
-function startTeleprompter() {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (!tele) {
-    return;
-  }
-
-
-  openTeleprompter();
-
-
-  tele.isPlaying =
-    true;
-
-
-  if (tele.playButton) {
-
-    tele.playButton.textContent =
-      "Pause";
-
-  }
-
-
-  cancelAnimationFrame(
-    CourseStudio.teleprompterAnimation
-  );
-
-
-  const step =
-    () => {
-
-      if (
-        !tele.isPlaying
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        tele.scrollContainer
-      ) {
-
-        tele.scrollContainer.scrollTop +=
-          tele.scrollSpeed;
-
-      }
-
-
-      updateTeleprompterProgress();
-
-
-      CourseStudio.teleprompterAnimation =
-        requestAnimationFrame(
-          step
-        );
-
-    };
-
-
-  CourseStudio.teleprompterAnimation =
-    requestAnimationFrame(
-      step
-    );
-
-}
-
-
-/* =========================================================
-   PAUSE TELEPROMPTER
-   ========================================================= */
-
-function pauseTeleprompter() {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (!tele) {
-    return;
-  }
-
-
-  tele.isPlaying =
-    false;
-
-
-  cancelAnimationFrame(
-    CourseStudio.teleprompterAnimation
-  );
-
-
-  CourseStudio.teleprompterAnimation =
-    null;
-
-
-  if (tele.playButton) {
-
-    tele.playButton.textContent =
-      "Play";
-
-  }
-
-}
-
-
-/* =========================================================
-   STOP TELEPROMPTER
-   ========================================================= */
-
-function stopTeleprompter() {
-
-  pauseTeleprompter();
-
-}
-
-
-/* =========================================================
-   RESET TELEPROMPTER
-   ========================================================= */
-
-function resetTeleprompter() {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (!tele) {
-    return;
-  }
-
-
-  pauseTeleprompter();
-
-
-  if (
-    tele.scrollContainer
-  ) {
-
-    tele.scrollContainer.scrollTop =
-      0;
-
-  }
-
-
-  updateTeleprompterProgress();
-
-
-  showToast(
-    "Teleprompter reset."
-  );
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER TXT FILE
-   ========================================================= */
-
-async function handleTeleprompterFile(
-  event
-) {
-
-  const file =
-    event.target.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  try {
-
-    const text =
-      await file.text();
-
-
-    setTeleprompterText(
-      text
-    );
-
-
-    showToast(
-      "Script loaded."
+    mentorVideo.addEventListener(
+      "play",
+      () =>
+        renderCompositionFrame()
     );
-
-  } catch (error) {
-
-    console.error(
-      "Script file error:",
-      error
-    );
-
 
-    showToast(
-      "Could not read script file."
+    mentorVideo.addEventListener(
+      "timeupdate",
+      () =>
+        renderCompositionFrame()
     );
-
-  }
-
-
-  event.target.value =
-    "";
-
-}
-
-
-/* =========================================================
-   SET TELEPROMPTER TEXT
-   ========================================================= */
-
-function setTeleprompterText(
-  text
-) {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (!tele) {
-    return;
-  }
-
-
-  const clean =
-    String(
-      text || ""
-    ).trim();
-
-
-  if (tele.textElement) {
 
-    tele.textElement.textContent =
-      clean ||
-      "Paste your class script here...";
-
-  }
-
-
-  localStorage.setItem(
-    "courseStudioTeleprompterScript",
-    clean
-  );
-
-
-  resetTeleprompter();
-
-}
-
-
-/* =========================================================
-   TELEPROMPTER PROGRESS
-   ========================================================= */
-
-function updateTeleprompterProgress() {
-
-  const tele =
-    CourseStudio.teleprompter;
-
-
-  if (
-    !tele ||
-    !tele.scrollContainer ||
-    !tele.progress
-  ) {
-
-    return;
-
-  }
-
-
-  const container =
-    tele.scrollContainer;
-
-
-  const max =
-    container.scrollHeight -
-    container.clientHeight;
-
-
-  let percent =
-    0;
-
-
-  if (max > 0) {
-
-    percent =
-      (
-        container.scrollTop /
-        max
-      ) *
-      100;
-
   }
-
-
-  percent =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        percent
-      )
-    );
-
-
-  tele.progress.textContent =
-    `${Math.round(percent)}%`;
-
-}
-
 
-/* =========================================================
-   KEYBOARD SHORTCUTS
-   ========================================================= */
 
-function setupKeyboardShortcuts() {
+  /* =======================================================
+     PAGE VISIBILITY
+     ======================================================= */
 
   document.addEventListener(
-    "keydown",
-    (event) => {
-
-      if (
-        event.target.matches(
-          "input,textarea,select"
-        )
-      ) {
-
-        return;
-
-      }
-
-
-      /* R = recording */
-
-      if (
-        event.key.toLowerCase() ===
-        "r"
-      ) {
-
-        event.preventDefault();
-
-
-        if (
-          CourseStudio.recording
-        ) {
-
-          stopRecording();
-
-        } else {
-
-          startRecording();
-
-        }
-
-      }
-
-
-      /* T = teleprompter */
-
-      if (
-        event.key.toLowerCase() ===
-        "t"
-      ) {
-
-        event.preventDefault();
-
-
-        const tele =
-          CourseStudio.teleprompter;
-
-
-        if (!tele) {
-          return;
-        }
-
-
-        const windowElement =
-          tele.panel.querySelector(
-            "[data-teleprompter-window]"
-          );
-
-
-        const visible =
-          windowElement &&
-          windowElement.style.display !==
-            "none";
-
-
-        if (visible) {
-
-          closeTeleprompter();
-
-        } else {
-
-          openTeleprompter();
-
-        }
-
-      }
-
-
-      /* Space = pause main video */
-
-      if (
-        event.code ===
-        "Space"
-      ) {
-
-        if (
-          mainVideo &&
-          mainVideo.style.display !==
-            "none"
-        ) {
-
-          event.preventDefault();
-
-
-          if (
-            mainVideo.paused
-          ) {
-
-            playMainVideo();
-
-          } else {
-
-            pauseMainVideo();
-
-          }
-
-        }
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   STAGE RESIZE
-   ========================================================= */
-
-function setupStageResize() {
-
-  window.addEventListener(
-    "resize",
+    "visibilitychange",
     () => {
 
-      saveMentorPosition();
+      /*
+       * Don't stop recording when tab becomes
+       * hidden. The render loop continues where
+       * the browser allows it.
+       */
 
-      renderCompositionFrame();
+      if (
+        !document.hidden &&
+        state.audio.context
+      ) {
+
+        if (
+          state.audio.context.state ===
+          "suspended"
+        ) {
+
+          state.audio.context
+            .resume()
+            .catch(
+              () => {}
+            );
+
+        }
+
+      }
 
     }
   );
 
-}
+
+  /* =======================================================
+     CLEANUP
+     ======================================================= */
+
+  window.addEventListener(
+    "beforeunload",
+    () => {
+
+      stopRecordingTimer();
+
+      stopScreenCapture();
+
+      stopCamera(false);
 
 
-/* =========================================================
-   UI UPDATE
-   ========================================================= */
+      if (
+        state.audio.micStream
+      ) {
 
-function updateUI() {
+        state.audio.micStream
+          .getTracks()
+          .forEach(
+            track => {
 
-  const cameraActive =
-    Boolean(
-      CourseStudio.cameraStream
-    );
+              try {
+                track.stop();
+              } catch {}
 
+            }
+          );
 
-  if (stopCameraBtn) {
-
-    stopCameraBtn.disabled =
-      !cameraActive;
-
-  }
-
-
-  if (stopCameraSideBtn) {
-
-    stopCameraSideBtn.disabled =
-      !cameraActive;
-
-  }
+      }
 
 
-  if (switchCameraBtn) {
-
-    switchCameraBtn.disabled =
-      !cameraActive;
-
-  }
-
-
-  if (switchCameraSideBtn) {
-
-    switchCameraSideBtn.disabled =
-      !cameraActive;
-
-  }
-
-
-  updateRecordingButton();
-
-}
-
-
-/* =========================================================
-   TOAST
-   ========================================================= */
-
-function showToast(
-  message
-) {
-
-  let toast =
-    document.getElementById(
-      "courseStudioToast"
-    );
-
-
-  if (!toast) {
-
-    toast =
-      document.createElement(
-        "div"
+      cleanupUrl(
+        state.main.objectUrl
       );
 
+      cleanupUrl(
+        state.mentor.objectUrl
+      );
 
-    toast.id =
-      "courseStudioToast";
+      cleanupUrl(
+        state.recording.url
+      );
 
-
-    toast.style.cssText = `
-
-      position:fixed;
-      left:50%;
-      bottom:24px;
-      transform:translateX(-50%) translateY(20px);
-      z-index:1000000;
-      padding:11px 15px;
-      border-radius:12px;
-      background:rgba(15,19,28,.95);
-      border:1px solid rgba(255,255,255,.1);
-      box-shadow:0 15px 50px rgba(0,0,0,.4);
-      color:#fff;
-      font-family:Arial,sans-serif;
-      font-size:13px;
-      opacity:0;
-      pointer-events:none;
-      transition:.25s ease;
-
-    `;
-
-
-    document.body.appendChild(
-      toast
-    );
-
-  }
-
-
-  toast.textContent =
-    message;
-
-
-  toast.style.opacity =
-    "1";
-
-
-  toast.style.transform =
-    "translateX(-50%) translateY(0)";
-
-
-  clearTimeout(
-    toast._timer
+    }
   );
 
 
-  toast._timer =
-    setTimeout(
+  /* =======================================================
+     GLOBAL API
+     ======================================================= */
+
+  window.CourseStudio = {
+
+    startRecording,
+
+    pauseRecording,
+
+    resumeRecording,
+
+    stopRecording,
+
+    startCamera,
+
+    stopCamera,
+
+    switchCamera,
+
+    startScreenCapture,
+
+    stopScreenCapture,
+
+    openTeleprompter,
+
+    closeTeleprompter,
+
+    playTeleprompter,
+
+    pauseTeleprompter,
+
+    toggleStageFullscreen,
+
+    toggleStudioFullscreen,
+
+    renderCompositionFrame,
+
+    isRecording:
+      () =>
+        state.recording.active,
+
+    getState:
+      () =>
+        state
+
+  };
+
+
+  /* =======================================================
+     GLOBAL AUDIO BRIDGE
+     ======================================================= */
+
+  window.CourseStudioMicVolume =
+    () =>
+      Number(
+        $("#micVolume")
+          ?.value || 100
+      ) / 100;
+
+
+  window.CourseStudioMicEnabled =
+    () =>
+      $("#micEnabled")
+        ?.checked !== false;
+
+
+  window.CourseStudioMicMonitor =
+    () =>
+      $("#micMonitor")
+        ?.checked === true;
+
+
+  /* =======================================================
+     INIT
+     ======================================================= */
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
       () => {
 
-        toast.style.opacity =
-          "0";
+        setupStudents();
 
-
-        toast.style.transform =
-          "translateX(-50%) translateY(20px)";
+        init();
 
       },
-      2500
+      {
+        once: true
+      }
     );
 
-}
+  } else {
+
+    setupStudents();
+
+    init();
+
+  }
 
 
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =========================================================
-   GLOBAL API
-   ========================================================= */
-
-window.CourseStudio = {
-
-  ...CourseStudio,
-
-  createTeleprompter,
-
-  openTeleprompter,
-
-  closeTeleprompter,
-
-  startTeleprompter,
-
-  pauseTeleprompter,
-
-  resetTeleprompter,
-
-  setTeleprompterText,
-
-  startCamera,
-
-  stopCamera,
-
-  switchCamera,
-
-  startRecording,
-
-  stopRecording,
-
-  toggleRecordingPause,
-
-  setBackgroundMode,
-
-  addStudent,
-
-  renderStudents,
-
-  openSettings,
-
-  closeSettings
-
-};
-
-
-/* =========================================================
-   INITIAL FALLBACK
-   ========================================================= */
-
-if (
-  document.readyState ===
-  "loading"
-) {
-
-  /*
-    DOMContentLoaded will initialize.
-  */
-
-} else {
-
-  initializeCourseStudio();
-
-}
-
-
-/* =========================================================
-   END — STEP 3.6
-   ========================================================= */
+})();
