@@ -1,2323 +1,2784 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Mentor Studio | Personal Course Studio</title>
-
-  <meta
-    name="description"
-    content="Personal Mentor Studio for creating course and live class videos."
-  >
-
-  <style>
-    /* =========================================================
-       PERSONAL COURSE STUDIO
-       MENTOR STUDIO — INDEX
-       ========================================================= */
-
-    :root {
-      --bg: #070b12;
-      --bg-soft: #0d131d;
-      --panel: #101823;
-      --panel-2: #141e2b;
-
-      --border: rgba(255,255,255,.09);
-      --border-soft: rgba(255,255,255,.055);
-
-      --text: #f5f8fc;
-      --muted: #91a0b5;
-
-      --blue: #62a9ff;
-      --blue-strong: #2f83f7;
-      --blue-soft: rgba(98,169,255,.13);
-
-      --green: #35d58a;
-      --red: #ff5f6d;
-      --orange: #ffad42;
-
-      --shadow:
-        0 24px 70px rgba(0,0,0,.35);
-
-      --radius: 18px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      width: 100%;
-      min-height: 100%;
-    }
-
-    body {
-      font-family:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      background:
-        radial-gradient(
-          circle at top left,
-          rgba(47,131,247,.10),
-          transparent 30%
-        ),
-        radial-gradient(
-          circle at bottom right,
-          rgba(98,169,255,.06),
-          transparent 35%
-        ),
-        var(--bg);
-
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    button,
-    input,
-    select {
-      font: inherit;
-    }
-
-    button {
-      border: 0;
-    }
-
-    .app {
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* =========================================================
-       TOP BAR
-       ========================================================= */
-
-    .topbar {
-      height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-
-      padding: 0 22px;
-
-      background:
-        rgba(7,11,18,.92);
-
-      border-bottom:
-        1px solid var(--border);
-
-      backdrop-filter: blur(18px);
-
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .brand-area {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      min-width: 0;
-    }
-
-    .brand-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Mentor Studio | Personal Course Studio
+    </title>
+
+    <meta
+        name="description"
+        content="Private Mentor Studio for Personal Course Studio."
+    >
+
+    <meta
+        name="theme-color"
+        content="#08111f"
+    >
+
+    <style>
+        /* =====================================================
+           PERSONAL COURSE STUDIO
+           MENTOR STUDIO
+           STEP 3.6
+           ===================================================== */
+
+        :root {
+            --bg: #070b12;
+            --bg-soft: #0b111c;
+            --panel: #101827;
+            --panel-2: #121d2d;
+
+            --border: rgba(255,255,255,.09);
+            --border-soft: rgba(255,255,255,.06);
+
+            --text: #f5f7fb;
+            --muted: #8e9aad;
+
+            --blue: #2563eb;
+            --blue-light: #60a5fa;
+            --green: #34d399;
+            --red: #ef4444;
+
+            --stage: #05080d;
+
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(37,99,235,.12),
+                    transparent 32%
+                ),
+                var(--bg);
+
+            color: var(--text);
+
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
 
-      display: grid;
-      place-items: center;
+        /* =====================================================
+           APP
+           ===================================================== */
 
-      background:
-        linear-gradient(
-          135deg,
-          var(--blue-strong),
-          #79bcff
-        );
-
-      color: #fff;
+        .app {
+            width: 100%;
+            height: 100vh;
 
-      box-shadow:
-        0 10px 30px rgba(47,131,247,.28);
+            display: grid;
 
-      font-size: 20px;
-      font-weight: 800;
-    }
+            grid-template-rows:
+                64px
+                minmax(0, 1fr)
+                54px;
+        }
 
-    .brand-text {
-      min-width: 0;
-    }
+        /* =====================================================
+           TOPBAR
+           ===================================================== */
 
-    .brand-text h1 {
-      font-size: 16px;
-      line-height: 1.1;
-      font-weight: 800;
-      letter-spacing: -.02em;
-    }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-    .brand-text p {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 11px;
-    }
+            gap: 16px;
 
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
+            padding:
+                0 18px;
 
-    .top-btn {
-      min-height: 40px;
-      padding: 0 14px;
+            background:
+                rgba(8,12,20,.94);
 
-      border-radius: 11px;
+            border-bottom:
+                1px solid var(--border);
 
-      background: var(--panel);
-      color: var(--text);
+            backdrop-filter:
+                blur(18px);
 
-      border: 1px solid var(--border);
+            z-index: 100;
+        }
 
-      cursor: pointer;
+        .brand-area {
+            display: flex;
+            align-items: center;
 
-      transition:
-        transform .18s ease,
-        background .18s ease,
-        border-color .18s ease;
-    }
+            gap: 12px;
 
-    .top-btn:hover {
-      background: var(--panel-2);
-      border-color: rgba(98,169,255,.35);
-      transform: translateY(-1px);
-    }
+            min-width: 0;
+        }
 
-    .top-btn.record {
-      background: rgba(255,95,109,.12);
-      border-color: rgba(255,95,109,.28);
-      color: #ff9da6;
-    }
+        .brand-icon {
+            width: 38px;
+            height: 38px;
 
-    .top-btn.record.recording {
-      background: rgba(255,95,109,.22);
-      color: #fff;
-      border-color: rgba(255,95,109,.55);
-    }
+            display: grid;
+            place-items: center;
 
-    /* =========================================================
-       MAIN WORKSPACE
-       ========================================================= */
+            border-radius: 12px;
 
-    .workspace {
-      width: 100%;
-      max-width: 1500px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #60a5fa
+                );
 
-      margin: 0 auto;
+            color: white;
 
-      padding: 18px;
+            font-weight: 900;
+            font-size: 16px;
 
-      display: grid;
+            box-shadow:
+                0 10px 30px
+                rgba(37,99,235,.25);
+        }
 
-      grid-template-columns:
-        minmax(0, 1fr)
-        220px;
+        .brand-title {
+            min-width: 0;
+        }
 
-      gap: 18px;
+        .brand-title strong {
+            display: block;
 
-      flex: 1;
-    }
+            font-size: 14px;
+            line-height: 1.2;
 
-    /* =========================================================
-       STAGE
-       ========================================================= */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-    .stage-wrap {
-      min-width: 0;
-    }
+        .brand-title span {
+            display: block;
 
-    .stage {
-      width: 100%;
-      min-height: 640px;
+            margin-top: 3px;
 
-      position: relative;
+            color: var(--muted);
 
-      overflow: hidden;
+            font-size: 10px;
 
-      border-radius: 22px;
+            white-space: nowrap;
+        }
 
-      background:
-        linear-gradient(
-          145deg,
-          #111925,
-          #080d14
-        );
+        .top-actions {
+            display: flex;
+            align-items: center;
 
-      border: 1px solid var(--border);
+            gap: 8px;
 
-      box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
 
-      isolation: isolate;
-    }
+        .top-btn {
+            height: 38px;
 
-    .stage-grid {
-      position: absolute;
-      inset: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-      opacity: .22;
+            gap: 7px;
 
-      background-image:
-        linear-gradient(
-          rgba(255,255,255,.035) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,.035) 1px,
-          transparent 1px
-        );
+            padding:
+                0 13px;
 
-      background-size: 40px 40px;
+            border:
+                1px solid var(--border);
 
-      pointer-events: none;
-    }
+            border-radius: 11px;
 
-    .stage-content {
-      position: absolute;
-      inset: 0;
+            background:
+                rgba(255,255,255,.045);
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+            color: var(--text);
 
-      padding: 35px;
-    }
+            cursor: pointer;
 
-    #mainImage,
-    #mainVideo {
-      width: 100%;
-      height: 100%;
+            transition:
+                .2s ease;
+        }
 
-      object-fit: contain;
+        .top-btn:hover {
+            background:
+                rgba(255,255,255,.08);
 
-      display: none;
+            border-color:
+                rgba(255,255,255,.15);
+        }
 
-      border-radius: 8px;
-    }
+        .record-main-btn {
+            background:
+                linear-gradient(
+                    135deg,
+                    #dc2626,
+                    #ef4444
+                );
 
-    #mainVideo {
-      background: #000;
-    }
+            border-color:
+                transparent;
 
-    #mainImage.show,
-    #mainVideo.show {
-      display: block;
-    }
+            font-weight: 800;
 
-    .welcome-content {
-      width: min(560px, 90%);
+            box-shadow:
+                0 8px 24px
+                rgba(239,68,68,.18);
+        }
 
-      text-align: center;
+        .record-main-btn:hover {
+            transform:
+                translateY(-1px);
+        }
 
-      position: relative;
-      z-index: 2;
-    }
+        /* =====================================================
+           WORKSPACE
+           ===================================================== */
 
-    .welcome-icon {
-      width: 80px;
-      height: 80px;
+        .workspace {
+            min-height: 0;
 
-      margin: 0 auto 20px;
+            display: grid;
 
-      display: grid;
-      place-items: center;
+            grid-template-columns:
+                minmax(0, 1fr)
+                240px;
 
-      border-radius: 24px;
+            gap: 12px;
 
-      background:
-        linear-gradient(
-          135deg,
-          rgba(98,169,255,.18),
-          rgba(47,131,247,.08)
-        );
+            padding: 12px;
+        }
 
-      border:
-        1px solid rgba(98,169,255,.18);
+        /* =====================================================
+           STAGE AREA
+           ===================================================== */
 
-      font-size: 32px;
-    }
+        .stage-wrap {
+            min-width: 0;
+            min-height: 0;
 
-    .welcome-content h2 {
-      font-size: clamp(25px, 3vw, 38px);
-      letter-spacing: -.035em;
-      font-weight: 850;
-    }
+            display: flex;
+            flex-direction: column;
 
-    .welcome-content p {
-      margin-top: 12px;
+            background:
+                rgba(255,255,255,.025);
 
-      color: var(--muted);
+            border:
+                1px solid var(--border);
 
-      line-height: 1.7;
+            border-radius:
+                var(--radius);
 
-      font-size: 14px;
-    }
+            overflow: hidden;
+        }
 
-    .welcome-actions {
-      margin-top: 25px;
+        .stage-header {
+            height: 46px;
 
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-    .primary-btn,
-    .secondary-btn {
-      min-height: 43px;
+            gap: 12px;
 
-      padding: 0 17px;
+            padding:
+                0 13px;
 
-      border-radius: 12px;
+            border-bottom:
+                1px solid var(--border-soft);
 
-      cursor: pointer;
+            background:
+                rgba(255,255,255,.015);
 
-      transition:
-        transform .18s ease,
-        box-shadow .18s ease,
-        background .18s ease;
-    }
+            flex-shrink: 0;
+        }
 
-    .primary-btn {
-      background:
-        linear-gradient(
-          135deg,
-          var(--blue-strong),
-          var(--blue)
-        );
+        .stage-header-left {
+            display: flex;
+            align-items: center;
 
-      color: #fff;
+            gap: 8px;
 
-      box-shadow:
-        0 12px 28px rgba(47,131,247,.22);
-    }
+            min-width: 0;
+        }
 
-    .primary-btn:hover,
-    .secondary-btn:hover {
-      transform: translateY(-2px);
-    }
+        .live-dot {
+            width: 8px;
+            height: 8px;
 
-    .secondary-btn {
-      background: var(--panel);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+            border-radius: 50%;
 
-    /* =========================================================
-       STAGE TOP CONTROLS
-       ========================================================= */
+            background:
+                var(--green);
 
-    .stage-controls {
-      position: absolute;
+            box-shadow:
+                0 0 12px
+                rgba(52,211,153,.6);
+        }
 
-      top: 16px;
-      left: 16px;
-      right: 16px;
+        .stage-title {
+            font-size: 12px;
+            font-weight: 800;
+        }
 
-      z-index: 20;
+        .stage-subtitle {
+            color: var(--muted);
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+            font-size: 10px;
+        }
 
-      pointer-events: none;
-    }
+        .stage-actions {
+            display: flex;
+            align-items: center;
 
-    .stage-control-group {
-      display: flex;
-      gap: 8px;
+            gap: 6px;
+        }
 
-      pointer-events: auto;
-    }
+        .mini-btn {
+            width: 32px;
+            height: 32px;
 
-    .stage-control {
-      height: 38px;
+            display: grid;
+            place-items: center;
 
-      padding: 0 12px;
+            border:
+                1px solid var(--border);
 
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
+            border-radius: 9px;
 
-      border-radius: 11px;
+            background:
+                rgba(255,255,255,.04);
 
-      background:
-        rgba(7,11,18,.76);
+            color: white;
 
-      color: #eaf2ff;
+            cursor: pointer;
+        }
 
-      border:
-        1px solid rgba(255,255,255,.10);
+        .mini-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
 
-      backdrop-filter: blur(14px);
+        /* =====================================================
+           STAGE
+           ===================================================== */
 
-      cursor: pointer;
+        #stage {
+            position: relative;
 
-      transition:
-        background .18s ease,
-        border-color .18s ease;
-    }
+            min-width: 0;
+            min-height: 0;
 
-    .stage-control:hover {
-      background: rgba(20,30,43,.92);
-      border-color: rgba(98,169,255,.35);
-    }
+            flex: 1;
 
-    /* =========================================================
-       MENTOR CARD
-       ========================================================= */
+            overflow: hidden;
 
-    .mentor-card {
-      position: absolute;
+            background:
+                radial-gradient(
+                    circle at center,
+                    #101827,
+                    #05080d 70%
+                );
 
-      top: 30px;
-      right: 30px;
+            user-select: none;
+        }
 
-      width: 220px;
-      height: 145px;
+        #stage::after {
+            content: "";
 
-      min-width: 140px;
-      min-height: 95px;
+            position: absolute;
+            inset: 0;
 
-      max-width: 48%;
-      max-height: 65%;
+            pointer-events: none;
 
-      z-index: 30;
+            border:
+                1px solid rgba(255,255,255,.025);
 
-      border-radius: 16px;
+            z-index: 10;
+        }
 
-      overflow: hidden;
+        #welcomeContent {
+            position: absolute;
 
-      background: #101722;
+            inset: 0;
 
-      border:
-        1px solid rgba(255,255,255,.16);
+            display: flex;
+            flex-direction: column;
 
-      box-shadow:
-        0 18px 45px rgba(0,0,0,.45);
+            align-items: center;
+            justify-content: center;
 
-      cursor: grab;
+            text-align: center;
 
-      touch-action: none;
+            padding: 30px;
 
-      user-select: none;
-    }
+            z-index: 2;
 
-    .mentor-card.dragging {
-      cursor: grabbing;
-    }
+            pointer-events: none;
+        }
 
-    .mentor-video-wrap {
-      position: absolute;
-      inset: 0;
+        .welcome-icon {
+            width: 74px;
+            height: 74px;
 
-      overflow: hidden;
+            display: grid;
+            place-items: center;
 
-      background:
-        radial-gradient(
-          circle at center,
-          #243247,
-          #0c121b
-        );
-    }
+            border-radius: 22px;
 
-    #mentorVideo {
-      width: 100%;
-      height: 100%;
+            background:
+                rgba(37,99,235,.12);
 
-      object-fit: cover;
+            border:
+                1px solid
+                rgba(96,165,250,.18);
 
-      display: none;
+            color:
+                var(--blue-light);
 
-      pointer-events: none;
-    }
+            font-size: 30px;
 
-    #mentorPlaceholder {
-      position: absolute;
-      inset: 0;
+            margin-bottom: 16px;
+        }
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 850;
+        }
 
-      text-align: center;
+        .welcome-text {
+            max-width: 430px;
 
-      color: #9eacc0;
+            margin-top: 8px;
 
-      font-size: 12px;
+            color: var(--muted);
 
-      padding: 15px;
-    }
+            font-size: 13px;
+            line-height: 1.6;
+        }
 
-    .mentor-placeholder-icon {
-      width: 44px;
-      height: 44px;
+        /* =====================================================
+           MAIN IMAGE / VIDEO
+           ===================================================== */
 
-      margin: 0 auto 8px;
+        #mainImage,
+        #mainVideo {
+            position: absolute;
 
-      display: grid;
-      place-items: center;
+            inset: 0;
 
-      border-radius: 50%;
+            width: 100%;
+            height: 100%;
 
-      background: rgba(98,169,255,.12);
+            object-fit: contain;
 
-      border: 1px solid rgba(98,169,255,.18);
-    }
+            display: none;
 
-    .mentor-overlay {
-      position: absolute;
-      left: 9px;
-      right: 9px;
-      bottom: 9px;
+            background: #000;
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+            z-index: 1;
+        }
 
-      pointer-events: none;
-    }
+        /* =====================================================
+           MENTOR CARD
+           ===================================================== */
 
-    .mentor-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+        #mentorCard {
+            position: absolute;
 
-      padding: 6px 8px;
+            top: 24px;
+            right: 24px;
 
-      border-radius: 8px;
+            width: 230px;
+            height: 150px;
 
-      background: rgba(0,0,0,.58);
+            min-width: 130px;
+            min-height: 90px;
 
-      backdrop-filter: blur(8px);
+            max-width: 45%;
+            max-height: 45%;
 
-      color: #fff;
+            overflow: hidden;
 
-      font-size: 10px;
-      font-weight: 700;
-    }
+            border-radius: 18px;
 
-    .online-dot {
-      width: 7px;
-      height: 7px;
+            background:
+                #101827;
 
-      border-radius: 50%;
+            border:
+                1px solid
+                rgba(255,255,255,.15);
 
-      background: var(--green);
+            box-shadow:
+                0 20px 55px
+                rgba(0,0,0,.5);
 
-      box-shadow:
-        0 0 10px rgba(53,213,138,.55);
-    }
+            z-index: 30;
 
-    .mentor-actions {
-      display: flex;
-      gap: 5px;
-    }
+            cursor: move;
 
-    .mentor-mini-btn {
-      width: 28px;
-      height: 28px;
+            touch-action: none;
+        }
 
-      display: grid;
-      place-items: center;
+        #mentorVideo,
+        #mentorCameraVideo,
+        #mentorAICanvas {
+            position: absolute;
 
-      border-radius: 8px;
+            inset: 0;
 
-      background: rgba(0,0,0,.58);
+            width: 100%;
+            height: 100%;
 
-      color: #fff;
+            object-fit: cover;
 
-      cursor: pointer;
+            display: none;
 
-      pointer-events: auto;
-    }
+            background: #101827;
+        }
 
-    .mentor-mini-btn:hover {
-      background: rgba(98,169,255,.3);
-    }
+        #mentorPlaceholder {
+            position: absolute;
 
-    .mentor-resize {
-      position: absolute;
+            inset: 0;
 
-      right: 2px;
-      bottom: 2px;
+            display: flex;
 
-      width: 19px;
-      height: 19px;
+            flex-direction: column;
 
-      z-index: 10;
+            align-items: center;
+            justify-content: center;
 
-      cursor: nwse-resize;
+            background:
+                linear-gradient(
+                    145deg,
+                    #172236,
+                    #0c1320
+                );
 
-      background:
-        linear-gradient(
-          135deg,
-          transparent 45%,
-          rgba(255,255,255,.8) 46%,
-          rgba(255,255,255,.8) 53%,
-          transparent 54%
-        );
-    }
+            color:
+                rgba(255,255,255,.7);
+        }
 
-    /* =========================================================
-       BRAND BADGE
-       ========================================================= */
+        .mentor-avatar {
+            width: 48px;
+            height: 48px;
 
-    .brand-badge {
-      position: absolute;
+            display: grid;
+            place-items: center;
 
-      left: 22px;
-      bottom: 22px;
+            border-radius: 50%;
 
-      z-index: 20;
+            background:
+                rgba(96,165,250,.12);
 
-      max-width: 45%;
+            border:
+                1px solid
+                rgba(96,165,250,.2);
 
-      padding: 9px 13px;
+            font-size: 20px;
 
-      border-radius: 10px;
+            margin-bottom: 7px;
+        }
 
-      background:
-        rgba(5,8,13,.72);
+        .mentor-placeholder-text {
+            font-size: 11px;
+            font-weight: 700;
 
-      border:
-        1px solid rgba(255,255,255,.10);
+            color:
+                rgba(255,255,255,.5);
+        }
 
-      backdrop-filter: blur(12px);
+        #mentorSourceLabel {
+            position: absolute;
 
-      color: #fff;
+            left: 9px;
+            bottom: 8px;
 
-      font-size: 12px;
-      font-weight: 750;
+            padding:
+                5px 8px;
 
-      pointer-events: none;
-    }
+            border-radius: 7px;
 
-    /* =========================================================
-       BOTTOM TOOLBAR
-       ========================================================= */
+            background:
+                rgba(0,0,0,.62);
 
-    .toolbar {
-      margin-top: 13px;
+            color: white;
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+            font-size: 9px;
+            font-weight: 800;
 
-      gap: 10px;
+            letter-spacing:
+                .05em;
 
-      padding: 11px;
+            z-index: 4;
 
-      border-radius: 16px;
+            pointer-events: none;
+        }
 
-      background: var(--panel);
+        #mentorResize {
+            position: absolute;
 
-      border: 1px solid var(--border);
+            right: 5px;
+            bottom: 5px;
 
-      box-shadow:
-        0 12px 35px rgba(0,0,0,.20);
-    }
+            width: 20px;
+            height: 20px;
 
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      align-items: center;
+            border-radius: 7px;
 
-      gap: 8px;
+            background:
+                rgba(255,255,255,.12);
 
-      flex-wrap: wrap;
-    }
+            border:
+                1px solid
+                rgba(255,255,255,.16);
 
-    .tool-btn {
-      min-height: 39px;
+            cursor:
+                nwse-resize;
 
-      padding: 0 12px;
+            z-index: 8;
+        }
 
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
+        #mentorResize::before {
+            content: "";
 
-      border-radius: 10px;
+            position: absolute;
 
-      background: var(--panel-2);
+            right: 5px;
+            bottom: 5px;
 
-      color: #e9f1fc;
+            width: 7px;
+            height: 7px;
 
-      border: 1px solid var(--border-soft);
+            border-right:
+                2px solid white;
 
-      cursor: pointer;
+            border-bottom:
+                2px solid white;
 
-      transition:
-        background .18s ease,
-        border-color .18s ease,
-        transform .18s ease;
-    }
+            opacity: .8;
+        }
 
-    .tool-btn:hover {
-      background: #1a2737;
-      border-color: rgba(98,169,255,.28);
-      transform: translateY(-1px);
-    }
+        /* =====================================================
+           BRAND BADGE
+           ===================================================== */
 
-    .tool-btn.danger {
-      color: #ff9ca5;
-    }
+        #brandBadge {
+            position: absolute;
 
-    .hidden-input {
-      display: none;
-    }
+            left: 20px;
+            bottom: 20px;
 
-    /* =========================================================
-       AI BACKGROUND PANEL
-       ========================================================= */
+            z-index: 25;
 
-    .ai-panel {
-      margin-top: 13px;
+            padding:
+                9px 13px;
 
-      padding: 15px;
+            border-radius: 10px;
 
-      border-radius: 16px;
+            background:
+                rgba(0,0,0,.62);
 
-      background: var(--panel);
+            border:
+                1px solid
+                rgba(255,255,255,.08);
 
-      border: 1px solid var(--border);
-    }
+            color: white;
 
-    .panel-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+            font-size: 11px;
+            font-weight: 800;
 
-      margin-bottom: 12px;
-    }
+            backdrop-filter:
+                blur(8px);
 
-    .panel-title strong {
-      font-size: 13px;
-    }
+            pointer-events: none;
+        }
 
-    .panel-title span {
-      color: var(--muted);
-      font-size: 11px;
-    }
+        /* =====================================================
+           TOOLBAR
+           ===================================================== */
 
-    .ai-controls {
-      display: grid;
+        .toolbar {
+            display: flex;
+            align-items: center;
 
-      grid-template-columns:
-        repeat(5, minmax(0, 1fr));
+            gap: 7px;
 
-      gap: 8px;
-    }
+            padding:
+                9px;
 
-    .ai-btn {
-      min-height: 40px;
+            border-top:
+                1px solid var(--border-soft);
 
-      padding: 0 9px;
+            background:
+                rgba(255,255,255,.015);
 
-      border-radius: 10px;
+            flex-shrink: 0;
 
-      background: var(--panel-2);
+            overflow-x: auto;
+        }
 
-      color: #dce8f8;
+        .tool-btn {
+            min-width: 38px;
+            height: 36px;
 
-      border: 1px solid var(--border-soft);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-      cursor: pointer;
+            gap: 7px;
 
-      font-size: 11px;
+            padding:
+                0 11px;
 
-      transition:
-        .18s ease;
-    }
+            border:
+                1px solid var(--border);
 
-    .ai-btn:hover {
-      border-color: rgba(98,169,255,.35);
-      background: #1a2737;
-    }
+            border-radius: 10px;
 
-    .ai-btn.active {
-      background:
-        rgba(47,131,247,.18);
+            background:
+                rgba(255,255,255,.04);
 
-      border-color:
-        rgba(98,169,255,.48);
+            color: white;
 
-      color: #fff;
-    }
+            cursor: pointer;
 
-    .ai-extra {
-      display: flex;
+            white-space: nowrap;
 
-      align-items: center;
+            font-size: 11px;
+            font-weight: 700;
 
-      gap: 8px;
+            transition:
+                .2s ease;
+        }
 
-      margin-top: 9px;
-    }
+        .tool-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
 
-    .color-input {
-      width: 44px;
-      height: 38px;
+        .tool-btn.primary {
+            background:
+                #2563eb;
 
-      padding: 3px;
+            border-color:
+                #2563eb;
+        }
 
-      border-radius: 9px;
+        .tool-btn.danger {
+            color:
+                #fca5a5;
+        }
 
-      background: var(--panel-2);
+        /* =====================================================
+           SIDE PANEL
+           ===================================================== */
 
-      border: 1px solid var(--border);
-    }
+        .side-panel {
+            min-width: 0;
+            min-height: 0;
 
-    .ai-note {
-      color: var(--muted);
+            display: flex;
+            flex-direction: column;
 
-      font-size: 10px;
+            background:
+                rgba(255,255,255,.025);
 
-      line-height: 1.5;
-    }
+            border:
+                1px solid var(--border);
 
-    /* =========================================================
-       STUDENTS PANEL
-       ========================================================= */
+            border-radius:
+                var(--radius);
 
-    .students-panel {
-      min-width: 0;
+            overflow: hidden;
+        }
 
-      border-radius: 20px;
+        .side-header {
+            min-height: 46px;
 
-      background: var(--panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-      border: 1px solid var(--border);
+            gap: 8px;
 
-      overflow: hidden;
+            padding:
+                0 13px;
 
-      box-shadow:
-        0 18px 55px rgba(0,0,0,.20);
+            border-bottom:
+                1px solid var(--border-soft);
 
-      display: flex;
-      flex-direction: column;
+            flex-shrink: 0;
+        }
 
-      min-height: 640px;
-    }
+        .side-header strong {
+            font-size: 12px;
+        }
 
-    .students-header {
-      padding: 17px;
+        .side-header span {
+            color: var(--muted);
 
-      border-bottom: 1px solid var(--border);
-    }
+            font-size: 10px;
+        }
 
-    .students-header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+        .side-content {
+            min-height: 0;
 
-    .students-title {
-      font-size: 14px;
-      font-weight: 800;
-    }
+            overflow-y: auto;
 
-    .student-count {
-      min-width: 28px;
-      height: 28px;
+            padding: 10px;
+        }
 
-      padding: 0 8px;
+        /* =====================================================
+           PANELS
+           ===================================================== */
 
-      display: grid;
-      place-items: center;
+        .panel {
+            padding: 11px;
 
-      border-radius: 9px;
+            margin-bottom: 9px;
 
-      background: var(--blue-soft);
+            border:
+                1px solid var(--border-soft);
 
-      color: #9bcaff;
+            border-radius: 13px;
 
-      font-size: 11px;
-      font-weight: 800;
-    }
+            background:
+                rgba(255,255,255,.025);
+        }
 
-    .students-subtitle {
-      margin-top: 6px;
+        .panel:last-child {
+            margin-bottom: 0;
+        }
 
-      color: var(--muted);
+        .panel-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-      font-size: 10px;
-    }
+            gap: 8px;
 
-    .students-list {
-      padding: 11px;
+            margin-bottom: 9px;
 
-      overflow-y: auto;
+            font-size: 11px;
+            font-weight: 800;
+        }
 
-      flex: 1;
-    }
+        .panel-title span {
+            color: var(--muted);
 
-    .student-item {
-      display: flex;
-      align-items: center;
-      gap: 9px;
+            font-size: 9px;
+            font-weight: 600;
+        }
 
-      padding: 9px;
+        .button-grid {
+            display: grid;
 
-      margin-bottom: 5px;
+            grid-template-columns:
+                repeat(2, minmax(0,1fr));
 
-      border-radius: 11px;
+            gap: 6px;
+        }
 
-      transition:
-        background .18s ease;
-    }
+        .side-btn {
+            min-height: 36px;
 
-    .student-item:hover {
-      background: rgba(255,255,255,.035);
-    }
+            border:
+                1px solid var(--border);
 
-    .student-avatar {
-      width: 32px;
-      height: 32px;
+            border-radius: 9px;
 
-      flex: 0 0 32px;
+            background:
+                rgba(255,255,255,.035);
 
-      display: grid;
-      place-items: center;
+            color: white;
 
-      border-radius: 10px;
+            cursor: pointer;
 
-      background:
-        linear-gradient(
-          135deg,
-          #1d334e,
-          #142234
-        );
+            font-size: 10px;
+            font-weight: 700;
 
-      color: #9fcaff;
+            transition:
+                .2s ease;
+        }
 
-      font-size: 10px;
-      font-weight: 800;
-    }
+        .side-btn:hover {
+            background:
+                rgba(255,255,255,.08);
+        }
 
-    .student-info {
-      min-width: 0;
-      flex: 1;
-    }
+        .side-btn.active {
+            background:
+                rgba(37,99,235,.22);
 
-    .student-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+            border-color:
+                rgba(96,165,250,.4);
 
-      font-size: 11px;
-      font-weight: 700;
-    }
+            color:
+                #bfdbfe;
+        }
 
-    .student-status {
-      margin-top: 3px;
+        .side-btn.full {
+            grid-column:
+                1 / -1;
+        }
 
-      color: var(--green);
+        /* =====================================================
+           CAMERA STATUS
+           ===================================================== */
 
-      font-size: 9px;
-    }
+        #cameraStatus {
+            margin-top: 8px;
 
-    .student-remove {
-      width: 25px;
-      height: 25px;
+            padding:
+                8px 9px;
 
-      display: grid;
-      place-items: center;
+            border-radius: 8px;
 
-      border-radius: 7px;
+            background:
+                rgba(255,255,255,.03);
 
-      background: transparent;
+            color: var(--muted);
 
-      color: #6f7d90;
+            font-size: 9px;
 
-      cursor: pointer;
-    }
+            text-align: center;
+        }
 
-    .student-remove:hover {
-      background: rgba(255,95,109,.10);
-      color: #ff8790;
-    }
+        /* =====================================================
+           COLOR INPUT
+           ===================================================== */
 
-    .students-footer {
-      padding: 12px;
+        .color-row {
+            display: flex;
+            align-items: center;
 
-      border-top: 1px solid var(--border);
-    }
+            gap: 8px;
 
-    .add-student-btn {
-      width: 100%;
+            margin-top: 8px;
+        }
 
-      min-height: 39px;
+        .color-row span {
+            flex: 1;
 
-      border-radius: 10px;
+            color: var(--muted);
 
-      background: var(--panel-2);
+            font-size: 10px;
+        }
 
-      border: 1px solid var(--border);
+        #backgroundColor {
+            width: 40px;
+            height: 28px;
 
-      color: #dce9fa;
+            padding: 2px;
 
-      cursor: pointer;
-    }
+            border:
+                1px solid var(--border);
 
-    .add-student-btn:hover {
-      border-color: rgba(98,169,255,.32);
-    }
+            border-radius: 7px;
 
-    /* =========================================================
-       STATUS BAR
-       ========================================================= */
+            background:
+                transparent;
 
-    .statusbar {
-      max-width: 1500px;
+            cursor: pointer;
+        }
 
-      width: 100%;
+        /* =====================================================
+           STUDENTS
+           ===================================================== */
 
-      margin: 0 auto;
+        #studentsList {
+            min-height: 20px;
+        }
 
-      padding:
-        0 18px 15px;
+        .student-item {
+            border-bottom:
+                1px solid var(--border-soft);
+        }
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+        .student-item:last-child {
+            border-bottom: 0;
+        }
 
-      color: var(--muted);
+        /* =====================================================
+           STATUSBAR
+           ===================================================== */
 
-      font-size: 10px;
-    }
+        .statusbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-    .status-left {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
+            gap: 10px;
 
-    .status-dot {
-      width: 7px;
-      height: 7px;
+            padding:
+                0 15px;
 
-      border-radius: 50%;
+            background:
+                rgba(8,12,20,.94);
 
-      background: var(--green);
+            border-top:
+                1px solid var(--border);
 
-      box-shadow:
-        0 0 10px rgba(53,213,138,.55);
-    }
+            color: var(--muted);
 
-    /* =========================================================
-       MODAL
-       ========================================================= */
+            font-size: 10px;
 
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
+            z-index: 100;
+        }
 
-      z-index: 500;
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
 
-      display: none;
-      align-items: center;
-      justify-content: center;
+            gap: 10px;
+        }
 
-      padding: 20px;
+        .status-online {
+            display: flex;
+            align-items: center;
 
-      background:
-        rgba(0,0,0,.68);
+            gap: 6px;
 
-      backdrop-filter: blur(10px);
-    }
+            color:
+                #86efac;
+        }
 
-    .modal-overlay.show {
-      display: flex;
-    }
+        /* =====================================================
+           SETTINGS MODAL
+           ===================================================== */
 
-    .modal {
-      width: min(470px, 100%);
+        #settingsModal {
+            position: fixed;
 
-      border-radius: 20px;
+            inset: 0;
 
-      background: #101823;
+            z-index: 12000;
 
-      border: 1px solid var(--border);
+            display: none;
 
-      box-shadow:
-        0 30px 100px rgba(0,0,0,.55);
+            align-items: center;
+            justify-content: center;
 
-      overflow: hidden;
-    }
+            padding: 20px;
 
-    .modal-header {
-      padding: 18px;
+            background:
+                rgba(0,0,0,.7);
 
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+            backdrop-filter:
+                blur(10px);
+        }
 
-      border-bottom: 1px solid var(--border);
-    }
+        .settings-card {
+            width:
+                min(460px, 100%);
 
-    .modal-header h3 {
-      font-size: 15px;
-    }
+            background:
+                #0e1624;
 
-    .modal-close {
-      width: 32px;
-      height: 32px;
+            border:
+                1px solid var(--border);
 
-      border-radius: 9px;
+            border-radius: 20px;
 
-      background: var(--panel-2);
+            box-shadow:
+                0 30px 100px
+                rgba(0,0,0,.55);
 
-      color: #cbd6e4;
+            overflow: hidden;
+        }
 
-      cursor: pointer;
-    }
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-    .modal-body {
-      padding: 18px;
-    }
+            padding:
+                16px;
 
-    .form-group {
-      margin-bottom: 15px;
-    }
+            border-bottom:
+                1px solid var(--border-soft);
+        }
 
-    .form-label {
-      display: block;
+        .settings-header strong {
+            font-size: 15px;
+        }
 
-      margin-bottom: 7px;
+        .settings-close {
+            width: 34px;
+            height: 34px;
 
-      color: #b9c6d8;
+            border: 0;
 
-      font-size: 11px;
-      font-weight: 700;
-    }
+            border-radius: 10px;
 
-    .form-input,
-    .form-select {
-      width: 100%;
+            background:
+                rgba(255,255,255,.07);
 
-      height: 42px;
+            color: white;
 
-      padding: 0 12px;
+            cursor: pointer;
 
-      border-radius: 10px;
+            font-size: 18px;
+        }
 
-      background: #0c131d;
+        .settings-body {
+            padding: 16px;
+        }
 
-      border: 1px solid var(--border);
+        .field {
+            margin-bottom: 14px;
+        }
 
-      color: #fff;
+        .field:last-child {
+            margin-bottom: 0;
+        }
 
-      outline: none;
-    }
+        .field label {
+            display: block;
 
-    .form-input:focus,
-    .form-select:focus {
-      border-color: rgba(98,169,255,.5);
-    }
+            margin-bottom: 7px;
 
-    .modal-footer {
-      padding: 14px 18px;
+            color: var(--muted);
 
-      display: flex;
-      justify-content: flex-end;
+            font-size: 11px;
+            font-weight: 700;
+        }
 
-      gap: 8px;
+        .field input {
+            width: 100%;
 
-      border-top: 1px solid var(--border);
-    }
+            height: 42px;
 
-    /* =========================================================
-       TOAST
-       ========================================================= */
+            padding:
+                0 12px;
 
-    .toast {
-      position: fixed;
+            border:
+                1px solid var(--border);
 
-      left: 50%;
-      bottom: 25px;
+            border-radius: 10px;
 
-      z-index: 800;
+            background:
+                rgba(255,255,255,.04);
 
-      transform:
-        translate(-50%, 20px);
+            color: white;
 
-      opacity: 0;
+            outline: none;
+        }
 
-      pointer-events: none;
+        .settings-footer {
+            display: flex;
+            justify-content: flex-end;
 
-      padding: 11px 15px;
+            gap: 8px;
 
-      border-radius: 11px;
+            padding:
+                13px 16px;
 
-      background:
-        rgba(16,24,35,.95);
+            border-top:
+                1px solid var(--border-soft);
+        }
 
-      border:
-        1px solid rgba(255,255,255,.10);
+        /* =====================================================
+           HIDDEN INPUTS
+           ===================================================== */
 
-      color: #fff;
+        .hidden-input {
+            display: none !important;
+        }
 
-      font-size: 11px;
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
 
-      box-shadow:
-        0 16px 45px rgba(0,0,0,.35);
+        @media (max-width: 900px) {
 
-      transition:
-        opacity .22s ease,
-        transform .22s ease;
-    }
+            body {
+                overflow: auto;
+            }
 
-    .toast.show {
-      opacity: 1;
+            .app {
+                height: auto;
+                min-height: 100vh;
 
-      transform:
-        translate(-50%, 0);
-    }
+                grid-template-rows:
+                    60px
+                    auto
+                    50px;
+            }
 
-    /* =========================================================
-       CAMERA CANVAS
-       ========================================================= */
+            .workspace {
+                grid-template-columns:
+                    1fr;
 
-    #aiCanvas,
-    #aiSourceCanvas,
-    #aiMaskCanvas {
-      display: none;
-    }
+                min-height:
+                    calc(100vh - 110px);
+            }
 
-    /* =========================================================
-       RESPONSIVE
-       ========================================================= */
+            .stage-wrap {
+                min-height:
+                    65vh;
+            }
 
-    @media (max-width: 1100px) {
+            .side-panel {
+                max-height:
+                    none;
+            }
 
-      .workspace {
-        grid-template-columns: 1fr;
-      }
+            .side-content {
+                display: grid;
 
-      .students-panel {
-        min-height: 260px;
-      }
+                grid-template-columns:
+                    repeat(2, minmax(0,1fr));
 
-      .students-list {
-        display: grid;
+                gap: 8px;
 
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
+                overflow: visible;
+            }
 
-        gap: 4px;
-      }
+            .panel {
+                margin-bottom: 0;
+            }
 
-      .student-item {
-        margin-bottom: 0;
-      }
+            .students-panel {
+                grid-column:
+                    1 / -1;
+            }
+        }
 
-    }
+        @media (max-width: 600px) {
 
-    @media (max-width: 760px) {
+            .topbar {
+                padding:
+                    0 10px;
+            }
 
-      .topbar {
-        height: auto;
+            .brand-title span {
+                display: none;
+            }
 
-        min-height: 66px;
+            .top-btn span {
+                display: none;
+            }
 
-        padding: 12px 14px;
+            .workspace {
+                padding: 7px;
+                gap: 7px;
+            }
 
-        align-items: flex-start;
-      }
+            .stage-wrap {
+                min-height:
+                    58vh;
+            }
 
-      .brand-text p {
-        display: none;
-      }
+            #mentorCard {
+                width: 170px;
+                height: 112px;
 
-      .top-actions {
-        gap: 5px;
-      }
+                top: 12px;
+                right: 12px;
+            }
 
-      .top-btn {
-        padding: 0 10px;
+            #brandBadge {
+                left: 12px;
+                bottom: 12px;
+            }
 
-        min-height: 36px;
+            .toolbar {
+                padding:
+                    7px;
+            }
 
-        font-size: 11px;
-      }
+            .tool-btn {
+                padding:
+                    0 9px;
+            }
 
-      .workspace {
-        padding: 10px;
+            .side-content {
+                grid-template-columns:
+                    1fr;
+            }
 
-        gap: 10px;
-      }
+            .students-panel {
+                grid-column:
+                    auto;
+            }
+        }
+    </style>
 
-      .stage {
-        min-height: 510px;
+    <!-- =====================================================
+         MEDIAPIPE
+         ===================================================== -->
 
-        border-radius: 17px;
-      }
+    <script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+    ></script>
 
-      .stage-content {
-        padding: 20px;
-      }
-
-      .mentor-card {
-        width: 160px;
-        height: 108px;
-
-        top: 20px;
-        right: 20px;
-      }
-
-      .brand-badge {
-        left: 14px;
-        bottom: 14px;
-      }
-
-      .toolbar {
-        align-items: stretch;
-
-        flex-direction: column;
-      }
-
-      .toolbar-left,
-      .toolbar-right {
-        width: 100%;
-      }
-
-      .tool-btn {
-        flex: 1;
-        justify-content: center;
-      }
-
-      .ai-controls {
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
-      }
-
-      .ai-btn:last-child {
-        grid-column: span 2;
-      }
-
-      .students-list {
-        grid-template-columns: 1fr;
-      }
-
-    }
-
-    @media (max-width: 480px) {
-
-      .top-actions .settings-top {
-        display: none;
-      }
-
-      .brand-icon {
-        width: 38px;
-        height: 38px;
-      }
-
-      .brand-text h1 {
-        font-size: 14px;
-      }
-
-      .stage {
-        min-height: 430px;
-      }
-
-      .mentor-card {
-        width: 145px;
-        height: 98px;
-      }
-
-      .welcome-content h2 {
-        font-size: 24px;
-      }
-
-      .welcome-content p {
-        font-size: 12px;
-      }
-
-      .stage-control {
-        padding: 0 9px;
-        font-size: 10px;
-      }
-
-    }
-
-  </style>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+    ></script>
 </head>
 
 <body>
 
-  <div class="app">
+<div class="app">
 
-    <!-- =======================================================
-         TOP BAR
-         ======================================================= -->
+    <!-- =====================================================
+         TOPBAR
+         ===================================================== -->
 
     <header class="topbar">
 
-      <div class="brand-area">
+        <div class="brand-area">
 
-        <div class="brand-icon">
-          M
+            <div class="brand-icon">
+                SNK
+            </div>
+
+            <div class="brand-title">
+
+                <strong>
+                    Personal Course Studio
+                </strong>
+
+                <span>
+                    Mentor Studio • Private Workspace
+                </span>
+
+            </div>
+
         </div>
 
-        <div class="brand-text">
-          <h1>Mentor Studio</h1>
-          <p>Personal Course Studio</p>
+        <div class="top-actions">
+
+            <button
+                type="button"
+                class="top-btn"
+                id="settingsBtn"
+            >
+                ⚙
+                <span>
+                    Settings
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="top-btn"
+                id="openTeleprompterTopBtn"
+            >
+                📜
+                <span>
+                    Teleprompter
+                </span>
+            </button>
+
+            <button
+                type="button"
+                class="top-btn record-main-btn"
+                id="recordBtn"
+            >
+                ●
+                <span>
+                    Record
+                </span>
+            </button>
+
         </div>
-
-      </div>
-
-      <div class="top-actions">
-
-        <button
-          class="top-btn settings-top"
-          type="button"
-          onclick="openSettings()"
-        >
-          ⚙ Settings
-        </button>
-
-        <button
-          class="top-btn record"
-          id="recordTopBtn"
-          type="button"
-          onclick="toggleRecording()"
-        >
-          ● Record
-        </button>
-
-      </div>
 
     </header>
 
 
-    <!-- =======================================================
+    <!-- =====================================================
          WORKSPACE
-         ======================================================= -->
+         ===================================================== -->
 
     <main class="workspace">
 
-      <!-- =====================================================
-           LEFT / MAIN AREA
-           ===================================================== -->
+        <!-- =================================================
+             STAGE
+             ================================================= -->
 
-      <section class="stage-wrap">
+        <section class="stage-wrap">
 
-        <div
-          class="stage"
-          id="stage"
-        >
+            <div class="stage-header">
 
-          <div class="stage-grid"></div>
+                <div class="stage-header-left">
 
+                    <span class="live-dot"></span>
 
-          <!-- Stage controls -->
+                    <div>
+                        <div class="stage-title">
+                            Course Stage
+                        </div>
 
-          <div class="stage-controls">
-
-            <div class="stage-control-group">
-
-              <button
-                class="stage-control"
-                type="button"
-                onclick="clearMainContent()"
-              >
-                ✕ Clear
-              </button>
-
-              <button
-                class="stage-control"
-                type="button"
-                onclick="fullscreenStage()"
-              >
-                ⛶ Fullscreen
-              </button>
-
-            </div>
-
-            <div class="stage-control-group">
-
-              <button
-                class="stage-control"
-                type="button"
-                onclick="toggleMainPlay()"
-              >
-                ▶ Play / Pause
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <!-- Main content -->
-
-          <div class="stage-content">
-
-            <img
-              id="mainImage"
-              alt="Course content"
-            >
-
-            <video
-              id="mainVideo"
-              playsinline
-              preload="metadata"
-            ></video>
-
-
-            <div
-              class="welcome-content"
-              id="welcomeContent"
-            >
-
-              <div class="welcome-icon">
-                🎬
-              </div>
-
-              <h2>
-                Welcome to Mentor Studio
-              </h2>
-
-              <p>
-                Upload your course slide, image or video,
-                add your mentor camera, and create your
-                personal teaching recording.
-              </p>
-
-              <div class="welcome-actions">
-
-                <button
-                  class="primary-btn"
-                  type="button"
-                  onclick="document.getElementById('imageUpload').click()"
-                >
-                  🖼 Upload Slide
-                </button>
-
-                <button
-                  class="secondary-btn"
-                  type="button"
-                  onclick="document.getElementById('videoUpload').click()"
-                >
-                  🎥 Upload Video
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- =================================================
-               MENTOR CARD
-               ================================================= -->
-
-          <div
-            class="mentor-card"
-            id="mentorCard"
-          >
-
-            <div class="mentor-video-wrap">
-
-              <video
-                id="mentorVideo"
-                autoplay
-                muted
-                playsinline
-              ></video>
-
-              <div
-                id="mentorPlaceholder"
-              >
-
-                <div>
-
-                  <div class="mentor-placeholder-icon">
-                    👤
-                  </div>
-
-                  <div>
-                    Upload mentor video
-                  </div>
+                        <div class="stage-subtitle">
+                            Main content + Mentor camera
+                        </div>
+                    </div>
 
                 </div>
 
-              </div>
+                <div class="stage-actions">
+
+                    <button
+                        type="button"
+                        class="mini-btn"
+                        id="stageUploadImageBtn"
+                        title="Upload image"
+                    >
+                        🖼
+                    </button>
+
+                    <button
+                        type="button"
+                        class="mini-btn"
+                        id="stageUploadVideoBtn"
+                        title="Upload video"
+                    >
+                        🎬
+                    </button>
+
+                </div>
 
             </div>
 
 
-            <div class="mentor-overlay">
+            <!-- =============================================
+                 MAIN STAGE
+                 ============================================= -->
 
-              <div class="mentor-label">
+            <div id="stage">
 
-                <span class="online-dot"></span>
+                <div id="welcomeContent">
 
-                <span>
-                  Mentor
-                </span>
+                    <div class="welcome-icon">
+                        🎓
+                    </div>
 
-              </div>
+                    <div class="welcome-title">
+                        Personal Course Studio
+                    </div>
 
-              <div class="mentor-actions">
+                    <div class="welcome-text">
+                        Upload your course slide,
+                        image or video, then add
+                        your mentor camera and
+                        teleprompter.
+                    </div>
+
+                </div>
+
+
+                <!-- Main Image -->
+
+                <img
+                    id="mainImage"
+                    alt="Main course content"
+                >
+
+
+                <!-- Main Video -->
+
+                <video
+                    id="mainVideo"
+                    playsinline
+                    controls
+                ></video>
+
+
+                <!-- Mentor -->
+
+                <div id="mentorCard">
+
+                    <video
+                        id="mentorVideo"
+                        playsinline
+                    ></video>
+
+                    <video
+                        id="mentorCameraVideo"
+                        autoplay
+                        muted
+                        playsinline
+                    ></video>
+
+                    <canvas
+                        id="mentorAICanvas"
+                    ></canvas>
+
+                    <div
+                        id="mentorPlaceholder"
+                    >
+
+                        <div class="mentor-avatar">
+                            👤
+                        </div>
+
+                        <div
+                            class="mentor-placeholder-text"
+                        >
+                            Mentor Camera
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="mentorSourceLabel"
+                    >
+                        MENTOR
+                    </div>
+
+                    <div
+                        id="mentorResize"
+                        title="Resize mentor"
+                    ></div>
+
+                </div>
+
+
+                <!-- Brand -->
+
+                <div id="brandBadge">
+                    Personal Course Studio
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 TOOLBAR
+                 ============================================= -->
+
+            <div class="toolbar">
 
                 <button
-                  class="mentor-mini-btn"
-                  type="button"
-                  title="Reset mentor position"
-                  onclick="resetMentorPosition()"
+                    type="button"
+                    class="tool-btn"
+                    id="uploadMainBtn"
                 >
-                  ↗
+                    🖼 Upload Image
                 </button>
 
-              </div>
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="uploadVideoBtn"
+                >
+                    🎬 Upload Video
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="mainPlayBtn"
+                >
+                    ▶ Play
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="mainPauseBtn"
+                >
+                    ❚❚ Pause
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="uploadMentorBtn"
+                >
+                    👤 Mentor Video
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn primary"
+                    id="startCameraBtn"
+                >
+                    📷 Camera
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="stopCameraBtn"
+                >
+                    ■ Stop Camera
+                </button>
+
+                <button
+                    type="button"
+                    class="tool-btn"
+                    id="switchCameraBtn"
+                >
+                    🔄 Switch
+                </button>
 
             </div>
-
-
-            <div
-              class="mentor-resize"
-              id="mentorResize"
-              title="Resize"
-            ></div>
-
-          </div>
-
-
-          <!-- Brand badge -->
-
-          <div
-            class="brand-badge"
-            id="brandBadge"
-          >
-            SNK Mentor Studio
-          </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             TOOLBAR
-             ===================================================== -->
-
-        <div class="toolbar">
-
-          <div class="toolbar-left">
-
-            <input
-              type="file"
-              id="imageUpload"
-              class="hidden-input"
-              accept="image/*"
-            >
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="document.getElementById('imageUpload').click()"
-            >
-              🖼 Image
-            </button>
-
-
-            <input
-              type="file"
-              id="videoUpload"
-              class="hidden-input"
-              accept="video/*"
-            >
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="document.getElementById('videoUpload').click()"
-            >
-              🎬 Main Video
-            </button>
-
-
-            <input
-              type="file"
-              id="mentorUpload"
-              class="hidden-input"
-              accept="video/*"
-            >
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="document.getElementById('mentorUpload').click()"
-            >
-              👤 Mentor
-            </button>
-
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="toggleMainPlay()"
-            >
-              ▶ Play
-            </button>
-
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="resetMentorPosition()"
-            >
-              ↗ Reset Mentor
-            </button>
-
-          </div>
-
-
-          <div class="toolbar-right">
-
-            <button
-              class="tool-btn"
-              type="button"
-              onclick="openBrandSettings()"
-            >
-              ✎ Brand
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             AI BACKGROUND PANEL
-             ===================================================== -->
-
-        <section class="ai-panel">
-
-          <div class="panel-title">
-
-            <strong>
-              Mentor Camera Background
-            </strong>
-
-            <span>
-              AI Background
-            </span>
-
-          </div>
-
-
-          <div class="ai-controls">
-
-            <button
-              class="ai-btn active"
-              id="bgOriginalBtn"
-              type="button"
-              onclick="setMentorBackgroundMode('original')"
-            >
-              Original
-            </button>
-
-            <button
-              class="ai-btn"
-              id="bgRemoveBtn"
-              type="button"
-              onclick="setMentorBackgroundMode('remove')"
-            >
-              Remove
-            </button>
-
-            <button
-              class="ai-btn"
-              id="bgBlurBtn"
-              type="button"
-              onclick="setMentorBackgroundMode('blur')"
-            >
-              Blur
-            </button>
-
-            <button
-              class="ai-btn"
-              id="bgImageBtn"
-              type="button"
-              onclick="document.getElementById('backgroundImageUpload').click()"
-            >
-              Custom Image
-            </button>
-
-            <button
-              class="ai-btn"
-              id="bgColorBtn"
-              type="button"
-              onclick="setMentorBackgroundMode('color')"
-            >
-              Solid Color
-            </button>
-
-          </div>
-
-
-          <div class="ai-extra">
-
-            <input
-              type="color"
-              id="backgroundColor"
-              class="color-input"
-              value="#101823"
-              title="Background color"
-            >
-
-            <input
-              type="file"
-              id="backgroundImageUpload"
-              class="hidden-input"
-              accept="image/*"
-            >
-
-            <span class="ai-note">
-              Mentor person stays visible while the
-              background is changed, blurred, removed
-              or replaced.
-            </span>
-
-          </div>
 
         </section>
 
 
-        <!-- Hidden AI canvases -->
+        <!-- =================================================
+             SIDE PANEL
+             ================================================= -->
 
-        <canvas id="aiCanvas"></canvas>
-        <canvas id="aiSourceCanvas"></canvas>
-        <canvas id="aiMaskCanvas"></canvas>
+        <aside class="side-panel">
 
-      </section>
+            <div class="side-header">
 
+                <div>
+                    <strong>
+                        Studio Controls
+                    </strong>
 
-      <!-- =====================================================
-           STUDENTS
-           ===================================================== -->
+                    <span>
+                        Mentor / AI / Students
+                    </span>
+                </div>
 
-      <aside class="students-panel">
-
-        <div class="students-header">
-
-          <div class="students-header-top">
-
-            <div class="students-title">
-              Students
             </div>
 
-            <div
-              class="student-count"
-              id="studentCount"
-            >
-              0
+
+            <div class="side-content">
+
+                <!-- =========================================
+                     CAMERA
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Mentor Camera
+                        </span>
+
+                        <span>
+                            LIVE
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="startCameraSideBtn"
+                        >
+                            📷 Start
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="stopCameraSideBtn"
+                        >
+                            ■ Stop
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="switchCameraSideBtn"
+                        >
+                            🔄 Switch Camera
+                        </button>
+
+                    </div>
+
+                    <div id="cameraStatus">
+                        Camera not started
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     AI BACKGROUND
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            AI Background
+                        </span>
+
+                        <span>
+                            SEGMENTATION
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn active"
+                            id="bgOriginalBtn"
+                        >
+                            Original
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgRemoveBtn"
+                        >
+                            Remove
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgBlurBtn"
+                        >
+                            Blur
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="bgImageBtn"
+                        >
+                            Image
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="bgColorBtn"
+                        >
+                            Solid Color
+                        </button>
+
+                    </div>
+
+                    <div class="color-row">
+
+                        <span>
+                            Background color
+                        </span>
+
+                        <input
+                            type="color"
+                            id="backgroundColor"
+                            value="#162033"
+                        >
+
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     TELEPROMPTER
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Teleprompter
+                        </span>
+
+                        <span>
+                            SCRIPT
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="openTeleprompterBtn"
+                        >
+                            📜 Open Teleprompter
+                        </button>
+
+                    </div>
+
+                    <div
+                        style="
+                            margin-top:8px;
+                            color:var(--muted);
+                            font-size:9px;
+                            line-height:1.5;
+                        "
+                    >
+                        Paste your script or upload
+                        a TXT file. The script is
+                        visible to you but is not
+                        included in the final video.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     AUDIO
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Recording Audio
+                        </span>
+
+                        <span>
+                            MIC
+                        </span>
+
+                    </div>
+
+                    <div
+                        style="
+                            color:var(--muted);
+                            font-size:9px;
+                            line-height:1.6;
+                        "
+                    >
+                        Your microphone voice is
+                        included in the final
+                        recording.
+                    </div>
+
+                    <label
+                        style="
+                            display:flex;
+                            align-items:center;
+                            gap:7px;
+                            margin-top:9px;
+                            font-size:10px;
+                            color:#dbeafe;
+                            cursor:pointer;
+                        "
+                    >
+
+                        <input
+                            type="checkbox"
+                            id="mainVideoAudioCheckbox"
+                            checked
+                        >
+
+                        Main video audio ON
+
+                    </label>
+
+                </section>
+
+
+                <!-- =========================================
+                     STUDENTS
+                     ========================================= -->
+
+                <section
+                    class="panel students-panel"
+                >
+
+                    <div class="panel-title">
+
+                        <span>
+                            Students
+                        </span>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="addStudentBtn"
+                            style="
+                                min-height:28px;
+                                padding:0 9px;
+                            "
+                        >
+                            + Add
+                        </button>
+
+                    </div>
+
+                    <div id="studentsList">
+                        <!-- JS -->
+                    </div>
+
+                </section>
+
+
+                <!-- =========================================
+                     FILES
+                     ========================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <span>
+                            Files
+                        </span>
+
+                        <span>
+                            LOCAL
+                        </span>
+
+                    </div>
+
+                    <div class="button-grid">
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="uploadMainSideBtn"
+                        >
+                            🖼 Image
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn"
+                            id="uploadVideoSideBtn"
+                        >
+                            🎬 Video
+                        </button>
+
+                        <button
+                            type="button"
+                            class="side-btn full"
+                            id="uploadMentorSideBtn"
+                        >
+                            👤 Mentor Video
+                        </button>
+
+                    </div>
+
+                </section>
+
             </div>
 
-          </div>
-
-          <div class="students-subtitle">
-            Live class participants
-          </div>
-
-        </div>
-
-
-        <div
-          class="students-list"
-          id="studentsList"
-        ></div>
-
-
-        <div class="students-footer">
-
-          <button
-            class="add-student-btn"
-            type="button"
-            onclick="addStudent()"
-          >
-            ＋ Add Student
-          </button>
-
-        </div>
-
-      </aside>
+        </aside>
 
     </main>
 
 
-    <!-- =======================================================
-         STATUS BAR
-         ======================================================= -->
+    <!-- =====================================================
+         STATUSBAR
+         ===================================================== -->
 
     <footer class="statusbar">
 
-      <div class="status-left">
+        <div class="status-left">
 
-        <span
-          class="status-dot"
-          id="statusDot"
-        ></span>
+            <div class="status-online">
 
-        <span id="statusText">
-          Ready
-        </span>
+                <span class="live-dot"></span>
 
-      </div>
+                Studio Ready
 
-      <div>
-        Personal Course Studio
-      </div>
+            </div>
+
+            <span>
+                Step 3.6
+            </span>
+
+        </div>
+
+        <div class="status-right">
+
+            <span>
+                Teleprompter
+            </span>
+
+            <span>
+                •
+            </span>
+
+            <span>
+                Mic Voice Track
+            </span>
+
+        </div>
 
     </footer>
 
-  </div>
+</div>
 
 
-  <!-- =========================================================
-       SETTINGS MODAL
-       ========================================================= -->
+<!-- =========================================================
+     HIDDEN FILE INPUTS
+     ========================================================= -->
 
-  <div
-    class="modal-overlay"
-    id="settingsModal"
-  >
+<input
+    type="file"
+    id="mainFileInput"
+    class="hidden-input"
+    accept="image/*"
+>
 
-    <div class="modal">
+<input
+    type="file"
+    id="mainVideoInput"
+    class="hidden-input"
+    accept="video/*"
+>
 
-      <div class="modal-header">
+<input
+    type="file"
+    id="mentorFileInput"
+    class="hidden-input"
+    accept="video/*"
+>
 
-        <h3>
-          Studio Settings
-        </h3>
-
-        <button
-          class="modal-close"
-          type="button"
-          onclick="closeSettings()"
-        >
-          ✕
-        </button>
-
-      </div>
+<input
+    type="file"
+    id="backgroundImageUpload"
+    class="hidden-input"
+    accept="image/*"
+>
 
 
-      <div class="modal-body">
+<!-- =========================================================
+     AI WORK CANVASES
+     ========================================================= -->
 
-        <div class="form-group">
+<canvas
+    id="aiCanvas"
+    style="display:none;"
+></canvas>
 
-          <label
-            class="form-label"
-            for="brandInput"
-          >
-            Brand / Mentor Name
-          </label>
+<canvas
+    id="aiSourceCanvas"
+    style="display:none;"
+></canvas>
 
-          <input
-            class="form-input"
-            id="brandInput"
-            type="text"
-            placeholder="SNK Mentor Studio"
-          >
+<canvas
+    id="aiMaskCanvas"
+    style="display:none;"
+></canvas>
+
+
+<!-- =========================================================
+     SETTINGS MODAL
+     ========================================================= -->
+
+<div id="settingsModal">
+
+    <div class="settings-card">
+
+        <div class="settings-header">
+
+            <strong>
+                Studio Settings
+            </strong>
+
+            <button
+                type="button"
+                class="settings-close"
+                id="closeSettingsBtn"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="settings-body">
+
+            <div class="field">
+
+                <label>
+                    Brand / Studio Name
+                </label>
+
+                <input
+                    type="text"
+                    id="brandNameInput"
+                    value="Personal Course Studio"
+                    placeholder="Enter studio name"
+                >
+
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Workspace
+                </label>
+
+                <input
+                    type="text"
+                    value="Mentor Studio"
+                    disabled
+                >
+
+            </div>
+
+            <div
+                style="
+                    padding:11px;
+                    border-radius:11px;
+                    background:rgba(37,99,235,.08);
+                    border:1px solid rgba(96,165,250,.12);
+                    color:#bfdbfe;
+                    font-size:10px;
+                    line-height:1.6;
+                "
+            >
+                This is a private Personal Course
+                Studio workspace. Camera,
+                microphone and recording data
+                are handled locally by the browser.
+            </div>
 
         </div>
 
 
-        <div class="form-group">
+        <div class="settings-footer">
 
-          <label class="form-label">
-            Mentor Background
-          </label>
+            <button
+                type="button"
+                class="tool-btn"
+                id="closeSettingsFooterBtn"
+            >
+                Cancel
+            </button>
 
-          <select
-            class="form-select"
-            id="mentorBackgroundSelect"
-            onchange="changeMentorBackground(this.value)"
-          >
-
-            <option value="#101823">
-              Dark
-            </option>
-
-            <option value="#ffffff">
-              White
-            </option>
-
-            <option value="#d5e9fb">
-              Light Blue
-            </option>
-
-            <option value="#000000">
-              Black
-            </option>
-
-          </select>
+            <button
+                type="button"
+                class="tool-btn primary"
+                id="saveSettingsBtn"
+            >
+                Save Settings
+            </button>
 
         </div>
-
-      </div>
-
-
-      <div class="modal-footer">
-
-        <button
-          class="secondary-btn"
-          type="button"
-          onclick="closeSettings()"
-        >
-          Cancel
-        </button>
-
-        <button
-          class="primary-btn"
-          type="button"
-          onclick="saveSettings()"
-        >
-          Save Settings
-        </button>
-
-      </div>
 
     </div>
 
-  </div>
+</div>
 
 
-  <!-- =========================================================
-       TOAST
-       ========================================================= -->
+<!-- =========================================================
+     STEP 3.6 JAVASCRIPT
+     ========================================================= -->
 
-  <div
-    class="toast"
-    id="toast"
-  ></div>
+<script src="script.js"></script>
 
 
-  <!-- =========================================================
-       MEDIAPIPE SELFIE SEGMENTATION
-       ========================================================= -->
+<script>
+/* =========================================================
+   INDEX UI HELPERS
+   ========================================================= */
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
-  ></script>
+document.addEventListener("DOMContentLoaded", function () {
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
-  ></script>
+    /* ---------------------------------------------
+       SETTINGS FOOTER CLOSE
+       --------------------------------------------- */
+
+    const footerClose =
+        document.getElementById(
+            "closeSettingsFooterBtn"
+        );
+
+    const settingsModal =
+        document.getElementById(
+            "settingsModal"
+        );
+
+    if (footerClose && settingsModal) {
+
+        footerClose.addEventListener(
+            "click",
+            function () {
+
+                settingsModal.style.display =
+                    "none";
+
+                settingsModal.classList.remove(
+                    "open"
+                );
+
+            }
+        );
+
+    }
 
 
-  <!-- =========================================================
-       MAIN SCRIPT
-       ========================================================= -->
+    /* ---------------------------------------------
+       TELEPROMPTER OPEN BUTTONS
+       --------------------------------------------- */
 
-  <script src="script.js"></script>
+    const openButtons = [
+        document.getElementById(
+            "openTeleprompterTopBtn"
+        ),
+
+        document.getElementById(
+            "openTeleprompterBtn"
+        )
+    ];
+
+    openButtons.forEach(function (button) {
+
+        if (!button) return;
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .createTeleprompter ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .createTeleprompter();
+
+                    const panel =
+                        document.getElementById(
+                            "courseStudioTeleprompter"
+                        );
+
+                    if (panel) {
+
+                        panel.style.display =
+                            "flex";
+
+                    }
+
+                    const floatingButton =
+                        document.getElementById(
+                            "openTeleprompterBtn"
+                        );
+
+                    if (
+                        floatingButton &&
+                        floatingButton !== button
+                    ) {
+
+                        floatingButton.style.display =
+                            "none";
+
+                    }
+
+                }
+
+            }
+        );
+
+    });
 
 
-  <!-- =========================================================
-       MENTOR RESIZE
-       ========================================================= -->
+    /* ---------------------------------------------
+       CAMERA SIDE BUTTONS
+       --------------------------------------------- */
 
-  <script>
+    const startCameraSide =
+        document.getElementById(
+            "startCameraSideBtn"
+        );
 
-    (function () {
+    const stopCameraSide =
+        document.getElementById(
+            "stopCameraSideBtn"
+        );
 
-      const stage =
-        document.getElementById("stage");
+    const switchCameraSide =
+        document.getElementById(
+            "switchCameraSideBtn"
+        );
 
-      const mentorCard =
-        document.getElementById("mentorCard");
 
-      const resizeHandle =
-        document.getElementById("mentorResize");
+    if (startCameraSide) {
 
-      if (!stage || !mentorCard || !resizeHandle) {
+        startCameraSide.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .startCamera ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .startCamera();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (stopCameraSide) {
+
+        stopCameraSide.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    window.CourseStudio &&
+                    typeof
+                        window.CourseStudio
+                            .stopCamera ===
+                        "function"
+                ) {
+
+                    window.CourseStudio
+                        .stopCamera();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    if (switchCameraSide) {
+
+        switchCameraSide.addEventListener(
+            "click",
+            function () {
+
+                const switchButton =
+                    document.getElementById(
+                        "switchCameraBtn"
+                    );
+
+                if (switchButton) {
+                    switchButton.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       FILE SIDE BUTTONS
+       --------------------------------------------- */
+
+    const uploadMainSide =
+        document.getElementById(
+            "uploadMainSideBtn"
+        );
+
+    const uploadVideoSide =
+        document.getElementById(
+            "uploadVideoSideBtn"
+        );
+
+    const uploadMentorSide =
+        document.getElementById(
+            "uploadMentorSideBtn"
+        );
+
+
+    if (uploadMainSide) {
+
+        uploadMainSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (uploadVideoSide) {
+
+        uploadVideoSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainVideoInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (uploadMentorSide) {
+
+        uploadMentorSide.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mentorFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       STAGE UPLOAD BUTTONS
+       --------------------------------------------- */
+
+    const stageImage =
+        document.getElementById(
+            "stageUploadImageBtn"
+        );
+
+    const stageVideo =
+        document.getElementById(
+            "stageUploadVideoBtn"
+        );
+
+
+    if (stageImage) {
+
+        stageImage.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainFileInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    if (stageVideo) {
+
+        stageVideo.addEventListener(
+            "click",
+            function () {
+
+                const input =
+                    document.getElementById(
+                        "mainVideoInput"
+                    );
+
+                if (input) {
+                    input.click();
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ---------------------------------------------
+       MAIN VIDEO AUDIO
+       --------------------------------------------- */
+
+    const audioCheckbox =
+        document.getElementById(
+            "mainVideoAudioCheckbox"
+        );
+
+    if (audioCheckbox) {
+
+        audioCheckbox.addEventListener(
+            "change",
+            function () {
+
+                /* The Step 3.6 JS reads
+                   this state when recording. */
+
+                window.courseStudioMainVideoAudioEnabled =
+                    audioCheckbox.checked;
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+
+<!-- =========================================================
+     MENTOR RESIZE
+     ========================================================= -->
+
+<script>
+(function () {
+
+    const mentorCard =
+        document.getElementById(
+            "mentorCard"
+        );
+
+    const resizeHandle =
+        document.getElementById(
+            "mentorResize"
+        );
+
+    const stage =
+        document.getElementById(
+            "stage"
+        );
+
+    if (
+        !mentorCard ||
+        !resizeHandle ||
+        !stage
+    ) {
         return;
-      }
+    }
 
-      let resizing = false;
+    let resizing = false;
 
-      let startX = 0;
-      let startY = 0;
+    let startX = 0;
+    let startY = 0;
 
-      let startWidth = 0;
-      let startHeight = 0;
-
-
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
-      }
+    let startWidth = 0;
+    let startHeight = 0;
 
 
-      resizeHandle.addEventListener(
-        "pointerdown",
-        function (event) {
+    function startResize(event) {
 
-          event.preventDefault();
-          event.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
 
-          resizing = true;
+        resizing = true;
 
-          startX = event.clientX;
-          startY = event.clientY;
+        const point =
+            event.touches?.[0] ||
+            event;
 
-          startWidth =
-            mentorCard.getBoundingClientRect().width;
+        startX =
+            point.clientX;
 
-          startHeight =
-            mentorCard.getBoundingClientRect().height;
+        startY =
+            point.clientY;
 
-          resizeHandle.setPointerCapture?.(
-            event.pointerId
-          );
+        startWidth =
+            mentorCard.offsetWidth;
 
-        }
-      );
+        startHeight =
+            mentorCard.offsetHeight;
+
+        document.body.style.userSelect =
+            "none";
+
+    }
 
 
-      window.addEventListener(
-        "pointermove",
-        function (event) {
+    function moveResize(event) {
 
-          if (!resizing) {
+        if (!resizing) {
             return;
-          }
+        }
 
-          const stageRect =
-            stage.getBoundingClientRect();
+        const point =
+            event.touches?.[0] ||
+            event;
 
-          const dx =
-            event.clientX - startX;
+        const dx =
+            point.clientX -
+            startX;
 
-          const dy =
-            event.clientY - startY;
+        const dy =
+            point.clientY -
+            startY;
 
+        let newWidth =
+            startWidth + dx;
 
-          const maxWidth =
-            stageRect.width * 0.48;
+        let newHeight =
+            startHeight + dy;
 
-          const maxHeight =
-            stageRect.height * 0.65;
+        const minWidth =
+            130;
 
+        const minHeight =
+            90;
 
-          const newWidth =
-            clamp(
-              startWidth + dx,
-              140,
-              maxWidth
+        const maxWidth =
+            stage.clientWidth *
+            .45;
+
+        const maxHeight =
+            stage.clientHeight *
+            .45;
+
+        newWidth =
+            Math.max(
+                minWidth,
+                Math.min(
+                    newWidth,
+                    maxWidth
+                )
             );
 
-          const newHeight =
-            clamp(
-              startHeight + dy,
-              95,
-              maxHeight
+        newHeight =
+            Math.max(
+                minHeight,
+                Math.min(
+                    newHeight,
+                    maxHeight
+                )
             );
 
-
-          mentorCard.style.width =
+        mentorCard.style.width =
             `${newWidth}px`;
 
-          mentorCard.style.height =
+        mentorCard.style.height =
             `${newHeight}px`;
 
-        }
-      );
+    }
 
 
-      window.addEventListener(
-        "pointerup",
-        function () {
+    function stopResize() {
 
-          if (!resizing) {
+        if (!resizing) {
             return;
-          }
+        }
 
-          resizing = false;
+        resizing = false;
 
-          localStorage.setItem(
+        document.body.style.userSelect =
+            "";
+
+        localStorage.setItem(
             "courseStudioMentorWidth",
-            mentorCard.offsetWidth
-          );
+            String(
+                mentorCard.offsetWidth
+            )
+        );
 
-          localStorage.setItem(
+        localStorage.setItem(
             "courseStudioMentorHeight",
-            mentorCard.offsetHeight
-          );
-
-        }
-      );
-
-
-      function restoreSize() {
-
-        const savedWidth =
-          Number(
-            localStorage.getItem(
-              "courseStudioMentorWidth"
+            String(
+                mentorCard.offsetHeight
             )
-          );
+        );
 
-        const savedHeight =
-          Number(
-            localStorage.getItem(
-              "courseStudioMentorHeight"
-            )
-          );
+    }
 
 
-        if (savedWidth >= 140) {
+    resizeHandle.addEventListener(
+        "mousedown",
+        startResize
+    );
 
-          mentorCard.style.width =
-            `${savedWidth}px`;
-
+    resizeHandle.addEventListener(
+        "touchstart",
+        startResize,
+        {
+            passive: false
         }
+    );
 
+    document.addEventListener(
+        "mousemove",
+        moveResize
+    );
 
-        if (savedHeight >= 95) {
-
-          mentorCard.style.height =
-            `${savedHeight}px`;
-
+    document.addEventListener(
+        "touchmove",
+        moveResize,
+        {
+            passive: false
         }
+    );
 
-      }
+    document.addEventListener(
+        "mouseup",
+        stopResize
+    );
 
+    document.addEventListener(
+        "touchend",
+        stopResize
+    );
 
-      window.addEventListener(
-        "load",
-        restoreSize
-      );
-
-    })();
-
-  </script>
+})();
+</script>
 
 </body>
 </html>
