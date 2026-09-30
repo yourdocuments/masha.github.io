@@ -315,7 +315,7 @@
           <button type="button" class="file-btn" id="uploadMainSideBtn"><span>▧</span> Main Image</button>
           <button type="button" class="file-btn" id="uploadVideoSideBtn"><span>▶</span> Main Video</button>
           <button type="button" class="file-btn" id="uploadMentorFileSideBtn"><span>👤</span> Mentor Video</button>
-          <button type="button" class="file-btn" id="uploadBackgroundSideBtn"><span>▨</span> Background</button>
+          <button type="button" class="file-btn" id="uploadBackgroundFileBtn"><span>▨</span> Background</button>
         </div>
       </section>
 
@@ -538,7 +538,13 @@
 <script src="fixes.js"></script>
 <script src="brand-drag.js"></script>
 <script src="covers.js"></script>
-<script src="mentor-drag.js"></script>
+
+<!-- FILES > BACKGROUND BUTTON (had a duplicate id before) -->
+<script>
+  document.getElementById("uploadBackgroundFileBtn")?.addEventListener("click", () => {
+    document.getElementById("backgroundImageUpload")?.click();
+  });
+</script>
 
 <!-- MENTOR RESIZE BRIDGE -->
 <script>
