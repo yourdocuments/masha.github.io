@@ -3,282 +3,613 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#02060c">
-<meta name="description" content="Personal learning, teaching and course recording studio.">
-<title>Learn • Create • Teach</title>
-<link rel="icon" href="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true">
-<style>
-
-/* RESET */
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#02060c;--white:#ffffff;--muted:rgba(255,255,255,.66);--line:rgba(255,255,255,.12);--blue:#55b9ff;--purple:#8370ff}
-html{scroll-behavior:smooth}
-body{min-height:100vh;overflow-x:hidden;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--white);background:var(--bg)}
-a{color:inherit;text-decoration:none}
-
-/* PAGE BACKGROUND */
-.page{position:relative;min-height:100vh;isolation:isolate;background:linear-gradient(rgba(2,7,15,.58),rgba(2,7,15,.94)),url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2200&q=85") center / cover fixed}
-.page::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 15% 20%,rgba(65,160,255,.18),transparent 28%),radial-gradient(circle at 85% 25%,rgba(130,100,255,.15),transparent 30%),radial-gradient(circle at 50% 90%,rgba(0,180,255,.08),transparent 35%)}
-
-/* NAVBAR */
-.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;min-height:120px;padding:10px 5vw;display:flex;align-items:center;justify-content:space-between;background:rgba(2,6,12,.48);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
-.brand{display:flex;align-items:center;flex-shrink:0}
-.brand-logo{width:100px;height:100px;display:block;object-fit:contain;filter:drop-shadow(0 10px 25px rgba(0,0,0,.35)) drop-shadow(0 0 18px rgba(85,185,255,.08));transition:transform .25s ease,filter .25s ease}
-.brand-logo:hover{transform:scale(1.04);filter:drop-shadow(0 12px 28px rgba(0,0,0,.4)) drop-shadow(0 0 25px rgba(85,185,255,.18))}
-
-/* NAV BUTTONS */
-.nav-actions{display:flex;align-items:center;gap:10px}
-.nav-btn{min-height:43px;padding:0 17px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:700;transition:transform .25s ease,background .25s ease,border-color .25s ease,box-shadow .25s ease}
-.nav-btn:hover{transform:translateY(-2px);background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.nav-btn.primary{background:linear-gradient(135deg,rgba(85,185,255,.96),rgba(122,92,255,.96));border-color:transparent;box-shadow:0 10px 30px rgba(70,125,255,.25)}
-.nav-btn.primary:hover{box-shadow:0 14px 38px rgba(70,125,255,.36)}
-
-/* HERO */
-.hero{min-height:100vh;padding:175px 5vw 90px;display:flex;align-items:center}
-.hero-grid{width:min(1250px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:70px;align-items:center}
-.hero-content{max-width:700px}
-
-/* EYEBROW */
-.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;margin-bottom:25px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px);color:rgba(255,255,255,.76);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
-.eyebrow-dot{width:7px;height:7px;border-radius:50%;background:#65c6ff;box-shadow:0 0 14px #65c6ff}
-
-/* HERO TITLE */
-.hero h1{font-size:clamp(58px,8vw,110px);line-height:.93;letter-spacing:-5px;font-weight:900;margin-bottom:28px;background:linear-gradient(135deg,#ffffff 15%,#d7eaff 48%,#9b8cff 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-subtitle{font-size:18px;color:rgba(255,255,255,.72);letter-spacing:.4px;margin-bottom:34px}
-
-/* HERO BUTTONS */
-.hero-actions{display:flex;flex-wrap:wrap;gap:12px}
-.hero-btn{min-height:53px;padding:0 23px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:15px;border:1px solid rgba(255,255,255,.13);font-size:14px;font-weight:800;transition:.25s ease}
-.hero-btn:hover{transform:translateY(-3px)}
-.hero-btn.primary{background:linear-gradient(135deg,#3da9ff,#735eff);border-color:transparent;box-shadow:0 16px 40px rgba(69,125,255,.28)}
-.hero-btn.secondary{background:rgba(255,255,255,.06);backdrop-filter:blur(12px)}
-.hero-btn.secondary:hover{background:rgba(255,255,255,.11)}
-
-/* SALAT SIDE */
-.hero-side{display:flex;justify-content:center}
-.salat-card{width:min(100%,430px);padding:30px;border:1px solid rgba(255,255,255,.13);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.045));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 35px 90px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.09);position:relative;overflow:hidden}
-.salat-card::before{content:"";position:absolute;width:180px;height:180px;top:-80px;right:-70px;border-radius:50%;background:rgba(91,177,255,.15);filter:blur(10px)}
-
-/* CARD TOP */
-.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:30px;position:relative}
-.card-title{font-size:20px;font-weight:800}
-.card-small{margin-top:7px;color:rgba(255,255,255,.52);font-size:12px}
-
-/* LIVE */
-.live-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(60,205,145,.1);border:1px solid rgba(60,205,145,.2);color:#82e6ba;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:#59e0a3;box-shadow:0 0 10px #59e0a3}
-
-/* PRAYER */
-.prayer-time{position:relative;padding:23px 0;border-top:1px solid rgba(255,255,255,.08)}
-.prayer-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;color:rgba(255,255,255,.75)}
-.prayer-row strong{color:#fff;font-size:14px}
-.prayer-row span{font-size:14px;font-weight:700}
-
-/* CARD NOTE */
-.card-note{position:relative;margin-top:18px;padding:13px 15px;border-radius:15px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.58);font-size:11px;line-height:1.6}
-
-/* FEATURES */
-.features{padding:30px 5vw 100px}
-.features-inner{width:min(1250px,100%);margin:0 auto}
-.section-label{margin-bottom:20px;color:rgba(255,255,255,.46);font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}
-.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-
-/* FEATURE CARD */
-.feature-card{min-height:190px;padding:26px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);backdrop-filter:blur(15px);transition:transform .3s ease,background .3s ease,border-color .3s ease}
-.feature-card:hover{transform:translateY(-6px);background:rgba(255,255,255,.085);border-color:rgba(255,255,255,.18)}
-.feature-icon{width:46px;height:46px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;border-radius:14px;background:linear-gradient(135deg,rgba(88,183,255,.2),rgba(143,124,255,.18));border:1px solid rgba(255,255,255,.1);font-size:20px}
-.feature-card h3{font-size:17px;margin-bottom:8px}
-.feature-card p{color:rgba(255,255,255,.54);font-size:12px;line-height:1.65}
-
-/* FOOTER */
-footer{padding:30px 5vw 40px;border-top:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.2)}
-.footer-inner{width:min(1250px,100%);margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.footer-brand{display:flex;align-items:center}
-.footer-logo{width:70px;height:70px;object-fit:contain;display:block;filter:drop-shadow(0 8px 18px rgba(0,0,0,.28))}
-.footer-copy{color:rgba(255,255,255,.4);font-size:11px}
-
-/* TABLET */
-@media (max-width:900px){
-.navbar{min-height:108px}
-.hero{padding-top:150px}
-.hero-grid{grid-template-columns:1fr;gap:50px}
-.hero-side{justify-content:flex-start}
-.feature-grid{grid-template-columns:1fr}
-.salat-card{max-width:520px}
-}
-
-/* MOBILE */
-@media (max-width:650px){
-.navbar{min-height:90px;padding:5px 16px}
-.brand-logo{width:78px;height:78px}
-.nav-actions{gap:6px}
-.nav-btn{min-height:38px;padding:0 11px;font-size:11px}
-.hero{padding:125px 18px 65px}
-.hero h1{font-size:clamp(52px,17vw,82px);letter-spacing:-4px}
-.hero-subtitle{font-size:15px}
-.hero-actions{flex-direction:column}
-.hero-btn{width:100%}
-.salat-card{padding:23px;border-radius:24px}
-.features{padding:15px 18px 70px}
-.feature-card{min-height:auto}
-.footer-inner{flex-direction:column;align-items:flex-start}
-.footer-logo{width:70px;height:70px}
-}
-
-/* SMALL MOBILE */
-@media (max-width:400px){
-.navbar{padding-left:10px;padding-right:10px}
-.brand-logo{width:70px;height:70px}
-.nav-btn{padding:0 8px;font-size:10px}
-.hero{padding-top:110px}
-.hero h1{font-size:50px;letter-spacing:-3px}
-}
-
-/* ANIMATION */
-@media (prefers-reduced-motion:no-preference){
-.hero-content{animation:heroIn .9s ease both}
-.hero-side{animation:sideIn 1s .15s ease both}
-.feature-card{animation:fadeUp .7s ease both}
-@keyframes heroIn{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
-@keyframes sideIn{from{opacity:0;transform:translateX(25px)}to{opacity:1;transform:translateX(0)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-}
-
-</style>
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Professional Mentor Studio for Personal Course Studio.">
+<title>Mentor Studio | Personal Course Studio</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="page">
+<div class="app">
 
-  <!-- NAVBAR -->
-  <header class="navbar">
-
-    <a href="./" class="brand" aria-label="Home">
-      <img class="brand-logo" src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true" alt="SNK Business">
-    </a>
-
-    <nav class="nav-actions">
-      <a href="./login/" class="nav-btn">Login</a>
-      <a href="./mentor/" class="nav-btn primary">Mentor Studio</a>
-    </nav>
-
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand-area">
+      <div class="brand-mark"><span>PCS</span></div>
+      <div class="brand-copy"><strong>Mentor Studio</strong><span>Personal Course Studio</span></div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-btn" id="openShortcutsBtn" title="Keyboard shortcuts"><span>⌨</span><span>Shortcuts</span></button>
+      <button type="button" class="topbar-btn" id="startScreenCaptureBtn" title="Share screen"><span>▣</span><span>Screen</span></button>
+      <button type="button" class="topbar-btn" id="fullscreenStageBtn" title="Fullscreen stage"><span>⛶</span><span>Stage</span></button>
+      <button type="button" class="topbar-btn" id="fullscreenStudioBtn" title="Fullscreen studio"><span>⛶</span><span>Studio</span></button>
+      <button type="button" class="topbar-btn" id="settingsBtn"><span>⚙</span><span>Settings</span></button>
+      <button type="button" class="topbar-btn" id="openTeleprompterTopBtn"><span>▤</span><span>Teleprompter</span></button>
+      <button type="button" class="record-main-btn" id="recordBtn"><span class="record-dot"></span><span>Record</span></button>
+    </div>
   </header>
 
-  <main>
-
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero-grid">
-
-        <div class="hero-content">
-
-          <div class="eyebrow">
-            <span class="eyebrow-dot"></span>
-            Personal Learning &amp; Recording Studio
-          </div>
-
-          <h1>
-            Create.<br>
-            Teach.<br>
-            Inspire.
-          </h1>
-
-          <p class="hero-subtitle">Learn • Create • Teach.</p>
-
-          <div class="hero-actions">
-            <a href="./login/" class="hero-btn primary">Enter Studio <span>→</span></a>
-            <a href="./mentor/" class="hero-btn secondary">Mentor Studio</a>
-          </div>
-
-        </div>
-
-        <!-- SALAT CARD -->
-        <div class="hero-side">
-          <div class="salat-card">
-
-            <div class="card-top">
-              <div>
-                <div class="card-title">Today's Salat</div>
-                <div class="card-small">Dhaka, Bangladesh</div>
-              </div>
-              <div class="live-pill">
-                <span class="live-dot"></span>
-                Today
-              </div>
-            </div>
-
-            <div class="prayer-time">
-              <div class="prayer-row"><strong>Fajr</strong><span>04:25 AM</span></div>
-              <div class="prayer-row"><strong>Dhuhr</strong><span>12:05 PM</span></div>
-              <div class="prayer-row"><strong>Asr</strong><span>04:25 PM</span></div>
-              <div class="prayer-row"><strong>Maghrib</strong><span>06:10 PM</span></div>
-              <div class="prayer-row"><strong>Isha</strong><span>07:25 PM</span></div>
-            </div>
-
-            <div class="card-note">
-              Prayer times are shown as a simple daily reference for the studio home page.
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- FEATURES -->
-    <section class="features">
-      <div class="features-inner">
-
-        <div class="section-label">Studio</div>
-
-        <div class="feature-grid">
-
-          <article class="feature-card">
-            <div class="feature-icon">🎥</div>
-            <h3>Course Recording</h3>
-            <p>Create your own class and course recordings with a simple personal studio workflow.</p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🎙️</div>
-            <h3>Mentor Studio</h3>
-            <p>Use the private Mentor Studio for teaching, recording and creating course content.</p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🕌</div>
-            <h3>Daily Salat</h3>
-            <p>Keep a simple daily prayer-time reference available beside your personal learning workspace.</p>
-          </article>
-
-        </div>
-
-      </div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img class="footer-logo" src="https://github.com/yourdocuments/masha.github.io/blob/main/logo.png?raw=true" alt="SNK Business">
-      </div>
-      <div class="footer-copy">Learn • Create • Teach.</div>
+  <!-- RECORDING STATUS BAR -->
+  <section class="recording-status-bar" id="recordingStatusBar" aria-live="polite">
+    <div class="recording-status-left">
+      <span class="recording-status-dot" id="recordingStatusDot"></span>
+      <strong id="recordingStatusText">Ready</strong>
+      <span class="recording-timer" id="recordingTimer">00:00:00</span>
     </div>
-  </footer>
+    <div class="recording-status-center">
+      <span>Quality: <strong id="recordingQuality">1920×1080</strong></span>
+      <span>FPS: <strong id="recordingFps">30</strong></span>
+      <span>Format: <strong id="recordingFormat">WebM VP9</strong></span>
+    </div>
+    <div class="recording-status-right">
+      <span class="status-indicator" id="cameraIndicator">Camera</span>
+      <span class="status-indicator" id="micIndicator">Mic</span>
+      <span class="status-indicator" id="audioIndicator">Audio</span>
+      <span class="status-indicator" id="screenIndicator">Screen</span>
+      <button type="button" class="mini-control" id="pauseRecordingBtn">Pause</button>
+      <button type="button" class="mini-control" id="resumeRecordingBtn">Resume</button>
+      <button type="button" class="mini-control danger" id="stopRecordingBtn">Stop</button>
+    </div>
+  </section>
 
+  <!-- MAIN WORKSPACE -->
+  <main class="workspace">
+
+    <section class="stage-area">
+      <div class="stage-shell" id="stageShell">
+        <div class="stage" id="stage">
+
+          <img id="mainImage" alt="Main presentation" draggable="false">
+          <video id="mainVideo" playsinline preload="metadata"></video>
+          <video id="screenCaptureVideo" playsinline autoplay muted></video>
+
+          <div class="welcome-content" id="welcomeContent">
+            <div class="welcome-icon">◈</div>
+            <h1>Mentor Studio</h1>
+            <p>Upload a presentation, video or screen and start building your course.</p>
+            <button type="button" class="primary-btn" id="uploadMainBtn">Upload Main Content</button>
+          </div>
+
+          <!-- MENTOR CARD -->
+          <div class="mentor-card" id="mentorCard">
+            <video id="mentorVideo" playsinline muted preload="metadata"></video>
+            <video id="mentorCameraVideo" playsinline autoplay muted></video>
+            <canvas id="mentorAICanvas"></canvas>
+            <div class="mentor-placeholder" id="mentorPlaceholder">
+              <div class="mentor-placeholder-icon">👤</div>
+              <span>Mentor Camera</span>
+            </div>
+            <div class="mentor-source-label" id="mentorSourceLabel">CAMERA</div>
+            <div class="mentor-resize" id="mentorResize" aria-label="Resize mentor video"></div>
+          </div>
+
+          <!-- BRAND BADGE -->
+          <div class="brand-badge" id="brandBadge">
+            <span class="brand-badge-dot"></span>
+            <span id="brandBadgeText">Personal Course Studio</span>
+          </div>
+
+          <!-- RECORDING OVERLAY -->
+          <div class="recording-overlay" id="recordingOverlay">
+            <span class="recording-overlay-dot"></span>
+            <span>RECORDING</span>
+            <strong id="recordingOverlayTimer">00:00:00</strong>
+          </div>
+
+          <!-- STAGE BADGES -->
+          <div class="stage-badges">
+            <span class="stage-badge" id="stageResolutionBadge">1920×1080</span>
+            <span class="stage-badge" id="stageFpsBadge">30 FPS</span>
+            <span class="stage-badge" id="stageSourceBadge">READY</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MAIN TOOLBAR -->
+      <div class="main-toolbar">
+        <div class="toolbar-group">
+          <button type="button" class="tool-btn primary" id="uploadMainBtnToolbar">Upload Image</button>
+          <button type="button" class="tool-btn" id="uploadVideoBtn">Upload Video</button>
+          <button type="button" class="tool-btn" id="mainPlayBtn">▶ Play</button>
+          <button type="button" class="tool-btn" id="mainPauseBtn">❚❚ Pause</button>
+        </div>
+        <div class="toolbar-group">
+          <button type="button" class="tool-btn" id="uploadMentorBtn">Mentor Video</button>
+          <button type="button" class="tool-btn" id="startCameraBtn">Camera</button>
+          <button type="button" class="tool-btn danger" id="stopCameraBtn">Stop Camera</button>
+        </div>
+        <div class="toolbar-group toolbar-right">
+          <button type="button" class="tool-btn" id="recordToolbarBtn"><span class="record-dot"></span> Record</button>
+          <button type="button" class="tool-btn" id="openTeleprompterBtn">Teleprompter</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- CAMERA -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Camera</h3><span>Mentor video source</span></div>
+          <span class="side-status" id="cameraStatus">Offline</span>
+        </div>
+        <div class="side-actions">
+          <button type="button" class="side-btn primary" id="startCameraSideBtn">Start Camera</button>
+          <button type="button" class="side-btn" id="stopCameraSideBtn">Stop</button>
+          <button type="button" class="side-btn" id="switchCameraSideBtn">Switch</button>
+          <button type="button" class="side-btn" id="uploadMentorSideBtn">Upload Video</button>
+        </div>
+        <div class="form-group">
+          <label for="cameraDeviceSelect">Camera Device</label>
+          <select id="cameraDeviceSelect"><option value="">Default Camera</option></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cameraQuality">Quality</label>
+            <select id="cameraQuality">
+              <option value="360">360p</option>
+              <option value="480">480p</option>
+              <option value="720" selected>720p</option>
+              <option value="1080">1080p</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cameraFps">FPS</label>
+            <select id="cameraFps">
+              <option value="24">24</option>
+              <option value="30" selected>30</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI BACKGROUND -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>AI Background</h3><span>Keep the mentor visible</span></div>
+        </div>
+        <div class="background-grid">
+          <button type="button" class="bg-btn active" id="bgOriginalBtn"><span>◉</span> Original</button>
+          <button type="button" class="bg-btn" id="bgRemoveBtn"><span>◌</span> Remove</button>
+          <button type="button" class="bg-btn" id="bgBlurBtn"><span>◍</span> Blur</button>
+          <button type="button" class="bg-btn" id="bgImageBtn"><span>▧</span> Image</button>
+          <button type="button" class="bg-btn" id="bgColorBtn"><span>●</span> Color</button>
+        </div>
+        <div class="form-group">
+          <label for="backgroundColor">Solid Color</label>
+          <input type="color" id="backgroundColor" value="#101827">
+        </div>
+        <div class="background-upload-box" id="backgroundUploadBox">
+          <strong>Custom Background</strong>
+          <span>Upload an image to place behind the mentor.</span>
+          <button type="button" class="side-btn" id="uploadBackgroundSideBtn">Choose Image</button>
+        </div>
+      </section>
+
+      <!-- SCREEN CAPTURE -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Screen Capture</h3><span>Record browser, window or screen</span></div>
+          <span class="side-status" id="screenCaptureStatus">Ready</span>
+        </div>
+        <div class="screen-status">
+          <span class="screen-status-light" id="screenCaptureStatusLight"></span>
+          <span>Screen sharing</span>
+        </div>
+        <div class="side-actions">
+          <button type="button" class="side-btn primary" id="startScreenCaptureSideBtn">Start Screen</button>
+          <button type="button" class="side-btn" id="stopScreenCaptureBtn">Stop Screen</button>
+        </div>
+      </section>
+
+      <!-- AUDIO -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Audio</h3><span>Main video + microphone</span></div>
+          <span class="side-status" data-mic-status>Mic Off</span>
+        </div>
+        <div class="check-row">
+          <label class="check-label"><input type="checkbox" id="mainVideoAudioCheckbox" checked><span>Main video audio</span></label>
+        </div>
+        <div class="range-group">
+          <div class="range-header"><label for="mainVideoVolume">Main Volume</label><span id="mainVolumeValue">100%</span></div>
+          <input type="range" id="mainVideoVolume" min="0" max="100" value="100">
+        </div>
+        <div class="range-group">
+          <div class="range-header"><label for="micVolume">Microphone</label><span id="micVolumeValue">100%</span></div>
+          <input type="range" id="micVolume" min="0" max="100" value="100">
+        </div>
+        <div class="check-row">
+          <label class="check-label"><input type="checkbox" id="micEnabled" checked><span>Enable microphone</span></label>
+        </div>
+        <div class="check-row">
+          <label class="check-label"><input type="checkbox" id="micMonitor"><span>Monitor microphone</span></label>
+        </div>
+        <div class="meter-group">
+          <div class="meter-header"><span>Microphone Level</span><strong id="micLevelValue">0%</strong></div>
+          <div class="audio-meter"><div class="audio-meter-fill" id="micLevelBar"></div></div>
+        </div>
+        <div class="meter-group">
+          <div class="meter-header"><span>Main Audio Level</span><strong id="mainAudioLevelValue">0%</strong></div>
+          <div class="audio-meter"><div class="audio-meter-fill" id="mainAudioLevelBar"></div></div>
+        </div>
+        <div class="waveform-box">
+          <canvas id="micWaveformCanvas" width="600" height="120"></canvas>
+        </div>
+      </section>
+
+      <!-- TELEPROMPTER -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Teleprompter</h3><span>Read your lesson while recording</span></div>
+        </div>
+        <div class="teleprompter-mini-preview" id="teleprompterMiniPreview">
+          <div class="teleprompter-mini-content">Your teleprompter text will appear here.</div>
+        </div>
+        <div class="side-actions">
+          <button type="button" class="side-btn primary" id="openTeleprompterSide">Open</button>
+          <button type="button" class="side-btn" id="uploadTeleprompterBtn">Upload TXT</button>
+        </div>
+      </section>
+
+      <!-- STUDENTS -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Students</h3><span>Class participant list</span></div>
+          <button type="button" class="small-add-btn" id="addStudentBtn">+</button>
+        </div>
+        <div class="students-list" id="studentsList">
+          <div class="empty-state">No students added.</div>
+        </div>
+      </section>
+
+      <!-- RECORDING SETTINGS -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Recording</h3><span>Output settings</span></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="recordingQualitySide">Resolution</label>
+            <select id="recordingQualitySide">
+              <option value="1280x720">1280×720</option>
+              <option value="1920x1080" selected>1920×1080</option>
+              <option value="2560x1440">2560×1440</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="recordingFpsSide">FPS</label>
+            <select id="recordingFpsSide">
+              <option value="24">24</option>
+              <option value="30" selected>30</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="recordingFormatSide">Format</label>
+          <select id="recordingFormatSide">
+            <option value="webm-vp9">WebM VP9</option>
+            <option value="webm-vp8">WebM VP8</option>
+            <option value="mp4">MP4</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="recordingFileNameSide">File Name</label>
+          <input type="text" id="recordingFileNameSide" value="mentor-course-recording" placeholder="Recording file name">
+        </div>
+        <div class="check-row">
+          <label class="check-label"><input type="checkbox" id="includeTeleprompterInRecording"><span>Include teleprompter</span></label>
+        </div>
+      </section>
+
+      <!-- FILES -->
+      <section class="side-card">
+        <div class="side-card-header">
+          <div><h3>Files</h3><span>Upload course assets</span></div>
+        </div>
+        <div class="file-buttons">
+          <button type="button" class="file-btn" id="uploadMainSideBtn"><span>▧</span> Main Image</button>
+          <button type="button" class="file-btn" id="uploadVideoSideBtn"><span>▶</span> Main Video</button>
+          <button type="button" class="file-btn" id="uploadMentorFileSideBtn"><span>👤</span> Mentor Video</button>
+          <button type="button" class="file-btn" id="uploadBackgroundSideBtn"><span>▨</span> Background</button>
+        </div>
+      </section>
+
+    </aside>
+  </main>
 </div>
 
-<!-- Root page stays simple. Login and Mentor are normal links. -->
+<!-- HIDDEN FILE INPUTS -->
+<input type="file" id="mainFileInput" accept="image/*" hidden>
+<input type="file" id="mainVideoInput" accept="video/*" hidden>
+<input type="file" id="mentorFileInput" accept="video/*" hidden>
+<input type="file" id="backgroundImageUpload" accept="image/*" hidden>
+<input type="file" id="teleprompterFileInput" accept=".txt,text/plain" hidden>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div><h2>Studio Settings</h2><p>Configure your recording workspace.</p></div>
+      <button type="button" class="modal-close" id="closeSettingsBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="brandNameInput">Brand Name</label>
+        <input type="text" id="brandNameInput" value="Personal Course Studio">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="settingsRecordingQuality">Recording Quality</label>
+          <select id="settingsRecordingQuality">
+            <option value="1280x720">1280×720</option>
+            <option value="1920x1080" selected>1920×1080</option>
+            <option value="2560x1440">2560×1440</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="settingsRecordingFps">Recording FPS</label>
+          <select id="settingsRecordingFps">
+            <option value="24">24 FPS</option>
+            <option value="30" selected>30 FPS</option>
+            <option value="60">60 FPS</option>
+          </select>
+        </div>
+      </div>
+      <div class="check-row">
+        <label class="check-label"><input type="checkbox" id="settingsAutoStartTeleprompter"><span>Automatically start teleprompter with recording</span></label>
+      </div>
+      <div class="check-row">
+        <label class="check-label"><input type="checkbox" id="settingsShowTeleprompterRecording" checked><span>Show teleprompter while recording</span></label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="secondary-btn" id="closeSettingsFooterBtn">Cancel</button>
+      <button type="button" class="primary-btn" id="saveSettingsBtn">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHORTCUTS MODAL -->
+<div class="modal" id="shortcutsModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel small">
+    <div class="modal-header">
+      <div><h2>Keyboard Shortcuts</h2><p>Quickly control your studio.</p></div>
+      <button type="button" class="modal-close" id="closeShortcutsBtn">×</button>
+    </div>
+    <div class="shortcut-list">
+      <div class="shortcut-row"><span>Play / Pause Main Video</span><kbd>Space</kbd></div>
+      <div class="shortcut-row"><span>Start Recording</span><kbd>R</kbd></div>
+      <div class="shortcut-row"><span>Pause / Resume Recording</span><kbd>P</kbd></div>
+      <div class="shortcut-row"><span>Stop Recording</span><kbd>S</kbd></div>
+      <div class="shortcut-row"><span>Stage Fullscreen</span><kbd>F</kbd></div>
+      <div class="shortcut-row"><span>Close Modal / Fullscreen</span><kbd>Esc</kbd></div>
+    </div>
+  </div>
+</div>
+
+<!-- TELEPROMPTER MODAL -->
+<div class="modal teleprompter-modal" id="teleprompterModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel teleprompter-panel">
+    <div class="modal-header">
+      <div><h2>Teleprompter</h2><p>Prepare your lesson script.</p></div>
+      <button type="button" class="modal-close" id="closeTeleprompterBtn">×</button>
+    </div>
+    <div class="teleprompter-editor">
+      <textarea id="teleprompterText" placeholder="Write or paste your lesson script here..."></textarea>
+      <div class="teleprompter-preview-wrap">
+        <div class="teleprompter-preview-header">Live Preview</div>
+        <div class="teleprompter-preview" id="teleprompterPreview">
+          <div class="teleprompter-preview-text">Your teleprompter preview will appear here.</div>
+        </div>
+      </div>
+    </div>
+    <div class="teleprompter-controls">
+      <div class="form-group">
+        <label for="teleprompterSpeed">Speed</label>
+        <input type="range" id="teleprompterSpeed" min="1" max="10" value="5">
+      </div>
+      <div class="form-group">
+        <label for="teleprompterFontSize">Font Size</label>
+        <input type="range" id="teleprompterFontSize" min="18" max="72" value="38">
+      </div>
+      <div class="form-group">
+        <label for="teleprompterOpacity">Opacity</label>
+        <input type="range" id="teleprompterOpacity" min="20" max="100" value="90">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="secondary-btn" id="teleprompterResetBtn">Reset</button>
+      <button type="button" class="secondary-btn" id="teleprompterPauseBtn">Pause</button>
+      <button type="button" class="secondary-btn" id="teleprompterPlayBtn">Play</button>
+      <button type="button" class="primary-btn" id="teleprompterSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECORDING PREVIEW MODAL -->
+<div class="modal recording-preview-modal" id="recordingPreviewModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel recording-preview-panel">
+    <div class="modal-header">
+      <div><h2>Recording Preview</h2><p>Review and manage your recording.</p></div>
+      <button type="button" class="modal-close" id="closeRecordingPreviewBtn">×</button>
+    </div>
+    <div class="recording-preview-layout">
+      <div class="recording-preview-video-wrap">
+        <video id="recordingPreviewVideo" controls playsinline></video>
+        <div class="preview-video-overlay">
+          <span id="recordingCurrentTime">00:00</span><span>/</span><span id="recordingDuration">00:00</span>
+        </div>
+      </div>
+      <div class="recording-info-panel">
+        <div class="recording-file-info" id="recordingFileInfo">No recording loaded.</div>
+        <div class="preview-controls">
+          <button type="button" class="secondary-btn" id="recordingPreviewPlayBtn">▶ Play</button>
+          <button type="button" class="secondary-btn" id="recordingPreviewPauseBtn">❚❚ Pause</button>
+        </div>
+        <div class="form-group">
+          <label for="recordingFileName">Recording Name</label>
+          <input type="text" id="recordingFileName" value="mentor-course-recording">
+        </div>
+        <div class="trim-box">
+          <div class="trim-header"><strong>Trim Preview</strong><span>Start / End</span></div>
+          <div class="trim-range">
+            <div class="form-group">
+              <label for="recordingTrimStart">Start</label>
+              <input type="range" id="recordingTrimStart" min="0" max="0" value="0" step="0.01">
+              <span id="recordingTrimStartTime">00:00</span>
+            </div>
+            <div class="form-group">
+              <label for="recordingTrimEnd">End</label>
+              <input type="range" id="recordingTrimEnd" min="0" max="0" value="0" step="0.01">
+              <span id="recordingTrimEndTime">00:00</span>
+            </div>
+          </div>
+          <div class="trim-actions">
+            <button type="button" class="secondary-btn" id="applyTrimBtn">Apply Trim</button>
+            <button type="button" class="secondary-btn" id="resetTrimBtn">Reset Trim</button>
+          </div>
+        </div>
+        <div class="recording-main-actions">
+          <button type="button" class="secondary-btn" id="renameRecordingBtn">Rename</button>
+          <button type="button" class="danger-btn" id="deleteRecordingBtn">Delete</button>
+          <button type="button" class="primary-btn" id="recordAgainBtn">Record Again</button>
+          <button type="button" class="primary-btn" id="downloadRecordingBtn">Download</button>
+        </div>
+      </div>
+    </div>
+    <div class="recording-history">
+      <div class="history-header">
+        <div><h3>Recording History</h3><span>Recordings created in this browser.</span></div>
+        <button type="button" class="secondary-btn" id="clearRecordingHistoryBtn">Clear History</button>
+      </div>
+      <div class="recording-history-list" id="recordingHistoryList">
+        <div class="empty-state">No recordings yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT MODAL -->
+<div class="modal" id="studentModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel small">
+    <div class="modal-header">
+      <div><h2>Add Student</h2><p>Add a student to this class.</p></div>
+      <button type="button" class="modal-close" id="closeStudentModalBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="studentNameInput">Student Name</label>
+        <input type="text" id="studentNameInput" placeholder="Enter student name">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="secondary-btn" id="cancelStudentBtn">Cancel</button>
+      <button type="button" class="primary-btn" id="saveStudentBtn">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- MIC BRIDGE -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('a[href="./mentor/"]').forEach(function (link) {
-    link.addEventListener("click", function () {
-      window.location.href = "./mentor/";
-    });
-  });
-});
+  window.CourseStudioMicVolume = 1;
+  window.CourseStudioMicEnabled = true;
+  window.CourseStudioMicMonitor = false;
+</script>
+
+<!-- MEDIAPIPE SELFIE SEGMENTATION -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+
+<!-- MAIN JAVASCRIPT (order matters) -->
+<script src="script.js"></script>
+<script src="fixes.js"></script>
+<script src="brand-drag.js"></script>
+<script src="covers.js"></script>
+<script src="mentor-drag.js"></script>
+
+<!-- MENTOR RESIZE BRIDGE -->
+<script>
+(() => {
+  const card = document.getElementById("mentorCard");
+  const handle = document.getElementById("mentorResize");
+  if (!card || !handle) return;
+
+  let resizing = false;
+  let startX = 0, startY = 0, startWidth = 0, startHeight = 0;
+
+  function getPoint(event) {
+    if (event.touches && event.touches.length) {
+      return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }
+    return { x: event.clientX, y: event.clientY };
+  }
+
+  function startResize(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const point = getPoint(event);
+    resizing = true;
+    startX = point.x;
+    startY = point.y;
+    startWidth = card.getBoundingClientRect().width;
+    startHeight = card.getBoundingClientRect().height;
+    document.body.classList.add("is-resizing");
+  }
+
+  function moveResize(event) {
+    if (!resizing) return;
+    const point = getPoint(event);
+    const deltaX = point.x - startX;
+    const deltaY = point.y - startY;
+    const rect = card.parentElement.getBoundingClientRect();
+    const minWidth = 130;
+    const maxWidth = rect.width * 0.45;
+    const maxHeight = rect.height * 0.45;
+    let width = startWidth + deltaX;
+    let height = startHeight + deltaY;
+    const aspect = 16 / 9;
+
+    if (Math.abs(deltaX) >= Math.abs(deltaY)) height = width / aspect;
+    else width = height * aspect;
+
+    width = Math.max(minWidth, Math.min(maxWidth, width));
+    height = width / aspect;
+
+    if (height > maxHeight) {
+      height = maxHeight;
+      width = height * aspect;
+    }
+
+    card.style.width = `${width}px`;
+    card.style.height = `${height}px`;
+  }
+
+  function stopResize() {
+    if (!resizing) return;
+    resizing = false;
+    document.body.classList.remove("is-resizing");
+  }
+
+  handle.addEventListener("mousedown", startResize);
+  window.addEventListener("mousemove", moveResize);
+  window.addEventListener("mouseup", stopResize);
+  handle.addEventListener("touchstart", startResize, { passive: false });
+  window.addEventListener("touchmove", moveResize, { passive: false });
+  window.addEventListener("touchend", stopResize);
+})();
 </script>
 
 </body>
