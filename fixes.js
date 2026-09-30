@@ -16,6 +16,24 @@
 
 
   /* =======================================================
+     0. MISSING FUNCTION
+     script.js calls initializeAudioUI() but never defines it.
+     Without this, init() stops half way (no render loop,
+     no settings, no history).
+     ======================================================= */
+
+  window.initializeAudioUI = function () {
+
+    updateMainVolumeLabel();
+
+    updateMicVolumeLabel();
+
+    updateAudioIndicator();
+
+  };
+
+
+  /* =======================================================
      1. LOGIN GUARD
      The page stays hidden until Mentor login is verified.
      ======================================================= */
@@ -665,7 +683,55 @@
     let win = null;
 
 
-    if ("documentPictureInPicture" in window) {
+    /* 1) Second monitor (Chrome / Edge, permission needed once) */
+
+    if ("getScreenDetails" in window) {
+
+      try {
+
+        const details =
+          await window.getScreenDetails();
+
+        const other =
+          details.screens.find(
+            item => item !== details.currentScreen
+          );
+
+        if (other) {
+
+          win = window.open(
+            "",
+            "mentorTeleprompter",
+            "popup=yes" +
+            ",left=" + other.availLeft +
+            ",top=" + other.availTop +
+            ",width=" + other.availWidth +
+            ",height=" + other.availHeight
+          );
+
+        }
+
+      }
+      catch (error) {
+
+        console.warn(
+          "Second monitor:",
+          error
+        );
+
+        win = null;
+
+      }
+
+    }
+
+
+    /* 2) Floating window (Document Picture-in-Picture) */
+
+    if (
+      !win &&
+      "documentPictureInPicture" in window
+    ) {
 
       try {
 
@@ -687,6 +753,8 @@
 
     }
 
+
+    /* 3) Normal popup window */
 
     if (!win) {
 
@@ -711,7 +779,7 @@
     if (!win) {
 
       showToast(
-        "Popup blocked. Please allow popups for this site.",
+        "Popup blocked. Please allow popups for this site and try again.",
         "error",
         5000
       );
