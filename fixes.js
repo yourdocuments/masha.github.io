@@ -1,5 +1,5 @@
 /* =========================================================
-   MENTOR STUDIO - FIXES (v2)
+   MENTOR STUDIO - FIXES (v3)
    File: mentor/fixes.js
 
    Load this AFTER script.js:
@@ -650,7 +650,9 @@
 
   /* =======================================================
      9. TELEPROMPTER IN A SEPARATE, MOVABLE WINDOW
-     - Chrome / Edge: floating always-on-top window
+     - Second monitor: opens full screen on monitor 2
+       (Chrome / Edge, permission asked once)
+     - One monitor: floating always-on-top window
        (Document Picture-in-Picture)
      - Other browsers: normal popup window
      - It is NOT part of the recording, so you can read it
