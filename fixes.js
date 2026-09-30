@@ -1,5 +1,5 @@
 /* =========================================================
-   MENTOR STUDIO - FIXES (v3)
+   MENTOR STUDIO - FIXES (v4)
    File: mentor/fixes.js
 
    Load this AFTER script.js:
@@ -650,11 +650,10 @@
 
   /* =======================================================
      9. TELEPROMPTER IN A SEPARATE, MOVABLE WINDOW
-     - Second monitor: opens full screen on monitor 2
-       (Chrome / Edge, permission asked once)
-     - One monitor: floating always-on-top window
-       (Document Picture-in-Picture)
-     - Other browsers: normal popup window
+     - Chrome / Edge: small floating always-on-top window
+       (Document Picture-in-Picture). Drag it by its top bar
+       to any monitor (Monitor 2 too) and resize it.
+     - Other browsers: normal popup window (also draggable).
      - It is NOT part of the recording, so you can read it
        while recording.
      - Script can follow your voice (Voice mode) or scroll
@@ -685,55 +684,9 @@
     let win = null;
 
 
-    /* 1) Second monitor (Chrome / Edge, permission needed once) */
+    /* 1) Floating window (Document Picture-in-Picture) */
 
-    if ("getScreenDetails" in window) {
-
-      try {
-
-        const details =
-          await window.getScreenDetails();
-
-        const other =
-          details.screens.find(
-            item => item !== details.currentScreen
-          );
-
-        if (other) {
-
-          win = window.open(
-            "",
-            "mentorTeleprompter",
-            "popup=yes" +
-            ",left=" + other.availLeft +
-            ",top=" + other.availTop +
-            ",width=" + other.availWidth +
-            ",height=" + other.availHeight
-          );
-
-        }
-
-      }
-      catch (error) {
-
-        console.warn(
-          "Second monitor:",
-          error
-        );
-
-        win = null;
-
-      }
-
-    }
-
-
-    /* 2) Floating window (Document Picture-in-Picture) */
-
-    if (
-      !win &&
-      "documentPictureInPicture" in window
-    ) {
+    if ("documentPictureInPicture" in window) {
 
       try {
 
@@ -756,7 +709,7 @@
     }
 
 
-    /* 3) Normal popup window */
+    /* 2) Normal popup window */
 
     if (!win) {
 
