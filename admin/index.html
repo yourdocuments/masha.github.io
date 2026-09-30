@@ -3,354 +3,5086 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Business Manager | Personal Course Studio</title>
 
+<meta
+  name="description"
+  content="Ultra Premium Business Administration Dashboard for Personal Course Studio."
+>
+
 <style>
+/* =========================================================
+   PERSONAL COURSE STUDIO
+   BUSINESS MANAGER — ULTRA PREMIUM UI
+   Complete Single-File Version
+   ========================================================= */
+
 :root{
-  --bg:#080b12;--panel:#111827;--panel2:#172033;--line:#263247;
-  --text:#f3f6fc;--muted:#91a0b8;--blue:#4f8cff;
-  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;
+  --bg:#060912;
+  --bg2:#0a0f1c;
+  --sidebar:#080d18;
+  --panel:#0e1524;
+  --panel2:#111a2b;
+  --panel3:#151f33;
+
+  --line:#202c41;
+  --line2:#2b3a53;
+
+  --text:#f5f7fb;
+  --muted:#8d9bb1;
+  --muted2:#64738b;
+
+  --blue:#4f8cff;
+  --blue2:#6ea4ff;
+
+  --green:#22c55e;
+  --green2:#86efac;
+
+  --yellow:#f59e0b;
+  --yellow2:#fcd34d;
+
+  --red:#ef4444;
+  --red2:#fca5a5;
+
+  --purple:#8b5cf6;
+  --cyan:#06b6d4;
+
+  --shadow:0 18px 50px rgba(0,0,0,.30);
+  --radius:16px;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px Arial,sans-serif}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.layout{display:flex;min-height:100vh}
-.sidebar{width:245px;background:#0d1422;border-right:1px solid var(--line);padding:22px 14px;flex-shrink:0}
-.brand{font-size:18px;font-weight:800;padding:8px 10px 25px}
-.brand small{display:block;color:var(--muted);font-size:11px;margin-top:6px;font-weight:400}
-.nav{display:grid;gap:7px}
-.nav button{border:1px solid transparent;background:transparent;color:#aab6ca;text-align:left;padding:13px;border-radius:10px;font-weight:700}
-.nav button.active,.nav button:hover{background:#1b2a45;border-color:#30476d;color:white}
-.main{flex:1;min-width:0;padding:28px;max-width:1500px;margin:auto;width:100%}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
-h1{font-size:25px;margin:0}
-.sub{color:var(--muted);margin-top:7px;font-size:13px}
-.section{display:none}.section.active{display:block}
-.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
-.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-.metric{font-size:28px;font-weight:800;margin-top:12px}
-.muted{color:var(--muted);font-size:12px}
-.panel{margin-bottom:16px}
-.panel h2{font-size:16px;margin:0 0 16px}
-.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-input,select{background:#0b1220;border:1px solid #344158;color:white;border-radius:8px;padding:11px;min-width:0}
-input{flex:1}
-.btn{border:0;border-radius:8px;padding:11px 15px;background:var(--blue);color:white;font-weight:700}
-.btn.secondary{background:#27354d}.btn.green{background:#15803d}.btn.red{background:#991b1b}.btn.yellow{background:#92400e}
-table{width:100%;border-collapse:collapse;min-width:650px}
-.table-wrap{overflow:auto}
-th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:12px}
-th{color:var(--muted);font-weight:700}
-.badge{display:inline-block;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#29364c}
-.badge.pending{color:#fbbf24;background:#4b3515}
-.badge.confirmed{color:#86efac;background:#123c2a}
-.badge.rejected{color:#fca5a5;background:#4b2024}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.field{display:grid;gap:6px}.field label{color:var(--muted);font-size:12px}
-.field.full{grid-column:1/-1}
-.actions{display:flex;gap:6px;flex-wrap:wrap}
-.preview{border:1px dashed #45536a;border-radius:12px;padding:22px;margin-top:14px;background:#0b1220}
-.preview-bar{height:12px;border-radius:8px;background:var(--preview,#4f8cff);margin-bottom:12px}
-.note{padding:12px;border-radius:9px;background:#332b17;color:#fbd38d;font-size:12px;line-height:1.6;margin-bottom:15px}
-.empty{text-align:center;color:var(--muted);padding:25px}
-@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(79,140,255,.10),transparent 30%),
+    radial-gradient(circle at 90% 20%,rgba(139,92,246,.08),transparent 28%),
+    var(--bg);
+
+  color:var(--text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+a{
+  color:inherit;
+  text-decoration:none;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+.app{
+  display:flex;
+  min-height:100vh;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar{
+  width:270px;
+  flex-shrink:0;
+
+  position:fixed;
+  inset:0 auto 0 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(13,20,34,.98),
+      rgba(7,11,20,.98)
+    );
+
+  border-right:1px solid var(--line);
+
+  padding:20px 15px;
+
+  z-index:100;
+
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{
+  padding:9px 10px 24px;
+}
+
+.brand-top{
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.brand-icon{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+
+  display:grid;
+  place-items:center;
+
+  background:
+    linear-gradient(135deg,#4f8cff,#7c5cff);
+
+  box-shadow:
+    0 10px 30px rgba(79,140,255,.25);
+
+  font-weight:900;
+  font-size:17px;
+}
+
+.brand-name{
+  font-size:15px;
+  font-weight:850;
+  letter-spacing:-.3px;
+}
+
+.brand-sub{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:4px;
+}
+
+.nav-label{
+  color:#52627b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.3px;
+  text-transform:uppercase;
+  padding:12px 10px 7px;
+}
+
+.nav{
+  display:grid;
+  gap:5px;
+}
+
+.nav button{
+  width:100%;
+
+  display:flex;
+  align-items:center;
+  gap:11px;
+
+  border:1px solid transparent;
+  background:transparent;
+
+  color:#9aa8bd;
+
+  padding:12px 12px;
+
+  border-radius:11px;
+
+  text-align:left;
+  font-size:12px;
+  font-weight:750;
+
+  transition:.2s ease;
+}
+
+.nav button .nav-icon{
+  width:25px;
+  text-align:center;
+  font-size:16px;
+}
+
+.nav button:hover{
+  background:#111c30;
+  color:white;
+}
+
+.nav button.active{
+  background:
+    linear-gradient(
+      90deg,
+      rgba(79,140,255,.18),
+      rgba(79,140,255,.05)
+    );
+
+  border-color:#263d63;
+  color:white;
+
+  box-shadow:
+    inset 3px 0 0 var(--blue);
+}
+
+.sidebar-bottom{
+  margin-top:auto;
+}
+
+.admin-card{
+  border:1px solid var(--line);
+  background:rgba(17,26,43,.65);
+  border-radius:13px;
+  padding:12px;
+}
+
+.admin-row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.avatar{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+
+  display:grid;
+  place-items:center;
+
+  background:#1d2b43;
+  color:#9ec0ff;
+
+  font-weight:800;
+}
+
+.admin-name{
+  font-size:11px;
+  font-weight:800;
+}
+
+.admin-role{
+  color:var(--muted);
+  font-size:9px;
+  margin-top:2px;
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.main{
+  width:calc(100% - 270px);
+  margin-left:270px;
+  min-width:0;
+}
+
+.main-inner{
+  max-width:1700px;
+  margin:auto;
+  padding:27px 30px 45px;
+}
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+
+  margin-bottom:26px;
+}
+
+.page-heading h1{
+  margin:0;
+
+  font-size:27px;
+  letter-spacing:-.7px;
+}
+
+.page-heading p{
+  margin:7px 0 0;
+
+  color:var(--muted);
+  font-size:12px;
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn{
+  border:1px solid transparent;
+
+  border-radius:10px;
+
+  padding:10px 14px;
+
+  color:white;
+
+  font-size:11px;
+  font-weight:800;
+
+  transition:.18s ease;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.btn:hover{
+  transform:translateY(-1px);
+}
+
+.btn-primary{
+  background:
+    linear-gradient(
+      135deg,
+      #4f8cff,
+      #396ed6
+    );
+
+  box-shadow:
+    0 8px 24px rgba(79,140,255,.20);
+}
+
+.btn-secondary{
+  background:#172238;
+  border-color:#293850;
+}
+
+.btn-green{
+  background:#126c39;
+  border-color:#1d8d50;
+}
+
+.btn-red{
+  background:#671f28;
+  border-color:#8b303a;
+}
+
+.btn-yellow{
+  background:#6c4810;
+  border-color:#936419;
+}
+
+.btn-purple{
+  background:#4b2b91;
+}
+
+.btn-small{
+  padding:7px 9px;
+  font-size:10px;
+  border-radius:8px;
+}
+
+/* =========================================================
+   SECTION
+   ========================================================= */
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+  animation:fadeIn .2s ease;
+}
+
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(4px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+/* =========================================================
+   METRIC CARDS
+   ========================================================= */
+
+.metrics{
+  display:grid;
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap:14px;
+
+  margin-bottom:18px;
+}
+
+.metric-card{
+  position:relative;
+
+  overflow:hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(17,26,43,.95),
+      rgba(10,16,28,.95)
+    );
+
+  border:1px solid var(--line);
+
+  border-radius:17px;
+
+  padding:18px;
+
+  min-height:140px;
+
+  box-shadow:var(--shadow);
+}
+
+.metric-card::after{
+  content:"";
+
+  position:absolute;
+
+  width:100px;
+  height:100px;
+
+  right:-40px;
+  top:-40px;
+
+  border-radius:50%;
+
+  background:var(--metric-glow,#4f8cff);
+  opacity:.09;
+
+  filter:blur(2px);
+}
+
+.metric-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.metric-label{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+}
+
+.metric-icon{
+  width:34px;
+  height:34px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:10px;
+
+  background:#18243a;
+
+  font-size:16px;
+}
+
+.metric-value{
+  margin-top:13px;
+
+  font-size:27px;
+  font-weight:900;
+
+  letter-spacing:-.7px;
+}
+
+.metric-foot{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  margin-top:7px;
+
+  color:var(--muted2);
+  font-size:10px;
+}
+
+.metric-foot strong{
+  color:var(--green2);
+}
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);
+  gap:16px;
+}
+
+.panel{
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15,23,39,.97),
+      rgba(10,16,28,.97)
+    );
+
+  border:1px solid var(--line);
+
+  border-radius:16px;
+
+  padding:18px;
+
+  box-shadow:var(--shadow);
+
+  margin-bottom:16px;
+}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+
+  margin-bottom:15px;
+}
+
+.panel-title{
+  font-size:14px;
+  font-weight:850;
+}
+
+.panel-sub{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:4px;
+}
+
+.panel-head-right{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+/* =========================================================
+   QUICK ACTIONS
+   ========================================================= */
+
+.quick-grid{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap:9px;
+}
+
+.quick{
+  border:1px solid var(--line);
+  background:#0b1220;
+
+  padding:13px;
+
+  border-radius:11px;
+
+  text-align:left;
+
+  color:white;
+
+  transition:.2s;
+}
+
+.quick:hover{
+  border-color:#35517d;
+  background:#101a2c;
+  transform:translateY(-1px);
+}
+
+.quick-icon{
+  font-size:18px;
+  margin-bottom:9px;
+}
+
+.quick-title{
+  font-size:11px;
+  font-weight:800;
+}
+
+.quick-sub{
+  color:var(--muted);
+  font-size:9px;
+  margin-top:3px;
+}
+
+/* =========================================================
+   ACTIVITY
+   ========================================================= */
+
+.activity{
+  display:grid;
+  gap:0;
+}
+
+.activity-item{
+  display:flex;
+  gap:10px;
+
+  padding:11px 0;
+
+  border-bottom:1px solid var(--line);
+}
+
+.activity-item:last-child{
+  border-bottom:0;
+}
+
+.activity-dot{
+  width:28px;
+  height:28px;
+
+  flex-shrink:0;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:9px;
+
+  background:#17243a;
+
+  font-size:12px;
+}
+
+.activity-main{
+  min-width:0;
+}
+
+.activity-text{
+  font-size:10px;
+  line-height:1.5;
+}
+
+.activity-time{
+  color:var(--muted2);
+  font-size:9px;
+  margin-top:3px;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.table-wrap{
+  width:100%;
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  min-width:780px;
+  border-collapse:collapse;
+}
+
+th,
+td{
+  text-align:left;
+  padding:12px 10px;
+  border-bottom:1px solid var(--line);
+  font-size:10px;
+  white-space:nowrap;
+}
+
+th{
+  color:#66758c;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+
+td{
+  color:#dce4ef;
+}
+
+tr:last-child td{
+  border-bottom:0;
+}
+
+tbody tr:hover td{
+  background:rgba(255,255,255,.015);
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+
+  padding:5px 8px;
+
+  border-radius:20px;
+
+  font-size:9px;
+  font-weight:850;
+}
+
+.badge::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:currentColor;
+}
+
+.badge.pending{
+  color:#fbbf24;
+  background:#3e3014;
+}
+
+.badge.confirmed,
+.badge.active{
+  color:#86efac;
+  background:#103b27;
+}
+
+.badge.rejected,
+.badge.suspended{
+  color:#fca5a5;
+  background:#421e25;
+}
+
+.badge.low{
+  color:#fdba74;
+  background:#402818;
+}
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+
+  margin-bottom:14px;
+}
+
+.search{
+  flex:1;
+  min-width:190px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+
+  background:#090f1c;
+
+  border:1px solid #27354b;
+
+  color:white;
+
+  border-radius:9px;
+
+  padding:11px 12px;
+
+  outline:none;
+
+  transition:.18s;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#4f8cff;
+  box-shadow:0 0 0 3px rgba(79,140,255,.08);
+}
+
+input::placeholder,
+textarea::placeholder{
+  color:#506078;
+}
+
+textarea{
+  min-height:100px;
+  resize:vertical;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap:12px;
+}
+
+.field{
+  display:grid;
+  gap:6px;
+}
+
+.field label{
+  color:#8391a8;
+  font-size:10px;
+  font-weight:700;
+}
+
+.field.full{
+  grid-column:1/-1;
+}
+
+.form-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero{
+  position:relative;
+  overflow:hidden;
+
+  border:1px solid #243654;
+
+  border-radius:18px;
+
+  padding:22px;
+
+  margin-bottom:17px;
+
+  background:
+    radial-gradient(
+      circle at 90% 20%,
+      rgba(79,140,255,.20),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #101c31,
+      #0a101d
+    );
+}
+
+.hero h2{
+  margin:0;
+
+  font-size:19px;
+}
+
+.hero p{
+  max-width:650px;
+
+  color:var(--muted);
+
+  line-height:1.6;
+
+  font-size:11px;
+}
+
+.hero-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   STAT STRIP
+   ========================================================= */
+
+.stat-strip{
+  display:grid;
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+
+  gap:10px;
+}
+
+.stat-box{
+  border:1px solid var(--line);
+  background:#0b1220;
+  border-radius:11px;
+  padding:12px;
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:9px;
+}
+
+.stat-value{
+  font-size:16px;
+  font-weight:850;
+  margin-top:5px;
+}
+
+/* =========================================================
+   INVENTORY BAR
+   ========================================================= */
+
+.stock-bar{
+  height:6px;
+
+  background:#1a2538;
+
+  border-radius:20px;
+
+  overflow:hidden;
+
+  margin-top:7px;
+}
+
+.stock-fill{
+  height:100%;
+
+  border-radius:20px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4f8cff,
+      #6ea4ff
+    );
+}
+
+/* =========================================================
+   PREVIEW
+   ========================================================= */
+
+.preview{
+  border:1px dashed #3a4c67;
+
+  border-radius:14px;
+
+  background:#080f1c;
+
+  padding:18px;
+
+  margin-top:14px;
+}
+
+.preview-bar{
+  height:9px;
+
+  border-radius:20px;
+
+  background:var(--preview,#4f8cff);
+
+  margin-bottom:14px;
+}
+
+.preview-brand{
+  font-size:14px;
+  font-weight:850;
+}
+
+.preview-title{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:5px;
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.empty{
+  text-align:center;
+  color:#62718a;
+
+  padding:35px 15px!important;
+}
+
+.empty-icon{
+  font-size:28px;
+  opacity:.55;
+  margin-bottom:7px;
+}
+
+.empty-title{
+  color:#a4b0c1;
+  font-size:11px;
+  font-weight:800;
+}
+
+.empty-sub{
+  font-size:9px;
+  margin-top:4px;
+}
+
+/* =========================================================
+   NOTE
+   ========================================================= */
+
+.note{
+  padding:12px 14px;
+
+  border-radius:11px;
+
+  background:#302813;
+
+  border:1px solid #56451d;
+
+  color:#f6d78c;
+
+  font-size:10px;
+
+  line-height:1.6;
+
+  margin-bottom:15px;
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.72);
+
+  backdrop-filter:blur(7px);
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  z-index:500;
+}
+
+.modal-backdrop.open{
+  display:flex;
+}
+
+.modal{
+  width:min(560px,100%);
+
+  background:#0d1524;
+
+  border:1px solid #293951;
+
+  border-radius:17px;
+
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.55);
+
+  padding:20px;
+
+  animation:modalIn .18s ease;
+}
+
+@keyframes modalIn{
+  from{
+    opacity:0;
+    transform:scale(.97) translateY(5px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+
+  margin-bottom:15px;
+}
+
+.modal-title{
+  font-size:15px;
+  font-weight:850;
+}
+
+.modal-close{
+  width:30px;
+  height:30px;
+
+  border:1px solid var(--line);
+
+  background:#111b2c;
+
+  color:#9aa8bd;
+
+  border-radius:8px;
+}
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+.toast-container{
+  position:fixed;
+
+  right:20px;
+  bottom:20px;
+
+  z-index:1000;
+
+  display:grid;
+  gap:8px;
+
+  width:min(350px,calc(100vw - 30px));
+}
+
+.toast{
+  padding:12px 14px;
+
+  border-radius:11px;
+
+  background:#111b2c;
+
+  border:1px solid #2b3b54;
+
+  box-shadow:0 15px 40px rgba(0,0,0,.35);
+
+  font-size:10px;
+
+  animation:toastIn .2s ease;
+}
+
+@keyframes toastIn{
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+.toast.success{
+  border-color:#226b43;
+}
+
+.toast.error{
+  border-color:#75303a;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+.mobile-top{
+  display:none;
+}
+
+@media(max-width:1150px){
+
+  .metrics{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .dashboard-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:800px){
+
+  .sidebar{
+    width:225px;
+  }
+
+  .main{
+    width:calc(100% - 225px);
+    margin-left:225px;
+  }
+
+  .main-inner{
+    padding:20px;
+  }
+
+}
+
 @media(max-width:650px){
- .layout{display:block}.sidebar{width:100%;padding:12px;border-right:0;border-bottom:1px solid var(--line)}
- .brand{padding:8px 6px 14px}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap;padding:10px}
- .main{padding:18px 12px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}
- .card{padding:13px}.metric{font-size:23px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
- .top{align-items:flex-start;flex-direction:column}
+
+  .sidebar{
+    position:relative;
+
+    width:100%;
+
+    border-right:0;
+    border-bottom:1px solid var(--line);
+
+    padding:12px;
+  }
+
+  .app{
+    display:block;
+  }
+
+  .main{
+    width:100%;
+    margin-left:0;
+  }
+
+  .main-inner{
+    padding:15px 12px 35px;
+  }
+
+  .brand{
+    padding:5px 5px 12px;
+  }
+
+  .nav{
+    display:flex;
+    overflow:auto;
+  }
+
+  .nav-label,
+  .sidebar-bottom{
+    display:none;
+  }
+
+  .nav button{
+    min-width:max-content;
+    padding:9px 10px;
+  }
+
+  .nav button .nav-icon{
+    width:auto;
+  }
+
+  .topbar{
+    align-items:flex-start;
+    flex-direction:column;
+    margin-bottom:19px;
+  }
+
+  .top-actions{
+    width:100%;
+  }
+
+  .top-actions .btn{
+    flex:1;
+  }
+
+  .metrics{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap:9px;
+  }
+
+  .metric-card{
+    min-height:125px;
+    padding:14px;
+  }
+
+  .metric-value{
+    font-size:22px;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .field.full{
+    grid-column:auto;
+  }
+
+  .panel{
+    padding:14px;
+  }
+
+  .stat-strip{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    padding:17px;
+  }
+
+}
+
+@media(max-width:430px){
+
+  .metrics{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .metric-label{
+    font-size:9px;
+  }
+
+  .metric-value{
+    font-size:19px;
+  }
+
+  .metric-icon{
+    width:29px;
+    height:29px;
+    font-size:13px;
+  }
+
 }
 </style>
 </head>
 
 <body>
-<div class="layout">
-  <aside class="sidebar">
-    <div class="brand">Personal Course Studio<small>Business Administration</small></div>
-    <nav class="nav">
-      <button class="active" data-tab="overview">▦ Overview</button>
-      <button data-tab="mentors">♙ New Mentor</button>
-      <button data-tab="browser">▣ Browser UI</button>
-      <button data-tab="inventory">▤ Inventory</button>
-      <button data-tab="payments">৳ Payments</button>
-    </nav>
-  </aside>
 
-  <main class="main">
-    <header class="top">
+<div class="app">
+
+<!-- =======================================================
+     SIDEBAR
+     ======================================================= -->
+
+<aside class="sidebar">
+
+  <div class="brand">
+
+    <div class="brand-top">
+
+      <div class="brand-icon">
+        PCS
+      </div>
+
       <div>
-        <h1 id="pageTitle">Business Overview</h1>
-        <div class="sub">Manage mentors, studio branding, packages and payment records.</div>
-      </div>
-      <button class="btn secondary" onclick="location.href='admin.html'">← Main Admin</button>
-    </header>
+        <div class="brand-name">
+          Personal Course Studio
+        </div>
 
-    <section id="overview" class="section active">
-      <div class="cards">
-        <div class="card"><div class="muted">Total Mentors</div><div class="metric" id="metricMentors">0</div></div>
-        <div class="card"><div class="muted">Inventory Items</div><div class="metric" id="metricInventory">0</div></div>
-        <div class="card"><div class="muted">Pending Payments</div><div class="metric" id="metricPending">0</div></div>
-        <div class="card"><div class="muted">Confirmed Revenue</div><div class="metric" id="metricRevenue">৳0</div></div>
-      </div>
-      <div class="panel">
-        <h2>Sales workflow</h2>
-        <p class="muted">Create a mentor record → assign a package → review payment → confirm payment → activate access through your secured backend.</p>
-      </div>
-      <div class="note">Demo mode: this page stores records in this browser using LocalStorage. Records are not shared between devices or admins. Do not use this version as the production payment or account-security system.</div>
-    </section>
-
-    <section id="mentors" class="section">
-      <div class="panel">
-        <h2>Create Mentor Record</h2>
-        <form id="mentorForm" class="form-grid">
-          <div class="field"><label>Mentor Name *</label><input id="mentorName" required placeholder="Full name"></div>
-          <div class="field"><label>Email *</label><input id="mentorEmail" type="email" required placeholder="name@example.com"></div>
-          <div class="field"><label>Phone</label><input id="mentorPhone" placeholder="+880..."></div>
-          <div class="field"><label>Studio Name</label><input id="mentorStudio" placeholder="My Teaching Studio"></div>
-          <div class="field"><label>Package</label><select id="mentorPackage"></select></div>
-          <div class="field"><label>Account Status</label><select id="mentorStatus"><option>Pending</option><option>Active</option><option>Suspended</option></select></div>
-          <div class="field full"><button class="btn" type="submit">＋ Create Mentor Record</button></div>
-        </form>
-      </div>
-      <div class="panel">
-        <h2>Mentors</h2>
-        <div class="table-wrap"><table><thead><tr><th>Mentor ID</th><th>Name</th><th>Email</th><th>Package</th><th>Status</th><th>Actions</th></tr></thead><tbody id="mentorRows"></tbody></table></div>
-      </div>
-    </section>
-
-    <section id="browser" class="section">
-      <div class="panel">
-        <h2>Mentor Browser UI / Branding</h2>
-        <form id="browserForm" class="form-grid">
-          <div class="field"><label>Select Mentor</label><select id="browserMentor"></select></div>
-          <div class="field"><label>Browser Tab Title</label><input id="browserTitle" placeholder="Mentor Studio"></div>
-          <div class="field"><label>Studio Brand Name</label><input id="browserBrand" placeholder="My Studio"></div>
-          <div class="field"><label>Favicon / Logo URL</label><input id="browserLogo" type="url" placeholder="https://..."></div>
-          <div class="field"><label>Theme Color</label><input id="browserColor" type="color" value="#4f8cff"></div>
-          <div class="field"><label>Interface Theme</label><select id="browserTheme"><option value="dark">Dark</option><option value="light">Light</option></select></div>
-          <div class="field full"><button class="btn" type="submit">Save UI Settings</button></div>
-        </form>
-        <div class="preview" id="uiPreview">
-          <div class="preview-bar"></div>
-          <strong id="previewBrand">Your Studio</strong>
-          <p class="muted" id="previewTitle">Mentor Studio — Preview</p>
+        <div class="brand-sub">
+          Business Administration
         </div>
       </div>
-      <div class="note">This saves per-mentor UI configuration in this demo. To apply branding inside each mentor's actual Studio, the Mentor Studio must read these settings from the database using the authenticated mentor's ID.</div>
-    </section>
 
-    <section id="inventory" class="section">
-      <div class="panel">
-        <h2>Add Package / License Inventory</h2>
-        <form id="inventoryForm" class="form-grid">
-          <div class="field"><label>Package Name *</label><input id="itemName" required placeholder="Pro Studio"></div>
-          <div class="field"><label>Price (BDT) *</label><input id="itemPrice" type="number" min="0" required placeholder="5000"></div>
-          <div class="field"><label>License Quantity *</label><input id="itemQty" type="number" min="0" required placeholder="10"></div>
-          <div class="field"><label>Validity</label><select id="itemValidity"><option>1 Month</option><option>3 Months</option><option>6 Months</option><option>1 Year</option><option>Lifetime</option></select></div>
-          <div class="field full"><button class="btn" type="submit">＋ Add Inventory Item</button></div>
-        </form>
-      </div>
-      <div class="panel">
-        <h2>Inventory</h2>
-        <div class="table-wrap"><table><thead><tr><th>Package</th><th>Price</th><th>Quantity</th><th>Sold</th><th>Validity</th><th>Action</th></tr></thead><tbody id="inventoryRows"></tbody></table></div>
-      </div>
-    </section>
+    </div>
 
-    <section id="payments" class="section">
-      <div class="panel">
-        <h2>Record Payment Submission</h2>
-        <form id="paymentForm" class="form-grid">
-          <div class="field"><label>Mentor / Customer *</label><select id="paymentMentor" required></select></div>
-          <div class="field"><label>Package *</label><select id="paymentItem" required></select></div>
-          <div class="field"><label>Amount (BDT) *</label><input id="paymentAmount" type="number" min="1" required></div>
-          <div class="field"><label>Payment Method</label><select id="paymentMethod"><option>bKash</option><option>Nagad</option><option>Rocket</option><option>Bank</option><option>Cash</option><option>Other</option></select></div>
-          <div class="field"><label>Transaction ID</label><input id="paymentTxn" placeholder="Transaction reference"></div>
-          <div class="field"><label>Payment Screenshot URL</label><input id="paymentProof" type="url" placeholder="https://..."></div>
-          <div class="field full"><button class="btn" type="submit">＋ Add Pending Payment</button></div>
-        </form>
+  </div>
+
+  <div class="nav-label">
+    Management
+  </div>
+
+  <nav class="nav">
+
+    <button class="active" data-tab="overview">
+      <span class="nav-icon">▦</span>
+      Overview
+    </button>
+
+    <button data-tab="mentors">
+      <span class="nav-icon">♙</span>
+      Mentors
+    </button>
+
+    <button data-tab="browser">
+      <span class="nav-icon">▣</span>
+      Browser UI
+    </button>
+
+    <button data-tab="inventory">
+      <span class="nav-icon">▤</span>
+      Inventory
+    </button>
+
+    <button data-tab="payments">
+      <span class="nav-icon">৳</span>
+      Payments
+    </button>
+
+  </nav>
+
+  <div class="nav-label">
+    System
+  </div>
+
+  <nav class="nav">
+
+    <button onclick="location.href='admin.html'">
+      <span class="nav-icon">⚙</span>
+      Main Admin
+    </button>
+
+  </nav>
+
+  <div class="sidebar-bottom">
+
+    <div class="admin-card">
+
+      <div class="admin-row">
+
+        <div class="avatar">
+          A
+        </div>
+
+        <div>
+          <div class="admin-name">
+            Super Admin
+          </div>
+
+          <div class="admin-role">
+            Business Manager
+          </div>
+        </div>
+
       </div>
-      <div class="panel">
-        <h2>Payment Records</h2>
-        <div class="table-wrap"><table><thead><tr><th>Payment ID</th><th>Mentor</th><th>Package</th><th>Amount</th><th>Transaction</th><th>Status</th><th>Actions</th></tr></thead><tbody id="paymentRows"></tbody></table></div>
-      </div>
-    </section>
-  </main>
+
+    </div>
+
+  </div>
+
+</aside>
+
+
+<!-- =======================================================
+     MAIN
+     ======================================================= -->
+
+<main class="main">
+
+<div class="main-inner">
+
+<header class="topbar">
+
+  <div class="page-heading">
+
+    <h1 id="pageTitle">
+      Business Overview
+    </h1>
+
+    <p id="pageSubtitle">
+      Manage mentors, packages, branding, inventory and payments.
+    </p>
+
+  </div>
+
+  <div class="top-actions">
+
+    <button
+      class="btn btn-secondary"
+      onclick="location.href='admin.html'"
+    >
+      ← Main Admin
+    </button>
+
+    <button
+      class="btn btn-primary"
+      onclick="quickMentor()"
+    >
+      ＋ New Mentor
+    </button>
+
+  </div>
+
+</header>
+
+
+<!-- =======================================================
+     OVERVIEW
+     ======================================================= -->
+
+<section id="overview" class="section active">
+
+<div class="hero">
+
+  <h2>
+    Business Control Center
+  </h2>
+
+  <p>
+    Manage your Personal Course Studio sales workflow from one place.
+    Create mentor accounts, assign packages, control studio branding,
+    track inventory and review payment submissions.
+  </p>
+
+  <div class="hero-actions">
+
+    <button
+      class="btn btn-primary"
+      onclick="switchTab('mentors')"
+    >
+      ＋ Create Mentor
+    </button>
+
+    <button
+      class="btn btn-secondary"
+      onclick="switchTab('payments')"
+    >
+      Review Payments
+    </button>
+
+  </div>
+
 </div>
 
+
+<div class="metrics">
+
+  <div class="metric-card">
+
+    <div class="metric-top">
+
+      <div class="metric-label">
+        Total Mentors
+      </div>
+
+      <div class="metric-icon">
+        ♙
+      </div>
+
+    </div>
+
+    <div
+      class="metric-value"
+      id="metricMentors"
+    >
+      0
+    </div>
+
+    <div class="metric-foot">
+      Active:
+      <strong id="activeMentors">
+        0
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div class="metric-card">
+
+    <div class="metric-top">
+
+      <div class="metric-label">
+        Inventory Packages
+      </div>
+
+      <div class="metric-icon">
+        ▤
+      </div>
+
+    </div>
+
+    <div
+      class="metric-value"
+      id="metricInventory"
+    >
+      0
+    </div>
+
+    <div class="metric-foot">
+      Available:
+      <strong id="availableLicenses">
+        0
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div class="metric-card">
+
+    <div class="metric-top">
+
+      <div class="metric-label">
+        Pending Payments
+      </div>
+
+      <div class="metric-icon">
+        ⏳
+      </div>
+
+    </div>
+
+    <div
+      class="metric-value"
+      id="metricPending"
+    >
+      0
+    </div>
+
+    <div class="metric-foot">
+      Awaiting review
+    </div>
+
+  </div>
+
+
+  <div class="metric-card">
+
+    <div class="metric-top">
+
+      <div class="metric-label">
+        Confirmed Revenue
+      </div>
+
+      <div class="metric-icon">
+        ৳
+      </div>
+
+    </div>
+
+    <div
+      class="metric-value"
+      id="metricRevenue"
+    >
+      ৳0
+    </div>
+
+    <div class="metric-foot">
+      Confirmed sales
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="dashboard-grid">
+
+<div>
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Sales Workflow
+      </div>
+
+      <div class="panel-sub">
+        Complete business operation flow
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stat-strip">
+
+    <div class="stat-box">
+      <div class="stat-label">
+        Pending
+      </div>
+
+      <div
+        class="stat-value"
+        id="workflowPending"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        Confirmed
+      </div>
+
+      <div
+        class="stat-value"
+        id="workflowConfirmed"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-label">
+        Rejected
+      </div>
+
+      <div
+        class="stat-value"
+        id="workflowRejected"
+      >
+        0
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Recent Payments
+      </div>
+
+      <div class="panel-sub">
+        Latest payment activity
+      </div>
+    </div>
+
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="switchTab('payments')"
+    >
+      View All
+    </button>
+
+  </div>
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Mentor</th>
+          <th>Package</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="recentPaymentRows"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+</div>
+
+
+<div>
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Quick Actions
+      </div>
+
+      <div class="panel-sub">
+        Common administration tasks
+      </div>
+    </div>
+
+  </div>
+
+  <div class="quick-grid">
+
+    <button
+      class="quick"
+      onclick="quickMentor()"
+    >
+      <div class="quick-icon">♙</div>
+      <div class="quick-title">
+        New Mentor
+      </div>
+      <div class="quick-sub">
+        Create customer account record
+      </div>
+    </button>
+
+    <button
+      class="quick"
+      onclick="switchTab('inventory')"
+    >
+      <div class="quick-icon">▤</div>
+      <div class="quick-title">
+        Add Package
+      </div>
+      <div class="quick-sub">
+        Add license inventory
+      </div>
+    </button>
+
+    <button
+      class="quick"
+      onclick="switchTab('payments')"
+    >
+      <div class="quick-icon">৳</div>
+      <div class="quick-title">
+        Payments
+      </div>
+      <div class="quick-sub">
+        Review submissions
+      </div>
+    </button>
+
+    <button
+      class="quick"
+      onclick="switchTab('browser')"
+    >
+      <div class="quick-icon">▣</div>
+      <div class="quick-title">
+        Browser UI
+      </div>
+      <div class="quick-sub">
+        Manage mentor branding
+      </div>
+    </button>
+
+  </div>
+
+</div>
+
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Recent Activity
+      </div>
+
+      <div class="panel-sub">
+        System activity log
+      </div>
+    </div>
+
+  </div>
+
+  <div
+    class="activity"
+    id="activityList"
+  ></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="note">
+
+  Demo mode: business records are stored in this browser's
+  LocalStorage. For production use, connect mentor authentication,
+  payment verification, database access control and audit logging
+  to your secured backend.
+
+</div>
+
+</section>
+
+
+<!-- =======================================================
+     MENTORS
+     ======================================================= -->
+
+<section id="mentors" class="section">
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Create Mentor
+      </div>
+
+      <div class="panel-sub">
+        Add a new mentor/customer to your business system.
+      </div>
+    </div>
+
+  </div>
+
+  <form
+    id="mentorForm"
+    class="form-grid"
+  >
+
+    <div class="field">
+
+      <label>
+        Mentor Name *
+      </label>
+
+      <input
+        id="mentorName"
+        required
+        placeholder="Full name"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Email *
+      </label>
+
+      <input
+        id="mentorEmail"
+        type="email"
+        required
+        placeholder="name@example.com"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Phone
+      </label>
+
+      <input
+        id="mentorPhone"
+        placeholder="+880..."
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Studio Name
+      </label>
+
+      <input
+        id="mentorStudio"
+        placeholder="My Teaching Studio"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Package
+      </label>
+
+      <select id="mentorPackage"></select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Account Status
+      </label>
+
+      <select id="mentorStatus">
+
+        <option>
+          Pending
+        </option>
+
+        <option>
+          Active
+        </option>
+
+        <option>
+          Suspended
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field full">
+
+      <div class="form-actions">
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+        >
+          ＋ Create Mentor
+        </button>
+
+        <button
+          class="btn btn-secondary"
+          type="reset"
+        >
+          Reset
+        </button>
+
+      </div>
+
+    </div>
+
+  </form>
+
+</div>
+
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Mentor Management
+      </div>
+
+      <div class="panel-sub">
+        Search and manage mentor records.
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="toolbar">
+
+    <input
+      id="mentorSearch"
+      class="search"
+      placeholder="Search mentor, email or studio..."
+    >
+
+    <select id="mentorFilter">
+
+      <option value="all">
+        All Status
+      </option>
+
+      <option value="Active">
+        Active
+      </option>
+
+      <option value="Pending">
+        Pending
+      </option>
+
+      <option value="Suspended">
+        Suspended
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Mentor ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Studio</th>
+          <th>Package</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="mentorRows"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- =======================================================
+     BROWSER UI
+     ======================================================= -->
+
+<section id="browser" class="section">
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Mentor Browser UI
+      </div>
+
+      <div class="panel-sub">
+        Customize the mentor's Studio browser experience.
+      </div>
+    </div>
+
+  </div>
+
+
+  <form
+    id="browserForm"
+    class="form-grid"
+  >
+
+    <div class="field">
+
+      <label>
+        Select Mentor
+      </label>
+
+      <select id="browserMentor"></select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Browser Tab Title
+      </label>
+
+      <input
+        id="browserTitle"
+        placeholder="Mentor Studio"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Studio Brand Name
+      </label>
+
+      <input
+        id="browserBrand"
+        placeholder="My Teaching Studio"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Favicon / Logo URL
+      </label>
+
+      <input
+        id="browserLogo"
+        type="url"
+        placeholder="https://..."
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Theme Color
+      </label>
+
+      <input
+        id="browserColor"
+        type="color"
+        value="#4f8cff"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Interface Theme
+      </label>
+
+      <select id="browserTheme">
+
+        <option value="dark">
+          Dark
+        </option>
+
+        <option value="light">
+          Light
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field full">
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+      >
+        Save UI Settings
+      </button>
+
+    </div>
+
+  </form>
+
+
+  <div
+    class="preview"
+    id="uiPreview"
+  >
+
+    <div class="preview-bar"></div>
+
+    <div
+      class="preview-brand"
+      id="previewBrand"
+    >
+      Your Studio
+    </div>
+
+    <div
+      class="preview-title"
+      id="previewTitle"
+    >
+      Mentor Studio — Preview
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="note">
+
+  Branding configuration is currently stored per mentor in LocalStorage.
+  In production, the Mentor Studio should load this configuration from
+  your authenticated backend using the mentor's account ID.
+
+</div>
+
+</section>
+
+
+<!-- =======================================================
+     INVENTORY
+     ======================================================= -->
+
+<section id="inventory" class="section">
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Package & License Inventory
+      </div>
+
+      <div class="panel-sub">
+        Manage packages that can be sold to mentors.
+      </div>
+    </div>
+
+  </div>
+
+
+  <form
+    id="inventoryForm"
+    class="form-grid"
+  >
+
+    <div class="field">
+
+      <label>
+        Package Name *
+      </label>
+
+      <input
+        id="itemName"
+        required
+        placeholder="Pro Studio"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Price (BDT) *
+      </label>
+
+      <input
+        id="itemPrice"
+        type="number"
+        min="0"
+        required
+        placeholder="5000"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        License Quantity *
+      </label>
+
+      <input
+        id="itemQty"
+        type="number"
+        min="0"
+        required
+        placeholder="10"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Validity
+      </label>
+
+      <select id="itemValidity">
+
+        <option>1 Month</option>
+        <option>3 Months</option>
+        <option>6 Months</option>
+        <option>1 Year</option>
+        <option>Lifetime</option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field full">
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+      >
+        ＋ Add Inventory
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Inventory
+      </div>
+
+      <div class="panel-sub">
+        Package stock and sales status.
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Package</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Sold</th>
+          <th>Available</th>
+          <th>Validity</th>
+          <th>Action</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="inventoryRows"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+</section>
+
+
+<!-- =======================================================
+     PAYMENTS
+     ======================================================= -->
+
+<section id="payments" class="section">
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Record Payment Submission
+      </div>
+
+      <div class="panel-sub">
+        Add a payment received from a mentor/customer.
+      </div>
+    </div>
+
+  </div>
+
+
+  <form
+    id="paymentForm"
+    class="form-grid"
+  >
+
+    <div class="field">
+
+      <label>
+        Mentor / Customer *
+      </label>
+
+      <select
+        id="paymentMentor"
+        required
+      ></select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Package *
+      </label>
+
+      <select
+        id="paymentItem"
+        required
+      ></select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Amount (BDT) *
+      </label>
+
+      <input
+        id="paymentAmount"
+        type="number"
+        min="1"
+        required
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Payment Method
+      </label>
+
+      <select id="paymentMethod">
+
+        <option>bKash</option>
+        <option>Nagad</option>
+        <option>Rocket</option>
+        <option>Bank</option>
+        <option>Cash</option>
+        <option>Other</option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Transaction ID
+      </label>
+
+      <input
+        id="paymentTxn"
+        placeholder="Transaction reference"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Payment Screenshot URL
+      </label>
+
+      <input
+        id="paymentProof"
+        type="url"
+        placeholder="https://..."
+      >
+
+    </div>
+
+
+    <div class="field full">
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+      >
+        ＋ Add Pending Payment
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+
+<div class="panel">
+
+  <div class="panel-head">
+
+    <div>
+      <div class="panel-title">
+        Payment Management
+      </div>
+
+      <div class="panel-sub">
+        Confirm or reject submitted payments.
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="toolbar">
+
+    <input
+      id="paymentSearch"
+      class="search"
+      placeholder="Search payment, mentor or transaction..."
+    >
+
+    <select id="paymentFilter">
+
+      <option value="all">
+        All Payments
+      </option>
+
+      <option value="Pending">
+        Pending
+      </option>
+
+      <option value="Confirmed">
+        Confirmed
+      </option>
+
+      <option value="Rejected">
+        Rejected
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+
+        <tr>
+          <th>Payment ID</th>
+          <th>Mentor</th>
+          <th>Package</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Transaction</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+
+      </thead>
+
+      <tbody id="paymentRows"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+</section>
+
+
+</div>
+</main>
+
+</div>
+
+
+<!-- =======================================================
+     CONFIRMATION MODAL
+     ======================================================= -->
+
+<div
+  class="modal-backdrop"
+  id="modalBackdrop"
+>
+
+<div class="modal">
+
+  <div class="modal-head">
+
+    <div
+      class="modal-title"
+      id="modalTitle"
+    >
+      Confirmation
+    </div>
+
+    <button
+      class="modal-close"
+      onclick="closeModal()"
+    >
+      ×
+    </button>
+
+  </div>
+
+  <div
+    id="modalBody"
+    class="muted"
+    style="line-height:1.7"
+  >
+    Are you sure?
+  </div>
+
+  <div
+    style="
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:18px;
+    "
+  >
+
+    <button
+      class="btn btn-secondary"
+      onclick="closeModal()"
+    >
+      Cancel
+    </button>
+
+    <button
+      class="btn btn-primary"
+      id="modalConfirm"
+    >
+      Confirm
+    </button>
+
+  </div>
+
+</div>
+
+</div>
+
+
+<!-- =======================================================
+     TOAST
+     ======================================================= -->
+
+<div
+  class="toast-container"
+  id="toastContainer"
+></div>
+
+
 <script>
+
+/* =========================================================
+   PERSONAL COURSE STUDIO
+   BUSINESS MANAGER
+   ULTRA PREMIUM JAVASCRIPT
+   ========================================================= */
+
 const STORE_KEY = "pcsBusinessManagerV1";
 
-let db = JSON.parse(localStorage.getItem(STORE_KEY) || '{"mentors":[],"inventory":[],"payments":[],"ui":{}}');
+let db;
+
+try{
+
+  db = JSON.parse(
+    localStorage.getItem(STORE_KEY)
+    ||
+    '{"mentors":[],"inventory":[],"payments":[],"ui":{},"activity":[]}'
+  );
+
+}catch(error){
+
+  db = {
+    mentors:[],
+    inventory:[],
+    payments:[],
+    ui:{},
+    activity:[]
+  };
+
+}
+
+db.mentors = Array.isArray(db.mentors) ? db.mentors : [];
+db.inventory = Array.isArray(db.inventory) ? db.inventory : [];
+db.payments = Array.isArray(db.payments) ? db.payments : [];
+db.ui = db.ui || {};
+db.activity = Array.isArray(db.activity) ? db.activity : [];
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
 function saveDB(){
-  localStorage.setItem(STORE_KEY, JSON.stringify(db));
+
+  localStorage.setItem(
+    STORE_KEY,
+    JSON.stringify(db)
+  );
+
   renderAll();
+
 }
-function id(prefix){
-  return prefix + "-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
+
+
+function makeId(prefix){
+
+  return (
+    prefix +
+    "-" +
+    Date.now().toString(36).toUpperCase() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2,6)
+      .toUpperCase()
+  );
+
 }
+
+
 function safe(value){
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[c]);
+
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      c =>
+        ({
+          "&":"&amp;",
+          "<":"&lt;",
+          ">":"&gt;",
+          '"':"&quot;",
+          "'":"&#39;"
+        })[c]
+    );
+
 }
+
+
 function money(value){
-  return "৳" + Number(value || 0).toLocaleString("en-BD");
+
+  return "৳" +
+    Number(value || 0)
+      .toLocaleString("en-BD");
+
 }
+
+
 function statusBadge(status){
-  return `<span class="badge ${String(status).toLowerCase()}">${safe(status)}</span>`;
+
+  const cls =
+    String(status)
+      .toLowerCase()
+      .replace(/\s+/g,"-");
+
+  return `
+    <span class="badge ${cls}">
+      ${safe(status)}
+    </span>
+  `;
+
 }
-function options(items, placeholder){
-  return `<option value="">${placeholder}</option>` + items.map(x =>
-    `<option value="${safe(x.id)}">${safe(x.name)}</option>`).join("");
+
+
+function optionList(items,placeholder){
+
+  return `
+    <option value="">
+      ${placeholder}
+    </option>
+  ` +
+
+  items.map(item => `
+    <option value="${safe(item.id)}">
+      ${safe(item.name)}
+    </option>
+  `).join("");
+
 }
-function renderAll(){
-  document.getElementById("metricMentors").textContent = db.mentors.length;
-  document.getElementById("metricInventory").textContent = db.inventory.length;
-  document.getElementById("metricPending").textContent = db.payments.filter(p=>p.status==="Pending").length;
-  document.getElementById("metricRevenue").textContent = money(db.payments.filter(p=>p.status==="Confirmed").reduce((s,p)=>s+Number(p.amount),0));
 
-  document.getElementById("mentorRows").innerHTML = db.mentors.map(m=>`
-    <tr><td>${safe(m.id)}</td><td>${safe(m.name)}</td><td>${safe(m.email)}</td>
-    <td>${safe(m.packageName || "Unassigned")}</td><td>${statusBadge(m.status)}</td>
-    <td><div class="actions"><button class="btn secondary" onclick="toggleMentor('${m.id}')">Toggle Status</button>
-    <button class="btn red" onclick="removeMentor('${m.id}')">Delete</button></div></td></tr>`).join("") || `<tr><td colspan="6" class="empty">No mentor records yet.</td></tr>`;
 
-  document.getElementById("inventoryRows").innerHTML = db.inventory.map(x=>`
-    <tr><td>${safe(x.name)}</td><td>${money(x.price)}</td><td>${x.quantity}</td><td>${x.sold}</td><td>${safe(x.validity)}</td>
-    <td><button class="btn red" onclick="removeItem('${x.id}')">Delete</button></td></tr>`).join("") || `<tr><td colspan="6" class="empty">No inventory items yet.</td></tr>`;
+function addActivity(
+  text,
+  icon="•"
+){
 
-  document.getElementById("paymentRows").innerHTML = db.payments.map(p=>`
-    <tr><td>${safe(p.id)}</td><td>${safe(p.mentorName)}</td><td>${safe(p.itemName)}</td>
-    <td>${money(p.amount)}</td><td>${safe(p.txn || "—")}</td><td>${statusBadge(p.status)}</td>
-    <td><div class="actions">
-      ${p.status==="Pending" ? `<button class="btn green" onclick="setPayment('${p.id}','Confirmed')">Confirm</button><button class="btn red" onclick="setPayment('${p.id}','Rejected')">Reject</button>` : ""}
-      ${p.proof ? `<button class="btn secondary" onclick="window.open('${safe(p.proof)}','_blank','noopener')">Proof</button>` : ""}
-    </div></td></tr>`).join("") || `<tr><td colspan="7" class="empty">No payment records yet.</td></tr>`;
+  db.activity.unshift({
 
-  const packageOptions = options(db.inventory,"Select package");
-  document.getElementById("mentorPackage").innerHTML = packageOptions;
-  document.getElementById("paymentItem").innerHTML = packageOptions;
-  const mentorOptions = options(db.mentors,"Select mentor");
-  document.getElementById("browserMentor").innerHTML = mentorOptions;
-  document.getElementById("paymentMentor").innerHTML = mentorOptions;
-}
-document.querySelectorAll(".nav button").forEach(button=>{
-  button.addEventListener("click",()=>{
-    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-    button.classList.add("active");
-    document.getElementById(button.dataset.tab).classList.add("active");
-    document.getElementById("pageTitle").textContent = button.textContent.replace(/^[^\w]+/,"").trim();
+    id:makeId("ACT"),
+
+    text,
+
+    icon,
+
+    time:new Date().toISOString()
+
   });
-});
 
-document.getElementById("mentorForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const item = db.inventory.find(x=>x.id===document.getElementById("mentorPackage").value);
-  db.mentors.push({
-    id:id("MENTOR"),name:document.getElementById("mentorName").value.trim(),
-    email:document.getElementById("mentorEmail").value.trim(),
-    phone:document.getElementById("mentorPhone").value.trim(),
-    studio:document.getElementById("mentorStudio").value.trim(),
-    packageId:item?.id || "",packageName:item?.name || "",
-    status:document.getElementById("mentorStatus").value,createdAt:new Date().toISOString()
+  db.activity =
+    db.activity.slice(0,12);
+
+}
+
+
+function formatTime(value){
+
+  const date =
+    new Date(value);
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+
+    return "Recently";
+
+  }
+
+  return date.toLocaleString(
+    "en-BD",
+    {
+      day:"2-digit",
+      month:"short",
+      hour:"2-digit",
+      minute:"2-digit"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+function toast(
+  message,
+  type="success"
+){
+
+  const container =
+    document.getElementById(
+      "toastContainer"
+    );
+
+  const el =
+    document.createElement("div");
+
+  el.className =
+    "toast " + type;
+
+  el.textContent =
+    message;
+
+  container.appendChild(el);
+
+  setTimeout(
+    () => el.remove(),
+    3200
+  );
+
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+let modalAction = null;
+
+function openModal(
+  title,
+  body,
+  action
+){
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent = title;
+
+  document.getElementById(
+    "modalBody"
+  ).innerHTML = body;
+
+  modalAction = action;
+
+  document.getElementById(
+    "modalBackdrop"
+  ).classList.add("open");
+
+}
+
+
+function closeModal(){
+
+  document.getElementById(
+    "modalBackdrop"
+  ).classList.remove("open");
+
+  modalAction = null;
+
+}
+
+
+document.getElementById(
+  "modalConfirm"
+).addEventListener(
+  "click",
+  () => {
+
+    if(
+      typeof modalAction ===
+      "function"
+    ){
+
+      modalAction();
+
+    }
+
+    closeModal();
+
+  }
+);
+
+
+/* =========================================================
+   TAB SYSTEM
+   ========================================================= */
+
+const tabTitles = {
+
+  overview:{
+    title:"Business Overview",
+    subtitle:
+      "Manage mentors, packages, branding, inventory and payments."
+  },
+
+  mentors:{
+    title:"Mentor Management",
+    subtitle:
+      "Create and manage mentor/customer accounts."
+  },
+
+  browser:{
+    title:"Browser UI Manager",
+    subtitle:
+      "Manage mentor Studio branding and interface settings."
+  },
+
+  inventory:{
+    title:"Inventory Management",
+    subtitle:
+      "Manage packages, licenses and available stock."
+  },
+
+  payments:{
+    title:"Payment Management",
+    subtitle:
+      "Review, confirm and manage payment submissions."
+  }
+
+};
+
+
+function switchTab(tab){
+
+  document
+    .querySelectorAll(".nav button[data-tab]")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.tab === tab
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(".section")
+    .forEach(section => {
+
+      section.classList.toggle(
+        "active",
+        section.id === tab
+      );
+
+    });
+
+
+  document.getElementById(
+    "pageTitle"
+  ).textContent =
+    tabTitles[tab]?.title ||
+    "Business Manager";
+
+
+  document.getElementById(
+    "pageSubtitle"
+  ).textContent =
+    tabTitles[tab]?.subtitle ||
+    "";
+
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
   });
-  e.target.reset();saveDB();alert("Mentor record created. Account login is not provisioned by this demo.");
-});
 
-document.getElementById("inventoryForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  db.inventory.push({
-    id:id("PKG"),name:document.getElementById("itemName").value.trim(),
-    price:Number(document.getElementById("itemPrice").value),
-    quantity:Number(document.getElementById("itemQty").value),
-    sold:0,validity:document.getElementById("itemValidity").value
+}
+
+
+document
+  .querySelectorAll(".nav button[data-tab]")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        switchTab(
+          button.dataset.tab
+        );
+
+      }
+    );
+
   });
-  e.target.reset();saveDB();
+
+
+/* =========================================================
+   QUICK MENTOR
+   ========================================================= */
+
+function quickMentor(){
+
+  switchTab("mentors");
+
+  setTimeout(
+    () =>
+      document
+        .getElementById("mentorName")
+        .focus(),
+    100
+  );
+
+}
+
+
+/* =========================================================
+   OVERVIEW
+   ========================================================= */
+
+function renderOverview(){
+
+  const mentors =
+    db.mentors;
+
+  const inventory =
+    db.inventory;
+
+  const payments =
+    db.payments;
+
+
+  document.getElementById(
+    "metricMentors"
+  ).textContent =
+    mentors.length;
+
+
+  document.getElementById(
+    "activeMentors"
+  ).textContent =
+    mentors.filter(
+      m => m.status === "Active"
+    ).length;
+
+
+  document.getElementById(
+    "metricInventory"
+  ).textContent =
+    inventory.length;
+
+
+  document.getElementById(
+    "availableLicenses"
+  ).textContent =
+    inventory.reduce(
+      (
+        total,
+        item
+      ) =>
+        total +
+        Math.max(
+          0,
+          Number(item.quantity || 0) -
+          Number(item.sold || 0)
+        ),
+      0
+    );
+
+
+  document.getElementById(
+    "metricPending"
+  ).textContent =
+    payments.filter(
+      p => p.status === "Pending"
+    ).length;
+
+
+  document.getElementById(
+    "metricRevenue"
+  ).textContent =
+    money(
+      payments
+        .filter(
+          p => p.status === "Confirmed"
+        )
+        .reduce(
+          (sum,p) =>
+            sum +
+            Number(p.amount || 0),
+          0
+        )
+    );
+
+
+  document.getElementById(
+    "workflowPending"
+  ).textContent =
+    payments.filter(
+      p => p.status === "Pending"
+    ).length;
+
+
+  document.getElementById(
+    "workflowConfirmed"
+  ).textContent =
+    payments.filter(
+      p => p.status === "Confirmed"
+    ).length;
+
+
+  document.getElementById(
+    "workflowRejected"
+  ).textContent =
+    payments.filter(
+      p => p.status === "Rejected"
+    ).length;
+
+
+  renderRecentPayments();
+  renderActivity();
+
+}
+
+
+function renderRecentPayments(){
+
+  const rows =
+    [...db.payments]
+      .sort(
+        (a,b) =>
+          new Date(b.createdAt) -
+          new Date(a.createdAt)
+      )
+      .slice(0,6);
+
+
+  document.getElementById(
+    "recentPaymentRows"
+  ).innerHTML =
+
+    rows.length ?
+
+    rows.map(p => `
+
+      <tr>
+
+        <td>
+          ${safe(p.mentorName)}
+        </td>
+
+        <td>
+          ${safe(p.itemName)}
+        </td>
+
+        <td>
+          ${money(p.amount)}
+        </td>
+
+        <td>
+          ${statusBadge(p.status)}
+        </td>
+
+      </tr>
+
+    `).join("") :
+
+    `
+      <tr>
+        <td
+          colspan="4"
+          class="empty"
+        >
+          <div class="empty-icon">
+            ৳
+          </div>
+
+          <div class="empty-title">
+            No payments yet
+          </div>
+
+          <div class="empty-sub">
+            Payment records will appear here.
+          </div>
+        </td>
+      </tr>
+    `;
+
+}
+
+
+function renderActivity(){
+
+  const list =
+    document.getElementById(
+      "activityList"
+    );
+
+
+  if(!db.activity.length){
+
+    list.innerHTML = `
+
+      <div class="empty">
+
+        <div class="empty-icon">
+          ◷
+        </div>
+
+        <div class="empty-title">
+          No activity yet
+        </div>
+
+        <div class="empty-sub">
+          Business actions will appear here.
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    db.activity
+      .slice(0,7)
+      .map(item => `
+
+        <div class="activity-item">
+
+          <div class="activity-dot">
+            ${safe(item.icon)}
+          </div>
+
+          <div class="activity-main">
+
+            <div class="activity-text">
+              ${safe(item.text)}
+            </div>
+
+            <div class="activity-time">
+              ${formatTime(item.time)}
+            </div>
+
+          </div>
+
+        </div>
+
+      `)
+      .join("");
+
+}
+
+
+/* =========================================================
+   MENTORS
+   ========================================================= */
+
+function renderMentors(){
+
+  const search =
+    (
+      document.getElementById(
+        "mentorSearch"
+      )?.value || ""
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const filter =
+    document.getElementById(
+      "mentorFilter"
+    )?.value || "all";
+
+
+  const mentors =
+    db.mentors.filter(
+      mentor => {
+
+        const text =
+          [
+            mentor.id,
+            mentor.name,
+            mentor.email,
+            mentor.studio,
+            mentor.packageName
+          ]
+          .join(" ")
+          .toLowerCase();
+
+
+        const matchesSearch =
+          !search ||
+          text.includes(search);
+
+
+        const matchesFilter =
+          filter === "all" ||
+          mentor.status === filter;
+
+
+        return (
+          matchesSearch &&
+          matchesFilter
+        );
+
+      }
+    );
+
+
+  const tbody =
+    document.getElementById(
+      "mentorRows"
+    );
+
+
+  if(!mentors.length){
+
+    tbody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="7"
+          class="empty"
+        >
+
+          <div class="empty-icon">
+            ♙
+          </div>
+
+          <div class="empty-title">
+            No mentors found
+          </div>
+
+          <div class="empty-sub">
+            Create a mentor record or change your search.
+          </div>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    mentors
+      .map(m => `
+
+        <tr>
+
+          <td>
+            <strong>
+              ${safe(m.id)}
+            </strong>
+          </td>
+
+          <td>
+            ${safe(m.name)}
+          </td>
+
+          <td>
+            ${safe(m.email)}
+          </td>
+
+          <td>
+            ${safe(m.studio || "—")}
+          </td>
+
+          <td>
+            ${safe(
+              m.packageName ||
+              "Unassigned"
+            )}
+          </td>
+
+          <td>
+            ${statusBadge(m.status)}
+          </td>
+
+          <td>
+
+            <div
+              style="
+                display:flex;
+                gap:5px;
+              "
+            >
+
+              <button
+                class="btn btn-secondary btn-small"
+                onclick="toggleMentor('${m.id}')"
+              >
+                Toggle
+              </button>
+
+              <button
+                class="btn btn-red btn-small"
+                onclick="removeMentor('${m.id}')"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `)
+      .join("");
+
+}
+
+
+/* =========================================================
+   CREATE MENTOR
+   ========================================================= */
+
+document
+  .getElementById("mentorForm")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const item =
+        db.inventory.find(
+          x =>
+            x.id ===
+            document
+              .getElementById(
+                "mentorPackage"
+              )
+              .value
+        );
+
+
+      const name =
+        document
+          .getElementById(
+            "mentorName"
+          )
+          .value
+          .trim();
+
+
+      const email =
+        document
+          .getElementById(
+            "mentorEmail"
+          )
+          .value
+          .trim();
+
+
+      if(!name || !email){
+
+        toast(
+          "Mentor name and email are required.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const mentor = {
+
+        id:makeId("MENTOR"),
+
+        name,
+
+        email,
+
+        phone:
+          document
+            .getElementById(
+              "mentorPhone"
+            )
+            .value
+            .trim(),
+
+        studio:
+          document
+            .getElementById(
+              "mentorStudio"
+            )
+            .value
+            .trim(),
+
+        packageId:
+          item?.id || "",
+
+        packageName:
+          item?.name || "",
+
+        status:
+          document
+            .getElementById(
+              "mentorStatus"
+            )
+            .value,
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+
+      db.mentors.push(
+        mentor
+      );
+
+
+      addActivity(
+        `Mentor "${name}" was created.`,
+        "♙"
+      );
+
+
+      event.target.reset();
+
+      saveDB();
+
+      toast(
+        "Mentor record created successfully."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   TOGGLE MENTOR
+   ========================================================= */
+
+function toggleMentor(
+  mentorId
+){
+
+  const mentor =
+    db.mentors.find(
+      x =>
+        x.id ===
+        mentorId
+    );
+
+
+  if(!mentor) return;
+
+
+  const nextStatus =
+    mentor.status === "Active"
+      ? "Suspended"
+      : "Active";
+
+
+  openModal(
+
+    "Change Mentor Status",
+
+    `
+      Change
+      <strong>
+        ${safe(mentor.name)}
+      </strong>
+      to
+      <strong>
+        ${safe(nextStatus)}
+      </strong>?
+    `,
+
+    () => {
+
+      mentor.status =
+        nextStatus;
+
+
+      addActivity(
+        `Mentor "${mentor.name}" changed to ${nextStatus}.`,
+        nextStatus === "Active"
+          ? "✓"
+          : "!"
+      );
+
+
+      saveDB();
+
+      toast(
+        `Mentor is now ${nextStatus}.`
+      );
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   REMOVE MENTOR
+   ========================================================= */
+
+function removeMentor(
+  mentorId
+){
+
+  const mentor =
+    db.mentors.find(
+      x =>
+        x.id ===
+        mentorId
+    );
+
+
+  if(!mentor) return;
+
+
+  openModal(
+
+    "Delete Mentor",
+
+    `
+      This will remove
+      <strong>
+        ${safe(mentor.name)}
+      </strong>
+      from this demo database.
+    `,
+
+    () => {
+
+      db.mentors =
+        db.mentors.filter(
+          x =>
+            x.id !==
+            mentorId
+        );
+
+
+      addActivity(
+        `Mentor "${mentor.name}" was deleted.`,
+        "×"
+      );
+
+
+      saveDB();
+
+      toast(
+        "Mentor deleted."
+      );
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   INVENTORY
+   ========================================================= */
+
+function renderInventory(){
+
+  const tbody =
+    document.getElementById(
+      "inventoryRows"
+    );
+
+
+  if(!db.inventory.length){
+
+    tbody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="7"
+          class="empty"
+        >
+
+          <div class="empty-icon">
+            ▤
+          </div>
+
+          <div class="empty-title">
+            No inventory items
+          </div>
+
+          <div class="empty-sub">
+            Add your first package above.
+          </div>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    db.inventory
+      .map(item => {
+
+        const quantity =
+          Number(
+            item.quantity || 0
+          );
+
+        const sold =
+          Number(
+            item.sold || 0
+          );
+
+        const available =
+          Math.max(
+            0,
+            quantity - sold
+          );
+
+        const percent =
+          quantity > 0
+            ? Math.min(
+                100,
+                (available /
+                  quantity) *
+                100
+              )
+            : 0;
+
+
+        const stockBadge =
+          available <= 0
+
+            ? `
+              <span class="badge rejected">
+                Out of stock
+              </span>
+            `
+
+            : available <= 2
+
+              ? `
+                <span class="badge low">
+                  Low stock
+                </span>
+              `
+
+              : `
+                <span class="badge confirmed">
+                  Available
+                </span>
+              `;
+
+
+        return `
+
+          <tr>
+
+            <td>
+
+              <strong>
+                ${safe(item.name)}
+              </strong>
+
+              <div class="stock-bar">
+
+                <div
+                  class="stock-fill"
+                  style="
+                    width:${percent}%;
+                  "
+                ></div>
+
+              </div>
+
+            </td>
+
+            <td>
+              ${money(item.price)}
+            </td>
+
+            <td>
+              ${quantity}
+            </td>
+
+            <td>
+              ${sold}
+            </td>
+
+            <td>
+
+              <strong>
+                ${available}
+              </strong>
+
+              <div
+                style="
+                  margin-top:5px;
+                "
+              >
+                ${stockBadge}
+              </div>
+
+            </td>
+
+            <td>
+              ${safe(item.validity)}
+            </td>
+
+            <td>
+
+              <button
+                class="btn btn-red btn-small"
+                onclick="removeItem('${item.id}')"
+              >
+                Delete
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      })
+      .join("");
+
+}
+
+
+/* =========================================================
+   ADD INVENTORY
+   ========================================================= */
+
+document
+  .getElementById("inventoryForm")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const name =
+        document
+          .getElementById(
+            "itemName"
+          )
+          .value
+          .trim();
+
+
+      const price =
+        Number(
+          document
+            .getElementById(
+              "itemPrice"
+            )
+            .value
+        );
+
+
+      const quantity =
+        Number(
+          document
+            .getElementById(
+              "itemQty"
+            )
+            .value
+        );
+
+
+      if(
+        !name ||
+        price < 0 ||
+        quantity < 0
+      ){
+
+        toast(
+          "Please enter valid inventory information.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      db.inventory.push({
+
+        id:makeId("PKG"),
+
+        name,
+
+        price,
+
+        quantity,
+
+        sold:0,
+
+        validity:
+          document
+            .getElementById(
+              "itemValidity"
+            )
+            .value,
+
+        createdAt:
+          new Date().toISOString()
+
+      });
+
+
+      addActivity(
+        `Package "${name}" was added to inventory.`,
+        "▤"
+      );
+
+
+      event.target.reset();
+
+      saveDB();
+
+      toast(
+        "Inventory item added."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   DELETE INVENTORY
+   ========================================================= */
+
+function removeItem(
+  itemId
+){
+
+  const item =
+    db.inventory.find(
+      x =>
+        x.id ===
+        itemId
+    );
+
+
+  if(!item) return;
+
+
+  if(
+    Number(item.sold || 0) > 0
+  ){
+
+    toast(
+      "Sold inventory cannot be deleted.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  openModal(
+
+    "Delete Inventory",
+
+    `
+      Delete package
+      <strong>
+        ${safe(item.name)}
+      </strong>?
+    `,
+
+    () => {
+
+      db.inventory =
+        db.inventory.filter(
+          x =>
+            x.id !==
+            itemId
+        );
+
+
+      addActivity(
+        `Package "${item.name}" was deleted.`,
+        "×"
+      );
+
+
+      saveDB();
+
+      toast(
+        "Inventory item deleted."
+      );
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   PAYMENTS
+   ========================================================= */
+
+function renderPayments(){
+
+  const search =
+    (
+      document
+        .getElementById(
+          "paymentSearch"
+        )?.value ||
+      ""
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const filter =
+    document
+      .getElementById(
+        "paymentFilter"
+      )?.value ||
+    "all";
+
+
+  const payments =
+    db.payments.filter(
+      payment => {
+
+        const text =
+          [
+            payment.id,
+            payment.mentorName,
+            payment.itemName,
+            payment.txn,
+            payment.method
+          ]
+          .join(" ")
+          .toLowerCase();
+
+
+        return (
+
+          (!search ||
+            text.includes(search))
+
+          &&
+
+          (
+            filter === "all" ||
+            payment.status === filter
+          )
+
+        );
+
+      }
+    );
+
+
+  const tbody =
+    document.getElementById(
+      "paymentRows"
+    );
+
+
+  if(!payments.length){
+
+    tbody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="8"
+          class="empty"
+        >
+
+          <div class="empty-icon">
+            ৳
+          </div>
+
+          <div class="empty-title">
+            No payment records
+          </div>
+
+          <div class="empty-sub">
+            Submitted payments will appear here.
+          </div>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    payments
+      .map(p => `
+
+        <tr>
+
+          <td>
+            ${safe(p.id)}
+          </td>
+
+          <td>
+            <strong>
+              ${safe(p.mentorName)}
+            </strong>
+          </td>
+
+          <td>
+            ${safe(p.itemName)}
+          </td>
+
+          <td>
+            <strong>
+              ${money(p.amount)}
+            </strong>
+          </td>
+
+          <td>
+            ${safe(p.method || "—")}
+          </td>
+
+          <td>
+            ${safe(p.txn || "—")}
+          </td>
+
+          <td>
+            ${statusBadge(p.status)}
+          </td>
+
+          <td>
+
+            <div
+              style="
+                display:flex;
+                gap:5px;
+              "
+            >
+
+              ${
+                p.status === "Pending"
+
+                ? `
+
+                  <button
+                    class="btn btn-green btn-small"
+                    onclick="setPayment('${p.id}','Confirmed')"
+                  >
+                    Confirm
+                  </button>
+
+                  <button
+                    class="btn btn-red btn-small"
+                    onclick="setPayment('${p.id}','Rejected')"
+                  >
+                    Reject
+                  </button>
+
+                `
+
+                : ""
+              }
+
+
+              ${
+                p.proof
+
+                ? `
+
+                  <button
+                    class="btn btn-secondary btn-small"
+                    onclick="openProof('${safe(p.proof)}')"
+                  >
+                    Proof
+                  </button>
+
+                `
+
+                : ""
+              }
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `)
+      .join("");
+
+}
+
+
+/* =========================================================
+   ADD PAYMENT
+   ========================================================= */
+
+document
+  .getElementById("paymentForm")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const mentor =
+        db.mentors.find(
+          m =>
+            m.id ===
+            document
+              .getElementById(
+                "paymentMentor"
+              )
+              .value
+        );
+
+
+      const item =
+        db.inventory.find(
+          x =>
+            x.id ===
+            document
+              .getElementById(
+                "paymentItem"
+              )
+              .value
+        );
+
+
+      if(!mentor || !item){
+
+        toast(
+          "Select mentor and package.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const amount =
+        Number(
+          document
+            .getElementById(
+              "paymentAmount"
+            )
+            .value
+        );
+
+
+      if(amount <= 0){
+
+        toast(
+          "Enter a valid payment amount.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      db.payments.push({
+
+        id:makeId("PAY"),
+
+        mentorId:
+          mentor.id,
+
+        mentorName:
+          mentor.name,
+
+        itemId:
+          item.id,
+
+        itemName:
+          item.name,
+
+        amount,
+
+        method:
+          document
+            .getElementById(
+              "paymentMethod"
+            )
+            .value,
+
+        txn:
+          document
+            .getElementById(
+              "paymentTxn"
+            )
+            .value
+            .trim(),
+
+        proof:
+          document
+            .getElementById(
+              "paymentProof"
+            )
+            .value
+            .trim(),
+
+        status:
+          "Pending",
+
+        createdAt:
+          new Date().toISOString()
+
+      });
+
+
+      addActivity(
+        `Pending payment added for "${mentor.name}".`,
+        "৳"
+      );
+
+
+      event.target.reset();
+
+      saveDB();
+
+      toast(
+        "Pending payment added."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   SET PAYMENT
+   ========================================================= */
+
+function setPayment(
+  paymentId,
+  status
+){
+
+  const payment =
+    db.payments.find(
+      p =>
+        p.id ===
+        paymentId
+    );
+
+
+  if(
+    !payment ||
+    payment.status !==
+      "Pending"
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    status ===
+    "Confirmed"
+  ){
+
+    const item =
+      db.inventory.find(
+        x =>
+          x.id ===
+          payment.itemId
+      );
+
+
+    if(
+      !item ||
+      (
+        Number(item.quantity || 0) -
+        Number(item.sold || 0)
+      ) <= 0
+    ){
+
+      toast(
+        "No available license quantity for this package.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    openModal(
+
+      "Confirm Payment",
+
+      `
+        Confirm
+        <strong>
+          ${money(payment.amount)}
+        </strong>
+        payment from
+        <strong>
+          ${safe(payment.mentorName)}
+        </strong>?
+
+        <br><br>
+
+        This will also consume
+        <strong>1 license</strong>
+        from
+        <strong>
+          ${safe(item.name)}
+        </strong>.
+      `,
+
+      () => {
+
+        item.sold =
+          Number(item.sold || 0) +
+          1;
+
+
+        payment.status =
+          "Confirmed";
+
+
+        payment.reviewedAt =
+          new Date().toISOString();
+
+
+        const mentor =
+          db.mentors.find(
+            m =>
+              m.id ===
+              payment.mentorId
+          );
+
+
+        if(mentor){
+
+          mentor.packageId =
+            item.id;
+
+          mentor.packageName =
+            item.name;
+
+          mentor.status =
+            "Active";
+
+        }
+
+
+        addActivity(
+          `Payment ${payment.id} confirmed for "${payment.mentorName}".`,
+          "✓"
+        );
+
+
+        saveDB();
+
+        toast(
+          "Payment confirmed and license activated."
+        );
+
+      }
+
+    );
+
+
+    return;
+
+  }
+
+
+  if(
+    status ===
+    "Rejected"
+  ){
+
+    openModal(
+
+      "Reject Payment",
+
+      `
+        Reject payment
+        <strong>
+          ${safe(payment.id)}
+        </strong>
+        from
+        <strong>
+          ${safe(payment.mentorName)}
+        </strong>?
+      `,
+
+      () => {
+
+        payment.status =
+          "Rejected";
+
+
+        payment.reviewedAt =
+          new Date().toISOString();
+
+
+        addActivity(
+          `Payment ${payment.id} was rejected.`,
+          "!"
+        );
+
+
+        saveDB();
+
+        toast(
+          "Payment rejected."
+        );
+
+      }
+
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PAYMENT PROOF
+   ========================================================= */
+
+function openProof(
+  url
+){
+
+  if(
+    !/^https?:\/\//i.test(
+      url
+    )
+  ){
+
+    toast(
+      "Invalid proof URL.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+}
+
+
+/* =========================================================
+   BROWSER UI
+   ========================================================= */
+
+function renderBrowserOptions(){
+
+  const options =
+    optionList(
+      db.mentors,
+      "Select mentor"
+    );
+
+
+  document.getElementById(
+    "browserMentor"
+  ).innerHTML =
+    options;
+
+}
+
+
+document
+  .getElementById(
+    "browserForm"
+  )
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const mentorId =
+        document
+          .getElementById(
+            "browserMentor"
+          )
+          .value;
+
+
+      if(!mentorId){
+
+        toast(
+          "Select a mentor first.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      const mentor =
+        db.mentors.find(
+          m =>
+            m.id ===
+            mentorId
+        );
+
+
+      db.ui[mentorId] = {
+
+        title:
+          document
+            .getElementById(
+              "browserTitle"
+            )
+            .value
+            .trim(),
+
+        brand:
+          document
+            .getElementById(
+              "browserBrand"
+            )
+            .value
+            .trim(),
+
+        logo:
+          document
+            .getElementById(
+              "browserLogo"
+            )
+            .value
+            .trim(),
+
+        color:
+          document
+            .getElementById(
+              "browserColor"
+            )
+            .value,
+
+        theme:
+          document
+            .getElementById(
+              "browserTheme"
+            )
+            .value
+
+      };
+
+
+      addActivity(
+        `Browser UI settings updated for "${mentor?.name || "mentor"}".`,
+        "▣"
+      );
+
+
+      saveDB();
+
+      toast(
+        "Browser UI settings saved."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "browserMentor"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      const ui =
+        db.ui[
+          event.target.value
+        ] || {};
+
+
+      document.getElementById(
+        "browserTitle"
+      ).value =
+        ui.title || "";
+
+
+      document.getElementById(
+        "browserBrand"
+      ).value =
+        ui.brand || "";
+
+
+      document.getElementById(
+        "browserLogo"
+      ).value =
+        ui.logo || "";
+
+
+      document.getElementById(
+        "browserColor"
+      ).value =
+        ui.color ||
+        "#4f8cff";
+
+
+      document.getElementById(
+        "browserTheme"
+      ).value =
+        ui.theme ||
+        "dark";
+
+
+      updatePreview();
+
+    }
+  );
+
+
+[
+  "browserTitle",
+  "browserBrand",
+  "browserColor"
+]
+.forEach(id => {
+
+  document
+    .getElementById(id)
+    .addEventListener(
+      "input",
+      updatePreview
+    );
+
 });
 
-document.getElementById("paymentForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const mentor=db.mentors.find(m=>m.id===document.getElementById("paymentMentor").value);
-  const item=db.inventory.find(x=>x.id===document.getElementById("paymentItem").value);
-  if(!mentor || !item){alert("Select a mentor and package.");return;}
-  db.payments.push({
-    id:id("PAY"),mentorId:mentor.id,mentorName:mentor.name,
-    itemId:item.id,itemName:item.name,
-    amount:Number(document.getElementById("paymentAmount").value),
-    method:document.getElementById("paymentMethod").value,
-    txn:document.getElementById("paymentTxn").value.trim(),
-    proof:document.getElementById("paymentProof").value.trim(),
-    status:"Pending",createdAt:new Date().toISOString()
-  });
-  e.target.reset();saveDB();
-});
 
-document.getElementById("browserForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const mentorId=document.getElementById("browserMentor").value;
-  if(!mentorId){alert("Select a mentor first.");return;}
-  db.ui[mentorId]={
-    title:document.getElementById("browserTitle").value.trim(),
-    brand:document.getElementById("browserBrand").value.trim(),
-    logo:document.getElementById("browserLogo").value.trim(),
-    color:document.getElementById("browserColor").value,
-    theme:document.getElementById("browserTheme").value
-  };
-  saveDB();alert("UI settings saved in this browser.");
-});
-
-function setPayment(paymentId,status){
-  const p=db.payments.find(x=>x.id===paymentId);
-  if(!p || p.status!=="Pending")return;
-  if(status==="Confirmed"){
-    const item=db.inventory.find(x=>x.id===p.itemId);
-    if(!item || item.quantity-item.sold<=0){alert("No available license quantity for this package.");return;}
-    if(!confirm("Confirm this payment?"))return;
-    item.sold++;
-    const mentor=db.mentors.find(m=>m.id===p.mentorId);
-    if(mentor){mentor.packageId=item.id;mentor.packageName=item.name;}
-  }else if(status==="Rejected"){
-    if(!confirm("Reject this payment?"))return;
-  }else return;
-  p.status=status;p.reviewedAt=new Date().toISOString();saveDB();
-}
-function toggleMentor(mentorId){
-  const m=db.mentors.find(x=>x.id===mentorId);if(!m)return;
-  m.status=m.status==="Active"?"Suspended":"Active";saveDB();
-}
-function removeMentor(mentorId){
-  if(!confirm("Delete this mentor record?"))return;
-  db.mentors=db.mentors.filter(x=>x.id!==mentorId);saveDB();
-}
-function removeItem(itemId){
-  const item=db.inventory.find(x=>x.id===itemId);
-  if(!item)return;
-  if(item.sold>0){alert("This package has sold licenses and cannot be deleted in this demo.");return;}
-  if(!confirm("Delete this inventory item?"))return;
-  db.inventory=db.inventory.filter(x=>x.id!==itemId);saveDB();
-}
-document.getElementById("browserMentor").addEventListener("change",e=>{
-  const ui=db.ui[e.target.value]||{};
-  document.getElementById("browserTitle").value=ui.title||"";
-  document.getElementById("browserBrand").value=ui.brand||"";
-  document.getElementById("browserLogo").value=ui.logo||"";
-  document.getElementById("browserColor").value=ui.color||"#4f8cff";
-  document.getElementById("browserTheme").value=ui.theme||"dark";
-  updatePreview();
-});
-["browserTitle","browserBrand","browserColor"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",updatePreview);
-});
 function updatePreview(){
-  document.getElementById("previewBrand").textContent=document.getElementById("browserBrand").value||"Your Studio";
-  document.getElementById("previewTitle").textContent=document.getElementById("browserTitle").value||"Mentor Studio — Preview";
-  document.getElementById("uiPreview").style.setProperty("--preview",document.getElementById("browserColor").value);
+
+  const brand =
+    document.getElementById(
+      "browserBrand"
+    ).value ||
+    "Your Studio";
+
+
+  const title =
+    document.getElementById(
+      "browserTitle"
+    ).value ||
+    "Mentor Studio — Preview";
+
+
+  const color =
+    document.getElementById(
+      "browserColor"
+    ).value ||
+    "#4f8cff";
+
+
+  document.getElementById(
+    "previewBrand"
+  ).textContent =
+    brand;
+
+
+  document.getElementById(
+    "previewTitle"
+  ).textContent =
+    title;
+
+
+  document.getElementById(
+    "uiPreview"
+  ).style
+    .setProperty(
+      "--preview",
+      color
+    );
+
 }
+
+
+/* =========================================================
+   SELECT OPTIONS
+   ========================================================= */
+
+function refreshSelects(){
+
+  const packageOptions =
+    optionList(
+      db.inventory,
+      "Select package"
+    );
+
+
+  const mentorOptions =
+    optionList(
+      db.mentors,
+      "Select mentor"
+    );
+
+
+  document.getElementById(
+    "mentorPackage"
+  ).innerHTML =
+    packageOptions;
+
+
+  document.getElementById(
+    "paymentItem"
+  ).innerHTML =
+    packageOptions;
+
+
+  document.getElementById(
+    "browserMentor"
+  ).innerHTML =
+    mentorOptions;
+
+
+  document.getElementById(
+    "paymentMentor"
+  ).innerHTML =
+    mentorOptions;
+
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+document
+  .getElementById(
+    "mentorSearch"
+  )
+  .addEventListener(
+    "input",
+    renderMentors
+  );
+
+
+document
+  .getElementById(
+    "mentorFilter"
+  )
+  .addEventListener(
+    "change",
+    renderMentors
+  );
+
+
+document
+  .getElementById(
+    "paymentSearch"
+  )
+  .addEventListener(
+    "input",
+    renderPayments
+  );
+
+
+document
+  .getElementById(
+    "paymentFilter"
+  )
+  .addEventListener(
+    "change",
+    renderPayments
+  );
+
+
+/* =========================================================
+   MASTER RENDER
+   ========================================================= */
+
+function renderAll(){
+
+  renderOverview();
+
+  renderMentors();
+
+  renderInventory();
+
+  renderPayments();
+
+  refreshSelects();
+
+  updatePreview();
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
 renderAll();
+
 </script>
+
 </body>
 </html>
